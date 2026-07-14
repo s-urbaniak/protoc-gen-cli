@@ -119,6 +119,5 @@ message DeleteBookRequest {
   // The ID of the shelf from which to delete a book.
   int64 shelf = 1;
   // The ID of the book to delete.
-  // Testing, to be removed.
   int64 book = 2;
 }
