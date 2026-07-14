@@ -38,4 +38,19 @@ jobs:
       - name: Test
         run: make test
       - name: Lint
-        run: make lint
+        run: make lint-go
+
+  buf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+      - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
+      - name: Lint
+        run: make lint-proto
+      - name: Verify examples drift
+        run: make verify-examples-regen
