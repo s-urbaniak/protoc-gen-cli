@@ -25,13 +25,37 @@ test: build ## Run tests
 	go test -vet=off -race -cover ./...
 
 .PHONY: lint
-lint: ## Lint
+lint: lint-go lint-proto ## Lint Go and Proto
+
+.PHONY: lint-go
+lint-go: ## Lint go files
 	go vet ./...
 	golangci-lint run --modules-download-mode=readonly --timeout=3m0s
+
+lint-proto:  ## Lint proto files
+	buf lint
 
 .PHONY: lintfix
 lintfix: ## Fix lint errors
 	golangci-lint run --fix --modules-download-mode=readonly --timeout=3m0s
+
+.PHONY: gen
+gen: clean gen-examples ## Regenerate proto code
+
+.PHONY: gen-examples
+gen-examples: fmt build ## Regenerate examples
+	cd examples/bookstore && buf generate
+
+.PHONY: verify-examples-regen
+verify-examples-regen: gen ## Fail if regenerating examples changes anything
+	git diff --exit-code -- examples/
+
+.PHONY: fmt
+fmt: fmt-proto ## Format code
+
+.PHONY: fmt-proto
+fmt-proto: ## Format proto files
+	buf format -w
 
 .PHONY: install
 install: ## Install protoc-gen-cli
@@ -44,3 +68,4 @@ upgrade: ## Upgrade dependencies
 .PHONY: clean
 clean: ## Delete build artifacts
 	rm -rf .tmp dist
+	rm -rf examples/bookstore/go-cobra/gen
