@@ -52,3 +52,5 @@ jobs:
           setup_only: true
       - name: Lint
         run: make lint-proto
+      - name: Verify examples drift
+        run: make verify-examples-regen
