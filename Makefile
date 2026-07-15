@@ -43,7 +43,7 @@ lintfix: ## Fix lint errors
 gen: clean gen-examples ## Regenerate proto code
 
 .PHONY: gen-examples
-gen-examples: fmt build ## Regenerate examples
+gen-examples: fmt install ## Regenerate examples
 	cd examples/bookstore && buf generate
 
 .PHONY: verify-examples-regen
