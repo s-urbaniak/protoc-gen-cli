@@ -630,8 +630,8 @@ const file_bookstore_v1_bookstore_proto_rawDesc = "" +
 	"\x04book\x18\x02 \x01(\x03R\x04book\"=\n" +
 	"\x11DeleteBookRequest\x12\x14\n" +
 	"\x05shelf\x18\x01 \x01(\x03R\x05shelf\x12\x12\n" +
-	"\x04book\x18\x02 \x01(\x03R\x04book2\xc9\x04\n" +
-	"\tBookstore\x12J\n" +
+	"\x04book\x18\x02 \x01(\x03R\x04book2\xd0\x04\n" +
+	"\x10BookstoreService\x12J\n" +
 	"\vListShelves\x12\x16.google.protobuf.Empty\x1a!.bookstore.v1.ListShelvesResponse\"\x00\x12F\n" +
 	"\vCreateShelf\x12 .bookstore.v1.CreateShelfRequest\x1a\x13.bookstore.v1.Shelf\"\x00\x12@\n" +
 	"\bGetShelf\x12\x1d.bookstore.v1.GetShelfRequest\x1a\x13.bookstore.v1.Shelf\"\x00\x12I\n" +
@@ -675,22 +675,22 @@ var file_bookstore_v1_bookstore_proto_depIdxs = []int32{
 	0,  // 1: bookstore.v1.CreateShelfRequest.shelf:type_name -> bookstore.v1.Shelf
 	1,  // 2: bookstore.v1.ListBooksResponse.books:type_name -> bookstore.v1.Book
 	1,  // 3: bookstore.v1.CreateBookRequest.book:type_name -> bookstore.v1.Book
-	11, // 4: bookstore.v1.Bookstore.ListShelves:input_type -> google.protobuf.Empty
-	3,  // 5: bookstore.v1.Bookstore.CreateShelf:input_type -> bookstore.v1.CreateShelfRequest
-	4,  // 6: bookstore.v1.Bookstore.GetShelf:input_type -> bookstore.v1.GetShelfRequest
-	5,  // 7: bookstore.v1.Bookstore.DeleteShelf:input_type -> bookstore.v1.DeleteShelfRequest
-	6,  // 8: bookstore.v1.Bookstore.ListBooks:input_type -> bookstore.v1.ListBooksRequest
-	8,  // 9: bookstore.v1.Bookstore.CreateBook:input_type -> bookstore.v1.CreateBookRequest
-	9,  // 10: bookstore.v1.Bookstore.GetBook:input_type -> bookstore.v1.GetBookRequest
-	10, // 11: bookstore.v1.Bookstore.DeleteBook:input_type -> bookstore.v1.DeleteBookRequest
-	2,  // 12: bookstore.v1.Bookstore.ListShelves:output_type -> bookstore.v1.ListShelvesResponse
-	0,  // 13: bookstore.v1.Bookstore.CreateShelf:output_type -> bookstore.v1.Shelf
-	0,  // 14: bookstore.v1.Bookstore.GetShelf:output_type -> bookstore.v1.Shelf
-	11, // 15: bookstore.v1.Bookstore.DeleteShelf:output_type -> google.protobuf.Empty
-	7,  // 16: bookstore.v1.Bookstore.ListBooks:output_type -> bookstore.v1.ListBooksResponse
-	1,  // 17: bookstore.v1.Bookstore.CreateBook:output_type -> bookstore.v1.Book
-	1,  // 18: bookstore.v1.Bookstore.GetBook:output_type -> bookstore.v1.Book
-	11, // 19: bookstore.v1.Bookstore.DeleteBook:output_type -> google.protobuf.Empty
+	11, // 4: bookstore.v1.BookstoreService.ListShelves:input_type -> google.protobuf.Empty
+	3,  // 5: bookstore.v1.BookstoreService.CreateShelf:input_type -> bookstore.v1.CreateShelfRequest
+	4,  // 6: bookstore.v1.BookstoreService.GetShelf:input_type -> bookstore.v1.GetShelfRequest
+	5,  // 7: bookstore.v1.BookstoreService.DeleteShelf:input_type -> bookstore.v1.DeleteShelfRequest
+	6,  // 8: bookstore.v1.BookstoreService.ListBooks:input_type -> bookstore.v1.ListBooksRequest
+	8,  // 9: bookstore.v1.BookstoreService.CreateBook:input_type -> bookstore.v1.CreateBookRequest
+	9,  // 10: bookstore.v1.BookstoreService.GetBook:input_type -> bookstore.v1.GetBookRequest
+	10, // 11: bookstore.v1.BookstoreService.DeleteBook:input_type -> bookstore.v1.DeleteBookRequest
+	2,  // 12: bookstore.v1.BookstoreService.ListShelves:output_type -> bookstore.v1.ListShelvesResponse
+	0,  // 13: bookstore.v1.BookstoreService.CreateShelf:output_type -> bookstore.v1.Shelf
+	0,  // 14: bookstore.v1.BookstoreService.GetShelf:output_type -> bookstore.v1.Shelf
+	11, // 15: bookstore.v1.BookstoreService.DeleteShelf:output_type -> google.protobuf.Empty
+	7,  // 16: bookstore.v1.BookstoreService.ListBooks:output_type -> bookstore.v1.ListBooksResponse
+	1,  // 17: bookstore.v1.BookstoreService.CreateBook:output_type -> bookstore.v1.Book
+	1,  // 18: bookstore.v1.BookstoreService.GetBook:output_type -> bookstore.v1.Book
+	11, // 19: bookstore.v1.BookstoreService.DeleteBook:output_type -> google.protobuf.Empty
 	12, // [12:20] is the sub-list for method output_type
 	4,  // [4:12] is the sub-list for method input_type
 	4,  // [4:4] is the sub-list for extension type_name

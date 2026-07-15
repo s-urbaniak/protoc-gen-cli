@@ -25,7 +25,7 @@ option go_package = "github.com/braveokafor/proto-to-cli/examples/bookstore/go-c
 // A simple Bookstore API.
 //
 // The API manages shelves and books resources. Shelves contain books.
-service Bookstore {
+service BookstoreService {
   // Returns a list of all shelves in the bookstore.
   rpc ListShelves(google.protobuf.Empty) returns (ListShelvesResponse) {}
   // Creates a new shelf in the bookstore.
