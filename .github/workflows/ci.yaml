@@ -47,6 +47,11 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 1
+      - name: Install Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
       - uses: bufbuild/buf-action@v1
         with:
           setup_only: true

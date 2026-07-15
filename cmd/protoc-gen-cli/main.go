@@ -79,6 +79,7 @@ func run(plug *protogen.Plugin, cfg *Config) error {
 			if err != nil {
 				return fmt.Errorf("marshal IR for %s: %w", protoPath, err)
 			}
+			dump = append(dump, '\n')
 
 			g := plug.NewGeneratedFile(
 				file.GeneratedFilenamePrefix+".cli.ir.json",
