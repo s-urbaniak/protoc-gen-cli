@@ -1,21 +1,23 @@
 {
   "plugin_version": "dev",
   "proto_file": "bookstore/v1/bookstore.proto",
+  "proto_package": "bookstore.v1",
   "file_options": {
-    "go_package": "bookstorev1",
+    "go_package_name": "bookstorev1",
     "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1"
   },
-  "proto_package": "bookstore.v1",
   "services": [
     {
       "proto_name": "BookstoreService",
       "name": "bookstore",
-      "leading_comment": "A simple Bookstore API.\n\nThe API manages shelves and books resources. Shelves contain books.",
+      "short_help": "A simple Bookstore API.",
+      "long_help": "A simple Bookstore API.\n\nThe API manages shelves and books resources. Shelves contain books.",
       "commands": [
         {
           "proto_name": "ListShelves",
           "name": "list-shelves",
-          "leading_comment": "Returns a list of all shelves in the bookstore.",
+          "short_help": "Returns a list of all shelves in the bookstore.",
+          "long_help": "Returns a list of all shelves in the bookstore.\n\nA generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:\n\n    service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }",
           "input": {
             "full_name": "google.protobuf.Empty",
             "proto_file": "google/protobuf/empty.proto",
@@ -29,7 +31,8 @@
         {
           "proto_name": "CreateShelf",
           "name": "create-shelf",
-          "leading_comment": "Creates a new shelf in the bookstore.",
+          "short_help": "Creates a new shelf in the bookstore.",
+          "long_help": "Creates a new shelf in the bookstore.\n\nRequest message for CreateShelf method.",
           "input": {
             "full_name": "bookstore.v1.CreateShelfRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
@@ -43,7 +46,8 @@
         {
           "proto_name": "GetShelf",
           "name": "get-shelf",
-          "leading_comment": "Returns a specific bookstore shelf.",
+          "short_help": "Returns a specific bookstore shelf.",
+          "long_help": "Returns a specific bookstore shelf.\n\nRequest message for GetShelf method.",
           "input": {
             "full_name": "bookstore.v1.GetShelfRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
@@ -57,7 +61,8 @@
         {
           "proto_name": "DeleteShelf",
           "name": "delete-shelf",
-          "leading_comment": "Deletes a shelf, including all books that are stored on the shelf.",
+          "short_help": "Deletes a shelf, including all books that are stored on the shelf.",
+          "long_help": "Deletes a shelf, including all books that are stored on the shelf.\n\nRequest message for DeleteShelf method.",
           "input": {
             "full_name": "bookstore.v1.DeleteShelfRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
@@ -71,7 +76,8 @@
         {
           "proto_name": "ListBooks",
           "name": "list-books",
-          "leading_comment": "Returns a list of books on a shelf.",
+          "short_help": "Returns a list of books on a shelf.",
+          "long_help": "Returns a list of books on a shelf.\n\nRequest message for ListBooks method.",
           "input": {
             "full_name": "bookstore.v1.ListBooksRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
@@ -85,7 +91,8 @@
         {
           "proto_name": "CreateBook",
           "name": "create-book",
-          "leading_comment": "Creates a new book.",
+          "short_help": "Creates a new book.",
+          "long_help": "Creates a new book.\n\nRequest message for CreateBook method.",
           "input": {
             "full_name": "bookstore.v1.CreateBookRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
@@ -99,7 +106,8 @@
         {
           "proto_name": "GetBook",
           "name": "get-book",
-          "leading_comment": "Returns a specific book.",
+          "short_help": "Returns a specific book.",
+          "long_help": "Returns a specific book.\n\nRequest message for GetBook method.",
           "input": {
             "full_name": "bookstore.v1.GetBookRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
@@ -113,7 +121,8 @@
         {
           "proto_name": "DeleteBook",
           "name": "delete-book",
-          "leading_comment": "Deletes a book from a shelf.",
+          "short_help": "Deletes a book from a shelf.",
+          "long_help": "Deletes a book from a shelf.\n\nRequest message for DeleteBook method.",
           "input": {
             "full_name": "bookstore.v1.DeleteBookRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
