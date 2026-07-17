@@ -70,6 +70,8 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 				ShortHelp: shortDoc(doc),
 			}
 
+			cmd.Flags = buildFlags(m.Input.Desc)
+
 			reqDoc := cleanComment(string(m.Input.Comments.Leading))
 			if doc != cmd.ShortHelp || reqDoc != "" {
 				parts := make([]string, 0, 2)
