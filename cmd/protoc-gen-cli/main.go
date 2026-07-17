@@ -71,7 +71,7 @@ func run(plug *protogen.Plugin, cfg *Config) error {
 			Files:         plug.FilesByPath,
 		})
 		if err != nil {
-			return fmt.Errorf("IR build for %s: %w", protoPath, err)
+			return fmt.Errorf("%s: %w", protoPath, err)
 		}
 
 		if cfg.DumpIR {
