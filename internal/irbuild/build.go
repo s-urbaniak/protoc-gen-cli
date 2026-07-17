@@ -89,6 +89,10 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 		model.Services = append(model.Services, service)
 	}
 
+	if err := model.Validate(); err != nil {
+		return nil, err
+	}
+
 	return model, nil
 }
 
