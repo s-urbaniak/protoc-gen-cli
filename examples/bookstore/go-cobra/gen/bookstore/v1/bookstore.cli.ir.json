@@ -56,7 +56,14 @@
             "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.Shelf"
+          "output": "bookstore.v1.Shelf",
+          "flags": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "int"
+            }
+          ]
         },
         {
           "proto_name": "DeleteShelf",
@@ -71,7 +78,14 @@
             "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "google.protobuf.Empty"
+          "output": "google.protobuf.Empty",
+          "flags": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "int"
+            }
+          ]
         },
         {
           "proto_name": "ListBooks",
@@ -86,7 +100,14 @@
             "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.ListBooksResponse"
+          "output": "bookstore.v1.ListBooksResponse",
+          "flags": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "int"
+            }
+          ]
         },
         {
           "proto_name": "CreateBook",
@@ -101,7 +122,14 @@
             "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.Book"
+          "output": "bookstore.v1.Book",
+          "flags": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "int"
+            }
+          ]
         },
         {
           "proto_name": "GetBook",
@@ -116,7 +144,19 @@
             "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.Book"
+          "output": "bookstore.v1.Book",
+          "flags": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "int"
+            },
+            {
+              "proto_path": "book",
+              "name": "book",
+              "bind": "int"
+            }
+          ]
         },
         {
           "proto_name": "DeleteBook",
@@ -131,7 +171,19 @@
             "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "google.protobuf.Empty"
+          "output": "google.protobuf.Empty",
+          "flags": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "int"
+            },
+            {
+              "proto_path": "book",
+              "name": "book",
+              "bind": "int"
+            }
+          ]
         }
       ]
     }

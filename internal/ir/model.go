@@ -38,7 +38,8 @@ type Command struct {
 	// Input represents the request message.
 	Input *Request `json:"input,omitempty"`
 	// Output is the response message's full proto name..
-	Output string `json:"output,omitempty"`
+	Output string  `json:"output,omitempty"`
+	Flags  []*Flag `json:"flags,omitempty"`
 }
 
 // A Request represents an RPC's request message and the bindings needed to construct it.
@@ -50,3 +51,21 @@ type Request struct {
 	GoImportPath  string `json:"go_import_path,omitempty"`
 	GoPackageName string `json:"go_package_name,omitempty"`
 }
+
+// A Flag is a CLI flag derived from a request field.
+type Flag struct {
+	ProtoPath string `json:"proto_path,omitempty"`
+	Name      string `json:"name,omitempty"`
+	Bind      Bind   `json:"bind,omitempty"`
+}
+
+// A Bind represents the JSON type a flag's argument parses into.
+type Bind string
+
+const (
+	BindString Bind = "string" // free text; also bytes, timestamps, durations, enums, field masks
+	BindBool   Bind = "bool"
+	BindInt    Bind = "int"
+	BindUint   Bind = "uint"
+	BindFloat  Bind = "float"
+)
