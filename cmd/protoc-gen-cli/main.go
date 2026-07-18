@@ -98,6 +98,9 @@ func run(plug *protogen.Plugin, cfg *Config) error {
 		m, err := irbuild.Build(file, irbuild.Options{
 			PluginVersion: cfg.Version,
 			Files:         plug.FilesByPath,
+			Warn: func(msg string) {
+				fmt.Fprintf(os.Stderr, "protoc-gen-cli: %s: %s\n", protoPath, msg)
+			},
 		})
 		if err != nil {
 			return fmt.Errorf("%s: %w", protoPath, err)

@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/tidwall/sjson"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -66,13 +67,7 @@ func NewBookstoreServiceListShelvesCommand(client BookstoreServiceClient) *cobra
 			return err
 		},
 	}
-	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a file (JSON, YAML, or any registered format),\n"+
-			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
-			"merge in that order.")
-	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
-		"Request body inline (JSON, YAML, or any registered format).\n"+
-			"Repeatable; merges after -f files and before flags.")
+	addRequestFlags(cmd.Flags(), &files, &inputs)
 	return cmd
 }
 
@@ -104,13 +99,7 @@ func NewBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra
 			return err
 		},
 	}
-	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a file (JSON, YAML, or any registered format),\n"+
-			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
-			"merge in that order.")
-	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
-		"Request body inline (JSON, YAML, or any registered format).\n"+
-			"Repeatable; merges after -f files and before flags.")
+	addRequestFlags(cmd.Flags(), &files, &inputs)
 	return cmd
 }
 
@@ -148,13 +137,7 @@ func NewBookstoreServiceGetShelfCommand(client BookstoreServiceClient) *cobra.Co
 			return err
 		},
 	}
-	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a file (JSON, YAML, or any registered format),\n"+
-			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
-			"merge in that order.")
-	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
-		"Request body inline (JSON, YAML, or any registered format).\n"+
-			"Repeatable; merges after -f files and before flags.")
+	addRequestFlags(cmd.Flags(), &files, &inputs)
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
@@ -193,13 +176,7 @@ func NewBookstoreServiceDeleteShelfCommand(client BookstoreServiceClient) *cobra
 			return err
 		},
 	}
-	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a file (JSON, YAML, or any registered format),\n"+
-			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
-			"merge in that order.")
-	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
-		"Request body inline (JSON, YAML, or any registered format).\n"+
-			"Repeatable; merges after -f files and before flags.")
+	addRequestFlags(cmd.Flags(), &files, &inputs)
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
@@ -238,13 +215,7 @@ func NewBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.C
 			return err
 		},
 	}
-	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a file (JSON, YAML, or any registered format),\n"+
-			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
-			"merge in that order.")
-	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
-		"Request body inline (JSON, YAML, or any registered format).\n"+
-			"Repeatable; merges after -f files and before flags.")
+	addRequestFlags(cmd.Flags(), &files, &inputs)
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
@@ -283,13 +254,7 @@ func NewBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.
 			return err
 		},
 	}
-	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a file (JSON, YAML, or any registered format),\n"+
-			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
-			"merge in that order.")
-	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
-		"Request body inline (JSON, YAML, or any registered format).\n"+
-			"Repeatable; merges after -f files and before flags.")
+	addRequestFlags(cmd.Flags(), &files, &inputs)
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
@@ -334,13 +299,7 @@ func NewBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Com
 			return err
 		},
 	}
-	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a file (JSON, YAML, or any registered format),\n"+
-			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
-			"merge in that order.")
-	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
-		"Request body inline (JSON, YAML, or any registered format).\n"+
-			"Repeatable; merges after -f files and before flags.")
+	addRequestFlags(cmd.Flags(), &files, &inputs)
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	cmd.Flags().Int64Var(&flagBook, "book", int64(0), "")
 	return cmd
@@ -386,13 +345,7 @@ func NewBookstoreServiceDeleteBookCommand(client BookstoreServiceClient) *cobra.
 			return err
 		},
 	}
-	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a file (JSON, YAML, or any registered format),\n"+
-			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
-			"merge in that order.")
-	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
-		"Request body inline (JSON, YAML, or any registered format).\n"+
-			"Repeatable; merges after -f files and before flags.")
+	addRequestFlags(cmd.Flags(), &files, &inputs)
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	cmd.Flags().Int64Var(&flagBook, "book", int64(0), "")
 	return cmd
@@ -437,13 +390,7 @@ func NewAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 			return err
 		},
 	}
-	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a file (JSON, YAML, or any registered format),\n"+
-			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
-			"merge in that order.")
-	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
-		"Request body inline (JSON, YAML, or any registered format).\n"+
-			"Repeatable; merges after -f files and before flags.")
+	addRequestFlags(cmd.Flags(), &files, &inputs)
 	return cmd
 }
 
@@ -475,14 +422,69 @@ func NewAuctionsServiceListAuctionsCommand(client AuctionsServiceClient) *cobra.
 			return err
 		},
 	}
-	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
+	addRequestFlags(cmd.Flags(), &files, &inputs)
+	return cmd
+}
+
+// NewInventoryServiceCommand returns the InventoryService command with one subcommand per RPC.
+func NewInventoryServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
+	client := NewInventoryServiceClient(conn)
+	cmd := &cobra.Command{
+		Use: "inventory",
+	}
+	cmd.AddCommand(NewInventoryServiceExportReportCommand(client))
+	return cmd
+}
+
+// NewInventoryServiceExportReportCommand returns the cobra subcommand for InventoryService.ExportReport.
+func NewInventoryServiceExportReportCommand(client InventoryServiceClient) *cobra.Command {
+	var files, inputs []string
+	var flagShelf int64
+	cmd := &cobra.Command{
+		Use:  "export-report",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			overlay := []byte("{}")
+			if cmd.Flags().Changed("shelf") {
+				if overlay, err = sjson.SetBytes(overlay, "shelf", flagShelf); err != nil {
+					return err
+				}
+			}
+			req := &ExportReportRequest{}
+			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+				return err
+			}
+			resp, err := client.ExportReport(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
+		},
+	}
+	addRequestFlags(cmd.Flags(), &files, &inputs)
+	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
+	return cmd
+}
+
+// ---- Request flags ----
+
+func addRequestFlags(fs *pflag.FlagSet, files, inputs *[]string) {
+	fs.StringArrayVarP(files, "filename", "f", nil,
 		"Request body from a file (JSON, YAML, or any registered format),\n"+
 			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
 			"merge in that order.")
-	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
+	fs.StringArrayVarP(inputs, "input", "i", nil,
 		"Request body inline (JSON, YAML, or any registered format).\n"+
 			"Repeatable; merges after -f files and before flags.")
-	return cmd
 }
 
 // ---- Request assembly ----

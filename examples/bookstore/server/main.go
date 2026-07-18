@@ -10,7 +10,7 @@ import (
 	"net"
 	"time"
 
-	pb "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1"
+	bookstorev1 "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/sudorandom/fauxrpc"
 	"google.golang.org/grpc"
@@ -22,11 +22,15 @@ import (
 )
 
 type bookstoreServer struct {
-	pb.UnimplementedBookstoreServiceServer
+	bookstorev1.UnimplementedBookstoreServiceServer
 }
 
 type auctionsServer struct {
-	pb.UnimplementedAuctionsServiceServer
+	bookstorev1.UnimplementedAuctionsServiceServer
+}
+
+type inventoryServer struct {
+	bookstorev1.UnimplementedInventoryServiceServer
 }
 
 func main() {
@@ -38,8 +42,9 @@ func main() {
 		log.Fatalf("listen: %v", err)
 	}
 	srv := grpc.NewServer()
-	pb.RegisterBookstoreServiceServer(srv, bookstoreServer{})
-	pb.RegisterAuctionsServiceServer(srv, auctionsServer{})
+	bookstorev1.RegisterBookstoreServiceServer(srv, bookstoreServer{})
+	bookstorev1.RegisterAuctionsServiceServer(srv, auctionsServer{})
+	bookstorev1.RegisterInventoryServiceServer(srv, inventoryServer{})
 	log.Printf("bookstore-server listening on %s", *addr)
 	if err := srv.Serve(lis); err != nil {
 		log.Fatalf("serve: %v", err)
@@ -54,8 +59,8 @@ func fake(msg proto.Message) error {
 func (bookstoreServer) ListShelves(
 	context.Context,
 	*emptypb.Empty,
-) (*pb.ListShelvesResponse, error) {
-	resp := &pb.ListShelvesResponse{}
+) (*bookstorev1.ListShelvesResponse, error) {
+	resp := &bookstorev1.ListShelvesResponse{}
 	if err := fake(resp); err != nil {
 		return nil, err
 	}
@@ -64,21 +69,24 @@ func (bookstoreServer) ListShelves(
 
 func (bookstoreServer) CreateShelf(
 	_ context.Context,
-	req *pb.CreateShelfRequest,
-) (*pb.Shelf, error) {
+	req *bookstorev1.CreateShelfRequest,
+) (*bookstorev1.Shelf, error) {
 	shelf := req.GetShelf()
 	if shelf == nil {
-		shelf = &pb.Shelf{}
+		shelf = &bookstorev1.Shelf{}
 	}
 	shelf.Id = gofakeit.Int64()
 	return shelf, nil
 }
 
-func (bookstoreServer) GetShelf(_ context.Context, req *pb.GetShelfRequest) (*pb.Shelf, error) {
+func (bookstoreServer) GetShelf(
+	_ context.Context,
+	req *bookstorev1.GetShelfRequest,
+) (*bookstorev1.Shelf, error) {
 	if req.GetShelf() < 1 || req.GetShelf() > 100 {
 		return nil, status.Errorf(codes.NotFound, "shelf %d not found", req.GetShelf())
 	}
-	shelf := &pb.Shelf{}
+	shelf := &bookstorev1.Shelf{}
 	if err := fake(shelf); err != nil {
 		return nil, err
 	}
@@ -88,35 +96,41 @@ func (bookstoreServer) GetShelf(_ context.Context, req *pb.GetShelfRequest) (*pb
 
 func (bookstoreServer) DeleteShelf(
 	context.Context,
-	*pb.DeleteShelfRequest,
+	*bookstorev1.DeleteShelfRequest,
 ) (*emptypb.Empty, error) {
 	return &emptypb.Empty{}, nil
 }
 
 func (bookstoreServer) ListBooks(
 	_ context.Context,
-	req *pb.ListBooksRequest,
-) (*pb.ListBooksResponse, error) {
+	req *bookstorev1.ListBooksRequest,
+) (*bookstorev1.ListBooksResponse, error) {
 	if req.GetShelf() < 1 || req.GetShelf() > 100 {
 		return nil, status.Errorf(codes.NotFound, "shelf %d not found", req.GetShelf())
 	}
-	resp := &pb.ListBooksResponse{}
+	resp := &bookstorev1.ListBooksResponse{}
 	if err := fake(resp); err != nil {
 		return nil, err
 	}
 	return resp, nil
 }
 
-func (bookstoreServer) CreateBook(_ context.Context, req *pb.CreateBookRequest) (*pb.Book, error) {
+func (bookstoreServer) CreateBook(
+	_ context.Context,
+	req *bookstorev1.CreateBookRequest,
+) (*bookstorev1.Book, error) {
 	book := req.GetBook()
 	if book == nil {
-		book = &pb.Book{}
+		book = &bookstorev1.Book{}
 	}
 	book.Id = gofakeit.Int64()
 	return book, nil
 }
 
-func (bookstoreServer) GetBook(_ context.Context, req *pb.GetBookRequest) (*pb.Book, error) {
+func (bookstoreServer) GetBook(
+	_ context.Context,
+	req *bookstorev1.GetBookRequest,
+) (*bookstorev1.Book, error) {
 	if req.GetBook() < 1 || req.GetBook() > 100 {
 		return nil, status.Errorf(
 			codes.NotFound,
@@ -125,7 +139,7 @@ func (bookstoreServer) GetBook(_ context.Context, req *pb.GetBookRequest) (*pb.B
 			req.GetShelf(),
 		)
 	}
-	book := &pb.Book{}
+	book := &bookstorev1.Book{}
 	if err := fake(book); err != nil {
 		return nil, err
 	}
@@ -133,38 +147,51 @@ func (bookstoreServer) GetBook(_ context.Context, req *pb.GetBookRequest) (*pb.B
 	return book, nil
 }
 
-func (bookstoreServer) DeleteBook(context.Context, *pb.DeleteBookRequest) (*emptypb.Empty, error) {
+func (bookstoreServer) DeleteBook(
+	context.Context,
+	*bookstorev1.DeleteBookRequest,
+) (*emptypb.Empty, error) {
 	return &emptypb.Empty{}, nil
 }
 
 func (auctionsServer) CreateAuction(
 	_ context.Context,
-	req *pb.CreateAuctionRequest,
-) (*pb.Auction, error) {
+	req *bookstorev1.CreateAuctionRequest,
+) (*bookstorev1.Auction, error) {
 	starts := req.GetStartsAt()
 	if starts == nil {
 		starts = timestamppb.Now()
 	}
-	return &pb.Auction{
+	return &bookstorev1.Auction{
 		Id:     gofakeit.Int64(),
 		Lot:    req.GetLot(),
-		State:  pb.AuctionState_AUCTION_STATE_SCHEDULED,
+		State:  bookstorev1.AuctionState_AUCTION_STATE_SCHEDULED,
 		EndsAt: timestamppb.New(starts.AsTime().Add(time.Hour)),
 	}, nil
 }
 
 func (auctionsServer) ListAuctions(
 	_ context.Context,
-	req *pb.ListAuctionsRequest,
-) (*pb.ListAuctionsResponse, error) {
-	resp := &pb.ListAuctionsResponse{}
+	req *bookstorev1.ListAuctionsRequest,
+) (*bookstorev1.ListAuctionsResponse, error) {
+	resp := &bookstorev1.ListAuctionsResponse{}
 	if err := fake(resp); err != nil {
 		return nil, err
 	}
-	if s := req.GetState(); s != pb.AuctionState_AUCTION_STATE_UNSPECIFIED {
+	if s := req.GetState(); s != bookstorev1.AuctionState_AUCTION_STATE_UNSPECIFIED {
 		for _, a := range resp.GetAuctions() {
 			a.State = s
 		}
 	}
 	return resp, nil
+}
+
+func (inventoryServer) ExportReport(
+	_ context.Context,
+	req *bookstorev1.ExportReportRequest,
+) (*bookstorev1.Report, error) {
+	return &bookstorev1.Report{
+		Filename: req.GetFilename(),
+		Books:    int64(gofakeit.Number(1, 100)),
+	}, nil
 }

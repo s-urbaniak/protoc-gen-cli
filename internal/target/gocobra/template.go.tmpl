@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/tidwall/sjson"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -77,19 +78,25 @@ func New{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
 			return err
 		},
 	}
-	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a file (JSON, YAML, or any registered format),\n"+
-			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
-			"merge in that order.")
-	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
-		"Request body inline (JSON, YAML, or any registered format).\n"+
-			"Repeatable; merges after -f files and before flags.")
+	addRequestFlags(cmd.Flags(), &files, &inputs)
 {{- range .Flags }}
 	cmd.Flags().{{ goPflagFunc . }}(&{{ goVarName . }}, {{ printf "%q" .Name }}, {{ goZeroLiteral . }}, "")
 {{- end }}
 	return cmd
 }
 {{ end }}{{ end }}
+// ---- Request flags ----
+
+func addRequestFlags(fs *pflag.FlagSet, files, inputs *[]string) {
+	fs.StringArrayVarP(files, "filename", "f", nil,
+		"Request body from a file (JSON, YAML, or any registered format),\n"+
+			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
+			"merge in that order.")
+	fs.StringArrayVarP(inputs, "input", "i", nil,
+		"Request body inline (JSON, YAML, or any registered format).\n"+
+			"Repeatable; merges after -f files and before flags.")
+}
+
 // ---- Request assembly ----
 
 // An InputFormat parses one request-document encoding to JSON.

@@ -15,6 +15,8 @@ type Options struct {
 	PluginVersion string // "" means "dev"
 	// Files, keyed by proto path, locates the file declaring a command's request message.
 	Files map[string]*protogen.File
+	// Warn receives generation warnings.
+	Warn func(string)
 }
 
 // Build produces the ir.Model for one proto file.
@@ -72,7 +74,7 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 				ShortHelp: shortDoc(doc),
 			}
 
-			cmd.Flags = buildFlags(m.Input.Desc)
+			cmd.Flags = buildFlags(m.Input.Desc, opts.Warn)
 
 			reqDoc := cleanComment(string(m.Input.Comments.Leading))
 			if doc != cmd.ShortHelp || reqDoc != "" {

@@ -233,6 +233,37 @@
           "output": "bookstore.v1.ListAuctionsResponse"
         }
       ]
+    },
+    {
+      "proto_name": "InventoryService",
+      "go_name": "InventoryService",
+      "name": "inventory",
+      "short_help": "InventoryService is the back office's stock system.",
+      "commands": [
+        {
+          "proto_name": "ExportReport",
+          "go_name": "ExportReport",
+          "name": "export-report",
+          "short_help": "Renders a shelf's stock report and writes it to a file on the server.",
+          "long_help": "Renders a shelf's stock report and writes it to a file on the server.\n\nRequest message for ExportReport method.",
+          "input": {
+            "full_name": "bookstore.v1.ExportReportRequest",
+            "proto_file": "bookstore/v1/bookstore.proto",
+            "proto_package": "bookstore.v1",
+            "go_name": "ExportReportRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_package_name": "bookstorev1"
+          },
+          "output": "bookstore.v1.Report",
+          "flags": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "int"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
