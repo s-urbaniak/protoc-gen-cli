@@ -28,6 +28,7 @@ func main() {
 	books := bookstorev1.NewBookstoreServiceCommand(conn)
 	root.AddCommand(books.Commands()...)
 	root.AddCommand(bookstorev1.NewAuctionsServiceCommand(conn))
+	root.AddCommand(bookstorev1.NewInventoryServiceCommand(conn))
 
 	if err := root.Execute(); err != nil {
 		os.Exit(1)

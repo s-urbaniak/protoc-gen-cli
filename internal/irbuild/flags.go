@@ -1,13 +1,15 @@
 package irbuild
 
 import (
+	"fmt"
+
 	"github.com/braveokafor/proto-to-cli/internal/ir"
 	"github.com/stoewer/go-strcase"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // buildFlags derives a command's flags from its request message's fields.
-func buildFlags(md protoreflect.MessageDescriptor) []*ir.Flag {
+func buildFlags(md protoreflect.MessageDescriptor, warn func(string)) []*ir.Flag {
 	var flags []*ir.Flag
 	fields := md.Fields()
 	for i := range fields.Len() {
@@ -18,9 +20,20 @@ func buildFlags(md protoreflect.MessageDescriptor) []*ir.Flag {
 			continue
 		}
 
+		name := strcase.KebabCase(string(fd.Name()))
+		if reservedFlagNames[name] {
+			warn(fmt.Sprintf(
+				"field %s.%s: the derived flag --%s is already reserved by a global flag; no flag generated, set the field via -f/-i, or rename it",
+				md.Name(),
+				fd.Name(),
+				name,
+			))
+			continue
+		}
+
 		f := &ir.Flag{
 			ProtoPath: string(fd.Name()),
-			Name:      strcase.KebabCase(string(fd.Name())),
+			Name:      name,
 			Bind:      bind,
 		}
 
@@ -29,6 +42,9 @@ func buildFlags(md protoreflect.MessageDescriptor) []*ir.Flag {
 
 	return flags
 }
+
+// Flag names the generated code already reserve.
+var reservedFlagNames = map[string]bool{"filename": true, "input": true, "help": true}
 
 var scalarBinds = map[protoreflect.Kind]ir.Bind{
 	protoreflect.BoolKind:     ir.BindBool,

@@ -212,3 +212,25 @@ message ListAuctionsRequest {
 message ListAuctionsResponse {
   repeated Auction auctions = 1;
 }
+
+// InventoryService is the back office's stock system.
+service InventoryService {
+  // Renders a shelf's stock report and writes it to a file on the server.
+  rpc ExportReport(ExportReportRequest) returns (Report) {}
+}
+
+// Request message for ExportReport method.
+message ExportReportRequest {
+  // The ID of the shelf to report on.
+  int64 shelf = 1;
+  // The file to write the report to.
+  string filename = 2;
+}
+
+// A stock report resource.
+message Report {
+  // The file the report was written to.
+  string filename = 1;
+  // Number of books in the report.
+  int64 books = 2;
+}

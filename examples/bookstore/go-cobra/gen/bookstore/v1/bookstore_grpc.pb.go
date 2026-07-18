@@ -574,3 +574,111 @@ var AuctionsService_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "bookstore/v1/bookstore.proto",
 }
+
+const (
+	InventoryService_ExportReport_FullMethodName = "/bookstore.v1.InventoryService/ExportReport"
+)
+
+// InventoryServiceClient is the client API for InventoryService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// InventoryService is the back office's stock system.
+type InventoryServiceClient interface {
+	// Renders a shelf's stock report and writes it to a file on the server.
+	ExportReport(ctx context.Context, in *ExportReportRequest, opts ...grpc.CallOption) (*Report, error)
+}
+
+type inventoryServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewInventoryServiceClient(cc grpc.ClientConnInterface) InventoryServiceClient {
+	return &inventoryServiceClient{cc}
+}
+
+func (c *inventoryServiceClient) ExportReport(ctx context.Context, in *ExportReportRequest, opts ...grpc.CallOption) (*Report, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Report)
+	err := c.cc.Invoke(ctx, InventoryService_ExportReport_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// InventoryServiceServer is the server API for InventoryService service.
+// All implementations must embed UnimplementedInventoryServiceServer
+// for forward compatibility.
+//
+// InventoryService is the back office's stock system.
+type InventoryServiceServer interface {
+	// Renders a shelf's stock report and writes it to a file on the server.
+	ExportReport(context.Context, *ExportReportRequest) (*Report, error)
+	mustEmbedUnimplementedInventoryServiceServer()
+}
+
+// UnimplementedInventoryServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedInventoryServiceServer struct{}
+
+func (UnimplementedInventoryServiceServer) ExportReport(context.Context, *ExportReportRequest) (*Report, error) {
+	return nil, status.Error(codes.Unimplemented, "method ExportReport not implemented")
+}
+func (UnimplementedInventoryServiceServer) mustEmbedUnimplementedInventoryServiceServer() {}
+func (UnimplementedInventoryServiceServer) testEmbeddedByValue()                          {}
+
+// UnsafeInventoryServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to InventoryServiceServer will
+// result in compilation errors.
+type UnsafeInventoryServiceServer interface {
+	mustEmbedUnimplementedInventoryServiceServer()
+}
+
+func RegisterInventoryServiceServer(s grpc.ServiceRegistrar, srv InventoryServiceServer) {
+	// If the following call panics, it indicates UnimplementedInventoryServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&InventoryService_ServiceDesc, srv)
+}
+
+func _InventoryService_ExportReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExportReportRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).ExportReport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_ExportReport_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).ExportReport(ctx, req.(*ExportReportRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// InventoryService_ServiceDesc is the grpc.ServiceDesc for InventoryService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var InventoryService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "bookstore.v1.InventoryService",
+	HandlerType: (*InventoryServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ExportReport",
+			Handler:    _InventoryService_ExportReport_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "bookstore/v1/bookstore.proto",
+}
