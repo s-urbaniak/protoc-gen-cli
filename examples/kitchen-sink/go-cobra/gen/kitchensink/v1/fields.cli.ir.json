@@ -117,6 +117,11 @@
           "output": "kitchensink.v1.MessagesRequest",
           "flags": [
             {
+              "proto_path": "outer",
+              "name": "outer",
+              "bind": "json"
+            },
+            {
               "proto_path": "outer.string_leaf",
               "name": "outer.string-leaf",
               "bind": "string"
@@ -127,9 +132,19 @@
               "bind": "int"
             },
             {
+              "proto_path": "outer.middle",
+              "name": "outer.middle",
+              "bind": "json"
+            },
+            {
               "proto_path": "outer.middle.leaf",
               "name": "outer.middle.leaf",
               "bind": "string"
+            },
+            {
+              "proto_path": "outer.middle.inner",
+              "name": "outer.middle.inner",
+              "bind": "json"
             },
             {
               "proto_path": "outer.middle.inner.leaf",
@@ -137,14 +152,34 @@
               "bind": "string"
             },
             {
+              "proto_path": "outer.middle.inner.deep",
+              "name": "outer.middle.inner.deep",
+              "bind": "json"
+            },
+            {
               "proto_path": "outer.middle.inner.deep.leaf",
               "name": "outer.middle.inner.deep.leaf",
               "bind": "string"
             },
             {
+              "proto_path": "outer.middle.inner.deep.deeper",
+              "name": "outer.middle.inner.deep.deeper",
+              "bind": "json"
+            },
+            {
               "proto_path": "outer.middle.inner.deep.deeper.leaf",
               "name": "outer.middle.inner.deep.deeper.leaf",
               "bind": "string"
+            },
+            {
+              "proto_path": "outer.middle.inner.deep.deeper.deepest",
+              "name": "outer.middle.inner.deep.deeper.deepest",
+              "bind": "json"
+            },
+            {
+              "proto_path": "kebab_outer",
+              "name": "kebab-outer",
+              "bind": "json"
             },
             {
               "proto_path": "kebab_outer.string_leaf",
@@ -157,9 +192,19 @@
               "bind": "int"
             },
             {
+              "proto_path": "kebab_outer.middle",
+              "name": "kebab-outer.middle",
+              "bind": "json"
+            },
+            {
               "proto_path": "kebab_outer.middle.leaf",
               "name": "kebab-outer.middle.leaf",
               "bind": "string"
+            },
+            {
+              "proto_path": "kebab_outer.middle.inner",
+              "name": "kebab-outer.middle.inner",
+              "bind": "json"
             },
             {
               "proto_path": "kebab_outer.middle.inner.leaf",
@@ -167,14 +212,29 @@
               "bind": "string"
             },
             {
+              "proto_path": "kebab_outer.middle.inner.deep",
+              "name": "kebab-outer.middle.inner.deep",
+              "bind": "json"
+            },
+            {
               "proto_path": "kebab_outer.middle.inner.deep.leaf",
               "name": "kebab-outer.middle.inner.deep.leaf",
               "bind": "string"
             },
             {
+              "proto_path": "kebab_outer.middle.inner.deep.deeper",
+              "name": "kebab-outer.middle.inner.deep.deeper",
+              "bind": "json"
+            },
+            {
               "proto_path": "kebab_outer.middle.inner.deep.deeper.leaf",
               "name": "kebab-outer.middle.inner.deep.deeper.leaf",
               "bind": "string"
+            },
+            {
+              "proto_path": "kebab_outer.middle.inner.deep.deeper.deepest",
+              "name": "kebab-outer.middle.inner.deep.deeper.deepest",
+              "bind": "json"
             },
             {
               "proto_path": "timestamp",
@@ -192,9 +252,34 @@
               "bind": "string"
             },
             {
+              "proto_path": "recursive",
+              "name": "recursive",
+              "bind": "json"
+            },
+            {
               "proto_path": "recursive.name",
               "name": "recursive.name",
               "bind": "string"
+            },
+            {
+              "proto_path": "recursive.next",
+              "name": "recursive.next",
+              "bind": "json"
+            },
+            {
+              "proto_path": "odd",
+              "name": "odd",
+              "bind": "json"
+            },
+            {
+              "proto_path": "odd.even",
+              "name": "odd.even",
+              "bind": "json"
+            },
+            {
+              "proto_path": "odd.even.odd",
+              "name": "odd.even.odd",
+              "bind": "json"
             }
           ]
         }

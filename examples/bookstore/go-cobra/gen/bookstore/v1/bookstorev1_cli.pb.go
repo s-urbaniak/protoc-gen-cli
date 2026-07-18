@@ -58,9 +58,8 @@ func newBookstoreServiceListShelvesCommand(client BookstoreServiceClient) *cobra
 			if err != nil {
 				return err
 			}
-			overlay := []byte("{}")
 			req := &emptypb.Empty{}
-			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+			if err := BuildRequest(req, frags); err != nil {
 				return err
 			}
 			resp, err := client.ListShelves(cmd.Context(), req)
@@ -80,6 +79,7 @@ func newBookstoreServiceListShelvesCommand(client BookstoreServiceClient) *cobra
 
 // newBookstoreServiceCreateShelfCommand returns the cobra subcommand for BookstoreService.CreateShelf.
 func newBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra.Command {
+	var flagShelf string
 	var flagShelfId int64
 	var flagShelfTheme string
 	cmd := &cobra.Command{
@@ -98,19 +98,32 @@ func newBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra
 			if err != nil {
 				return err
 			}
-			overlay := []byte("{}")
-			if cmd.Flags().Changed("shelf.id") {
-				if overlay, err = sjson.SetBytes(overlay, "shelf.id", flagShelfId); err != nil {
+			if cmd.Flags().Changed("shelf") {
+				if !json.Valid([]byte(flagShelf)) {
+					return fmt.Errorf("flag --shelf: %q is not valid JSON", flagShelf)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "shelf", []byte(flagShelf))
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --shelf", JSON: doc})
+			}
+			if cmd.Flags().Changed("shelf.id") {
+				doc, err := sjson.SetBytes([]byte("{}"), "shelf.id", flagShelfId)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --shelf.id", JSON: doc})
 			}
 			if cmd.Flags().Changed("shelf.theme") {
-				if overlay, err = sjson.SetBytes(overlay, "shelf.theme", flagShelfTheme); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "shelf.theme", flagShelfTheme)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --shelf.theme", JSON: doc})
 			}
 			req := &CreateShelfRequest{}
-			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+			if err := BuildRequest(req, frags); err != nil {
 				return err
 			}
 			resp, err := client.CreateShelf(cmd.Context(), req)
@@ -125,6 +138,7 @@ func newBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra
 			return err
 		},
 	}
+	cmd.Flags().StringVar(&flagShelf, "shelf", "", "")
 	cmd.Flags().Int64Var(&flagShelfId, "shelf.id", int64(0), "")
 	cmd.Flags().StringVar(&flagShelfTheme, "shelf.theme", "", "")
 	return cmd
@@ -149,14 +163,15 @@ func newBookstoreServiceGetShelfCommand(client BookstoreServiceClient) *cobra.Co
 			if err != nil {
 				return err
 			}
-			overlay := []byte("{}")
 			if cmd.Flags().Changed("shelf") {
-				if overlay, err = sjson.SetBytes(overlay, "shelf", flagShelf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "shelf", flagShelf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --shelf", JSON: doc})
 			}
 			req := &GetShelfRequest{}
-			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+			if err := BuildRequest(req, frags); err != nil {
 				return err
 			}
 			resp, err := client.GetShelf(cmd.Context(), req)
@@ -194,14 +209,15 @@ func newBookstoreServiceDeleteShelfCommand(client BookstoreServiceClient) *cobra
 			if err != nil {
 				return err
 			}
-			overlay := []byte("{}")
 			if cmd.Flags().Changed("shelf") {
-				if overlay, err = sjson.SetBytes(overlay, "shelf", flagShelf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "shelf", flagShelf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --shelf", JSON: doc})
 			}
 			req := &DeleteShelfRequest{}
-			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+			if err := BuildRequest(req, frags); err != nil {
 				return err
 			}
 			resp, err := client.DeleteShelf(cmd.Context(), req)
@@ -239,14 +255,15 @@ func newBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.C
 			if err != nil {
 				return err
 			}
-			overlay := []byte("{}")
 			if cmd.Flags().Changed("shelf") {
-				if overlay, err = sjson.SetBytes(overlay, "shelf", flagShelf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "shelf", flagShelf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --shelf", JSON: doc})
 			}
 			req := &ListBooksRequest{}
-			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+			if err := BuildRequest(req, frags); err != nil {
 				return err
 			}
 			resp, err := client.ListBooks(cmd.Context(), req)
@@ -268,6 +285,7 @@ func newBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.C
 // newBookstoreServiceCreateBookCommand returns the cobra subcommand for BookstoreService.CreateBook.
 func newBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.Command {
 	var flagShelf int64
+	var flagBook string
 	var flagBookId int64
 	var flagBookAuthor string
 	var flagBookTitle string
@@ -287,29 +305,46 @@ func newBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.
 			if err != nil {
 				return err
 			}
-			overlay := []byte("{}")
 			if cmd.Flags().Changed("shelf") {
-				if overlay, err = sjson.SetBytes(overlay, "shelf", flagShelf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "shelf", flagShelf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --shelf", JSON: doc})
+			}
+			if cmd.Flags().Changed("book") {
+				if !json.Valid([]byte(flagBook)) {
+					return fmt.Errorf("flag --book: %q is not valid JSON", flagBook)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "book", []byte(flagBook))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --book", JSON: doc})
 			}
 			if cmd.Flags().Changed("book.id") {
-				if overlay, err = sjson.SetBytes(overlay, "book.id", flagBookId); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "book.id", flagBookId)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --book.id", JSON: doc})
 			}
 			if cmd.Flags().Changed("book.author") {
-				if overlay, err = sjson.SetBytes(overlay, "book.author", flagBookAuthor); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "book.author", flagBookAuthor)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --book.author", JSON: doc})
 			}
 			if cmd.Flags().Changed("book.title") {
-				if overlay, err = sjson.SetBytes(overlay, "book.title", flagBookTitle); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "book.title", flagBookTitle)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --book.title", JSON: doc})
 			}
 			req := &CreateBookRequest{}
-			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+			if err := BuildRequest(req, frags); err != nil {
 				return err
 			}
 			resp, err := client.CreateBook(cmd.Context(), req)
@@ -325,6 +360,7 @@ func newBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.
 		},
 	}
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
+	cmd.Flags().StringVar(&flagBook, "book", "", "")
 	cmd.Flags().Int64Var(&flagBookId, "book.id", int64(0), "")
 	cmd.Flags().StringVar(&flagBookAuthor, "book.author", "", "")
 	cmd.Flags().StringVar(&flagBookTitle, "book.title", "", "")
@@ -351,19 +387,22 @@ func newBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Com
 			if err != nil {
 				return err
 			}
-			overlay := []byte("{}")
 			if cmd.Flags().Changed("shelf") {
-				if overlay, err = sjson.SetBytes(overlay, "shelf", flagShelf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "shelf", flagShelf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --shelf", JSON: doc})
 			}
 			if cmd.Flags().Changed("book") {
-				if overlay, err = sjson.SetBytes(overlay, "book", flagBook); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "book", flagBook)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --book", JSON: doc})
 			}
 			req := &GetBookRequest{}
-			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+			if err := BuildRequest(req, frags); err != nil {
 				return err
 			}
 			resp, err := client.GetBook(cmd.Context(), req)
@@ -403,19 +442,22 @@ func newBookstoreServiceDeleteBookCommand(client BookstoreServiceClient) *cobra.
 			if err != nil {
 				return err
 			}
-			overlay := []byte("{}")
 			if cmd.Flags().Changed("shelf") {
-				if overlay, err = sjson.SetBytes(overlay, "shelf", flagShelf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "shelf", flagShelf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --shelf", JSON: doc})
 			}
 			if cmd.Flags().Changed("book") {
-				if overlay, err = sjson.SetBytes(overlay, "book", flagBook); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "book", flagBook)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --book", JSON: doc})
 			}
 			req := &DeleteBookRequest{}
-			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+			if err := BuildRequest(req, frags); err != nil {
 				return err
 			}
 			resp, err := client.DeleteBook(cmd.Context(), req)
@@ -449,12 +491,16 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 
 // newAuctionsServiceCreateAuctionCommand returns the cobra subcommand for AuctionsService.CreateAuction.
 func newAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra.Command {
+	var flagLot string
 	var flagLotId int64
+	var flagLotBook string
 	var flagLotBookId int64
 	var flagLotBookAuthor string
 	var flagLotBookTitle string
 	var flagLotReservePrice float64
+	var flagLotConsignor string
 	var flagLotConsignorName string
+	var flagLotConsignorAddress string
 	var flagStartsAt string
 	cmd := &cobra.Command{
 		Use:  "create-auction",
@@ -472,44 +518,97 @@ func newAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 			if err != nil {
 				return err
 			}
-			overlay := []byte("{}")
-			if cmd.Flags().Changed("lot.id") {
-				if overlay, err = sjson.SetBytes(overlay, "lot.id", flagLotId); err != nil {
+			if cmd.Flags().Changed("lot") {
+				if !json.Valid([]byte(flagLot)) {
+					return fmt.Errorf("flag --lot: %q is not valid JSON", flagLot)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "lot", []byte(flagLot))
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --lot", JSON: doc})
+			}
+			if cmd.Flags().Changed("lot.id") {
+				doc, err := sjson.SetBytes([]byte("{}"), "lot.id", flagLotId)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --lot.id", JSON: doc})
+			}
+			if cmd.Flags().Changed("lot.book") {
+				if !json.Valid([]byte(flagLotBook)) {
+					return fmt.Errorf("flag --lot.book: %q is not valid JSON", flagLotBook)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "lot.book", []byte(flagLotBook))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --lot.book", JSON: doc})
 			}
 			if cmd.Flags().Changed("lot.book.id") {
-				if overlay, err = sjson.SetBytes(overlay, "lot.book.id", flagLotBookId); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "lot.book.id", flagLotBookId)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --lot.book.id", JSON: doc})
 			}
 			if cmd.Flags().Changed("lot.book.author") {
-				if overlay, err = sjson.SetBytes(overlay, "lot.book.author", flagLotBookAuthor); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "lot.book.author", flagLotBookAuthor)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --lot.book.author", JSON: doc})
 			}
 			if cmd.Flags().Changed("lot.book.title") {
-				if overlay, err = sjson.SetBytes(overlay, "lot.book.title", flagLotBookTitle); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "lot.book.title", flagLotBookTitle)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --lot.book.title", JSON: doc})
 			}
 			if cmd.Flags().Changed("lot.reserve-price") {
-				if overlay, err = sjson.SetBytes(overlay, "lot.reserve_price", flagLotReservePrice); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "lot.reserve_price", flagLotReservePrice)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --lot.reserve-price", JSON: doc})
+			}
+			if cmd.Flags().Changed("lot.consignor") {
+				if !json.Valid([]byte(flagLotConsignor)) {
+					return fmt.Errorf("flag --lot.consignor: %q is not valid JSON", flagLotConsignor)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "lot.consignor", []byte(flagLotConsignor))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --lot.consignor", JSON: doc})
 			}
 			if cmd.Flags().Changed("lot.consignor.name") {
-				if overlay, err = sjson.SetBytes(overlay, "lot.consignor.name", flagLotConsignorName); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "lot.consignor.name", flagLotConsignorName)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --lot.consignor.name", JSON: doc})
+			}
+			if cmd.Flags().Changed("lot.consignor.address") {
+				if !json.Valid([]byte(flagLotConsignorAddress)) {
+					return fmt.Errorf("flag --lot.consignor.address: %q is not valid JSON", flagLotConsignorAddress)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "lot.consignor.address", []byte(flagLotConsignorAddress))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --lot.consignor.address", JSON: doc})
 			}
 			if cmd.Flags().Changed("starts-at") {
-				if overlay, err = sjson.SetBytes(overlay, "starts_at", flagStartsAt); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "starts_at", flagStartsAt)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --starts-at", JSON: doc})
 			}
 			req := &CreateAuctionRequest{}
-			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+			if err := BuildRequest(req, frags); err != nil {
 				return err
 			}
 			resp, err := client.CreateAuction(cmd.Context(), req)
@@ -524,12 +623,16 @@ func newAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 			return err
 		},
 	}
+	cmd.Flags().StringVar(&flagLot, "lot", "", "")
 	cmd.Flags().Int64Var(&flagLotId, "lot.id", int64(0), "")
+	cmd.Flags().StringVar(&flagLotBook, "lot.book", "", "")
 	cmd.Flags().Int64Var(&flagLotBookId, "lot.book.id", int64(0), "")
 	cmd.Flags().StringVar(&flagLotBookAuthor, "lot.book.author", "", "")
 	cmd.Flags().StringVar(&flagLotBookTitle, "lot.book.title", "", "")
 	cmd.Flags().Float64Var(&flagLotReservePrice, "lot.reserve-price", float64(0), "")
+	cmd.Flags().StringVar(&flagLotConsignor, "lot.consignor", "", "")
 	cmd.Flags().StringVar(&flagLotConsignorName, "lot.consignor.name", "", "")
+	cmd.Flags().StringVar(&flagLotConsignorAddress, "lot.consignor.address", "", "")
 	cmd.Flags().StringVar(&flagStartsAt, "starts-at", "", "")
 	return cmd
 }
@@ -552,9 +655,8 @@ func newAuctionsServiceListAuctionsCommand(client AuctionsServiceClient) *cobra.
 			if err != nil {
 				return err
 			}
-			overlay := []byte("{}")
 			req := &ListAuctionsRequest{}
-			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+			if err := BuildRequest(req, frags); err != nil {
 				return err
 			}
 			resp, err := client.ListAuctions(cmd.Context(), req)
@@ -602,14 +704,15 @@ func newInventoryServiceExportReportCommand(client InventoryServiceClient) *cobr
 			if err != nil {
 				return err
 			}
-			overlay := []byte("{}")
 			if cmd.Flags().Changed("shelf") {
-				if overlay, err = sjson.SetBytes(overlay, "shelf", flagShelf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "shelf", flagShelf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --shelf", JSON: doc})
 			}
 			req := &ExportReportRequest{}
-			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+			if err := BuildRequest(req, frags); err != nil {
 				return err
 			}
 			resp, err := client.ExportReport(cmd.Context(), req)

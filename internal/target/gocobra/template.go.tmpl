@@ -62,16 +62,24 @@ func new{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			overlay := []byte("{}")
 {{- range .Flags }}
 			if cmd.Flags().Changed({{ printf "%q" .Name }}) {
-				if overlay, err = sjson.SetBytes(overlay, {{ printf "%q" .ProtoPath }}, {{ goVarName . }}); err != nil {
+{{- if isJSONBind . }}
+				if !json.Valid([]byte({{ goVarName . }})) {
+					return fmt.Errorf("flag --{{ .Name }}: %q is not valid JSON", {{ goVarName . }})
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), {{ printf "%q" .ProtoPath }}, []byte({{ goVarName . }}))
+{{- else }}
+				doc, err := sjson.SetBytes([]byte("{}"), {{ printf "%q" .ProtoPath }}, {{ goVarName . }})
+{{- end }}
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --{{ .Name }}", JSON: doc})
 			}
 {{- end }}
 			req := &{{ goRequestType . }}{}
-			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+			if err := BuildRequest(req, frags); err != nil {
 				return err
 			}
 			resp, err := client.{{ .GoName }}(cmd.Context(), req)

@@ -19,13 +19,33 @@ func funcMap(model *ir.Model) template.FuncMap {
 		"goRPCName": func(svc *ir.Service, cmd *ir.Command) string {
 			return svc.GoName + cmd.GoName
 		},
+		// The local variable backing f's flag.
+		"goVarName": func(f *ir.Flag) string {
+			name := "flag"
+			for seg := range strings.SplitSeq(f.ProtoPath, ".") {
+				name += strcase.UpperCamelCase(seg)
+			}
+			return name
+		},
 		"goClientType": func(svc *ir.Service) string { return svc.GoName + "Client" },
+		"goFlagType":   func(f *ir.Flag) string { return goBindings[f.Bind].GoType },
 		// The qualifier must match the alias requestImports emits.
 		"goRequestType": func(cmd *ir.Command) string {
 			if cmd.Input.GoImportPath == model.FileOptions.GoImportPath {
 				return cmd.Input.GoName
 			}
 			return cmd.Input.GoPackageName + "." + cmd.Input.GoName
+		},
+		"goPflagFunc": func(f *ir.Flag) string { return goBindings[f.Bind].Singular + "Var" },
+		"goZeroLiteral": func(f *ir.Flag) string {
+			switch t := goBindings[f.Bind].GoType; t {
+			case "string":
+				return `""`
+			case "bool":
+				return "false"
+			default:
+				return t + "(0)"
+			}
 		},
 		// One aliased import per foreign request-type package, sorted by
 		// path. The alias is protogen's package name for the defining file.
@@ -44,27 +64,7 @@ func funcMap(model *ir.Model) template.FuncMap {
 			}
 			return out
 		},
-
-		// The local variable backing f's flag.
-		"goVarName": func(f *ir.Flag) string {
-			name := "flag"
-			for seg := range strings.SplitSeq(f.ProtoPath, ".") {
-				name += strcase.UpperCamelCase(seg)
-			}
-			return name
-		},
-		"goFlagType":  func(f *ir.Flag) string { return goBindings[f.Bind].GoType },
-		"goPflagFunc": func(f *ir.Flag) string { return goBindings[f.Bind].Singular + "Var" },
-		"goZeroLiteral": func(f *ir.Flag) string {
-			switch t := goBindings[f.Bind].GoType; t {
-			case "string":
-				return `""`
-			case "bool":
-				return "false"
-			default:
-				return t + "(0)"
-			}
-		},
+		"isJSONBind": func(f *ir.Flag) bool { return f.Bind == ir.BindJSON },
 	}
 }
 
@@ -80,4 +80,5 @@ var goBindings = map[ir.Bind]pflagBinding{
 	ir.BindInt:    {"Int64", "int64"},
 	ir.BindUint:   {"Uint64", "uint64"},
 	ir.BindFloat:  {"Float64", "float64"},
+	ir.BindJSON:   {"String", "string"},
 }

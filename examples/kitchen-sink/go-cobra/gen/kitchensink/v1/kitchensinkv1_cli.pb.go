@@ -65,79 +65,106 @@ func newFieldsServiceScalarsCommand(client FieldsServiceClient) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			overlay := []byte("{}")
 			if cmd.Flags().Changed("double-field") {
-				if overlay, err = sjson.SetBytes(overlay, "double_field", flagDoubleField); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "double_field", flagDoubleField)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --double-field", JSON: doc})
 			}
 			if cmd.Flags().Changed("float-field") {
-				if overlay, err = sjson.SetBytes(overlay, "float_field", flagFloatField); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "float_field", flagFloatField)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --float-field", JSON: doc})
 			}
 			if cmd.Flags().Changed("int32-field") {
-				if overlay, err = sjson.SetBytes(overlay, "int32_field", flagInt32Field); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "int32_field", flagInt32Field)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --int32-field", JSON: doc})
 			}
 			if cmd.Flags().Changed("int64-field") {
-				if overlay, err = sjson.SetBytes(overlay, "int64_field", flagInt64Field); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "int64_field", flagInt64Field)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --int64-field", JSON: doc})
 			}
 			if cmd.Flags().Changed("uint32-field") {
-				if overlay, err = sjson.SetBytes(overlay, "uint32_field", flagUint32Field); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "uint32_field", flagUint32Field)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --uint32-field", JSON: doc})
 			}
 			if cmd.Flags().Changed("uint64-field") {
-				if overlay, err = sjson.SetBytes(overlay, "uint64_field", flagUint64Field); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "uint64_field", flagUint64Field)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --uint64-field", JSON: doc})
 			}
 			if cmd.Flags().Changed("sint32-field") {
-				if overlay, err = sjson.SetBytes(overlay, "sint32_field", flagSint32Field); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "sint32_field", flagSint32Field)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --sint32-field", JSON: doc})
 			}
 			if cmd.Flags().Changed("sint64-field") {
-				if overlay, err = sjson.SetBytes(overlay, "sint64_field", flagSint64Field); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "sint64_field", flagSint64Field)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --sint64-field", JSON: doc})
 			}
 			if cmd.Flags().Changed("fixed32-field") {
-				if overlay, err = sjson.SetBytes(overlay, "fixed32_field", flagFixed32Field); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "fixed32_field", flagFixed32Field)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --fixed32-field", JSON: doc})
 			}
 			if cmd.Flags().Changed("fixed64-field") {
-				if overlay, err = sjson.SetBytes(overlay, "fixed64_field", flagFixed64Field); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "fixed64_field", flagFixed64Field)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --fixed64-field", JSON: doc})
 			}
 			if cmd.Flags().Changed("sfixed32-field") {
-				if overlay, err = sjson.SetBytes(overlay, "sfixed32_field", flagSfixed32Field); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "sfixed32_field", flagSfixed32Field)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --sfixed32-field", JSON: doc})
 			}
 			if cmd.Flags().Changed("sfixed64-field") {
-				if overlay, err = sjson.SetBytes(overlay, "sfixed64_field", flagSfixed64Field); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "sfixed64_field", flagSfixed64Field)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --sfixed64-field", JSON: doc})
 			}
 			if cmd.Flags().Changed("bool-field") {
-				if overlay, err = sjson.SetBytes(overlay, "bool_field", flagBoolField); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "bool_field", flagBoolField)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --bool-field", JSON: doc})
 			}
 			if cmd.Flags().Changed("string-field") {
-				if overlay, err = sjson.SetBytes(overlay, "string_field", flagStringField); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "string_field", flagStringField)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --string-field", JSON: doc})
 			}
 			req := &ScalarsRequest{}
-			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+			if err := BuildRequest(req, frags); err != nil {
 				return err
 			}
 			resp, err := client.Scalars(cmd.Context(), req)
@@ -171,22 +198,39 @@ func newFieldsServiceScalarsCommand(client FieldsServiceClient) *cobra.Command {
 
 // newFieldsServiceMessagesCommand returns the cobra subcommand for FieldsService.Messages.
 func newFieldsServiceMessagesCommand(client FieldsServiceClient) *cobra.Command {
+	var flagOuter string
 	var flagOuterStringLeaf string
 	var flagOuterInt64Leaf int64
+	var flagOuterMiddle string
 	var flagOuterMiddleLeaf string
+	var flagOuterMiddleInner string
 	var flagOuterMiddleInnerLeaf string
+	var flagOuterMiddleInnerDeep string
 	var flagOuterMiddleInnerDeepLeaf string
+	var flagOuterMiddleInnerDeepDeeper string
 	var flagOuterMiddleInnerDeepDeeperLeaf string
+	var flagOuterMiddleInnerDeepDeeperDeepest string
+	var flagKebabOuter string
 	var flagKebabOuterStringLeaf string
 	var flagKebabOuterInt64Leaf int64
+	var flagKebabOuterMiddle string
 	var flagKebabOuterMiddleLeaf string
+	var flagKebabOuterMiddleInner string
 	var flagKebabOuterMiddleInnerLeaf string
+	var flagKebabOuterMiddleInnerDeep string
 	var flagKebabOuterMiddleInnerDeepLeaf string
+	var flagKebabOuterMiddleInnerDeepDeeper string
 	var flagKebabOuterMiddleInnerDeepDeeperLeaf string
+	var flagKebabOuterMiddleInnerDeepDeeperDeepest string
 	var flagTimestamp string
 	var flagDuration string
 	var flagFieldMask string
+	var flagRecursive string
 	var flagRecursiveName string
+	var flagRecursiveNext string
+	var flagOdd string
+	var flagOddEven string
+	var flagOddEvenOdd string
 	cmd := &cobra.Command{
 		Use:  "messages",
 		Args: cobra.NoArgs,
@@ -203,89 +247,290 @@ func newFieldsServiceMessagesCommand(client FieldsServiceClient) *cobra.Command 
 			if err != nil {
 				return err
 			}
-			overlay := []byte("{}")
-			if cmd.Flags().Changed("outer.string-leaf") {
-				if overlay, err = sjson.SetBytes(overlay, "outer.string_leaf", flagOuterStringLeaf); err != nil {
+			if cmd.Flags().Changed("outer") {
+				if !json.Valid([]byte(flagOuter)) {
+					return fmt.Errorf("flag --outer: %q is not valid JSON", flagOuter)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "outer", []byte(flagOuter))
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --outer", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.string-leaf") {
+				doc, err := sjson.SetBytes([]byte("{}"), "outer.string_leaf", flagOuterStringLeaf)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.string-leaf", JSON: doc})
 			}
 			if cmd.Flags().Changed("outer.int64-leaf") {
-				if overlay, err = sjson.SetBytes(overlay, "outer.int64_leaf", flagOuterInt64Leaf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "outer.int64_leaf", flagOuterInt64Leaf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --outer.int64-leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.middle") {
+				if !json.Valid([]byte(flagOuterMiddle)) {
+					return fmt.Errorf("flag --outer.middle: %q is not valid JSON", flagOuterMiddle)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "outer.middle", []byte(flagOuterMiddle))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle", JSON: doc})
 			}
 			if cmd.Flags().Changed("outer.middle.leaf") {
-				if overlay, err = sjson.SetBytes(overlay, "outer.middle.leaf", flagOuterMiddleLeaf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "outer.middle.leaf", flagOuterMiddleLeaf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.middle.inner") {
+				if !json.Valid([]byte(flagOuterMiddleInner)) {
+					return fmt.Errorf("flag --outer.middle.inner: %q is not valid JSON", flagOuterMiddleInner)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "outer.middle.inner", []byte(flagOuterMiddleInner))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.inner", JSON: doc})
 			}
 			if cmd.Flags().Changed("outer.middle.inner.leaf") {
-				if overlay, err = sjson.SetBytes(overlay, "outer.middle.inner.leaf", flagOuterMiddleInnerLeaf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "outer.middle.inner.leaf", flagOuterMiddleInnerLeaf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.inner.leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.middle.inner.deep") {
+				if !json.Valid([]byte(flagOuterMiddleInnerDeep)) {
+					return fmt.Errorf("flag --outer.middle.inner.deep: %q is not valid JSON", flagOuterMiddleInnerDeep)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "outer.middle.inner.deep", []byte(flagOuterMiddleInnerDeep))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.inner.deep", JSON: doc})
 			}
 			if cmd.Flags().Changed("outer.middle.inner.deep.leaf") {
-				if overlay, err = sjson.SetBytes(overlay, "outer.middle.inner.deep.leaf", flagOuterMiddleInnerDeepLeaf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "outer.middle.inner.deep.leaf", flagOuterMiddleInnerDeepLeaf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.inner.deep.leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.middle.inner.deep.deeper") {
+				if !json.Valid([]byte(flagOuterMiddleInnerDeepDeeper)) {
+					return fmt.Errorf("flag --outer.middle.inner.deep.deeper: %q is not valid JSON", flagOuterMiddleInnerDeepDeeper)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "outer.middle.inner.deep.deeper", []byte(flagOuterMiddleInnerDeepDeeper))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.inner.deep.deeper", JSON: doc})
 			}
 			if cmd.Flags().Changed("outer.middle.inner.deep.deeper.leaf") {
-				if overlay, err = sjson.SetBytes(overlay, "outer.middle.inner.deep.deeper.leaf", flagOuterMiddleInnerDeepDeeperLeaf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "outer.middle.inner.deep.deeper.leaf", flagOuterMiddleInnerDeepDeeperLeaf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.inner.deep.deeper.leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.middle.inner.deep.deeper.deepest") {
+				if !json.Valid([]byte(flagOuterMiddleInnerDeepDeeperDeepest)) {
+					return fmt.Errorf("flag --outer.middle.inner.deep.deeper.deepest: %q is not valid JSON", flagOuterMiddleInnerDeepDeeperDeepest)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "outer.middle.inner.deep.deeper.deepest", []byte(flagOuterMiddleInnerDeepDeeperDeepest))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.inner.deep.deeper.deepest", JSON: doc})
+			}
+			if cmd.Flags().Changed("kebab-outer") {
+				if !json.Valid([]byte(flagKebabOuter)) {
+					return fmt.Errorf("flag --kebab-outer: %q is not valid JSON", flagKebabOuter)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "kebab_outer", []byte(flagKebabOuter))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --kebab-outer", JSON: doc})
 			}
 			if cmd.Flags().Changed("kebab-outer.string-leaf") {
-				if overlay, err = sjson.SetBytes(overlay, "kebab_outer.string_leaf", flagKebabOuterStringLeaf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "kebab_outer.string_leaf", flagKebabOuterStringLeaf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --kebab-outer.string-leaf", JSON: doc})
 			}
 			if cmd.Flags().Changed("kebab-outer.int64-leaf") {
-				if overlay, err = sjson.SetBytes(overlay, "kebab_outer.int64_leaf", flagKebabOuterInt64Leaf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "kebab_outer.int64_leaf", flagKebabOuterInt64Leaf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --kebab-outer.int64-leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("kebab-outer.middle") {
+				if !json.Valid([]byte(flagKebabOuterMiddle)) {
+					return fmt.Errorf("flag --kebab-outer.middle: %q is not valid JSON", flagKebabOuterMiddle)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "kebab_outer.middle", []byte(flagKebabOuterMiddle))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --kebab-outer.middle", JSON: doc})
 			}
 			if cmd.Flags().Changed("kebab-outer.middle.leaf") {
-				if overlay, err = sjson.SetBytes(overlay, "kebab_outer.middle.leaf", flagKebabOuterMiddleLeaf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "kebab_outer.middle.leaf", flagKebabOuterMiddleLeaf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --kebab-outer.middle.leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("kebab-outer.middle.inner") {
+				if !json.Valid([]byte(flagKebabOuterMiddleInner)) {
+					return fmt.Errorf("flag --kebab-outer.middle.inner: %q is not valid JSON", flagKebabOuterMiddleInner)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "kebab_outer.middle.inner", []byte(flagKebabOuterMiddleInner))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --kebab-outer.middle.inner", JSON: doc})
 			}
 			if cmd.Flags().Changed("kebab-outer.middle.inner.leaf") {
-				if overlay, err = sjson.SetBytes(overlay, "kebab_outer.middle.inner.leaf", flagKebabOuterMiddleInnerLeaf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "kebab_outer.middle.inner.leaf", flagKebabOuterMiddleInnerLeaf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --kebab-outer.middle.inner.leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("kebab-outer.middle.inner.deep") {
+				if !json.Valid([]byte(flagKebabOuterMiddleInnerDeep)) {
+					return fmt.Errorf("flag --kebab-outer.middle.inner.deep: %q is not valid JSON", flagKebabOuterMiddleInnerDeep)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "kebab_outer.middle.inner.deep", []byte(flagKebabOuterMiddleInnerDeep))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --kebab-outer.middle.inner.deep", JSON: doc})
 			}
 			if cmd.Flags().Changed("kebab-outer.middle.inner.deep.leaf") {
-				if overlay, err = sjson.SetBytes(overlay, "kebab_outer.middle.inner.deep.leaf", flagKebabOuterMiddleInnerDeepLeaf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "kebab_outer.middle.inner.deep.leaf", flagKebabOuterMiddleInnerDeepLeaf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --kebab-outer.middle.inner.deep.leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("kebab-outer.middle.inner.deep.deeper") {
+				if !json.Valid([]byte(flagKebabOuterMiddleInnerDeepDeeper)) {
+					return fmt.Errorf("flag --kebab-outer.middle.inner.deep.deeper: %q is not valid JSON", flagKebabOuterMiddleInnerDeepDeeper)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "kebab_outer.middle.inner.deep.deeper", []byte(flagKebabOuterMiddleInnerDeepDeeper))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --kebab-outer.middle.inner.deep.deeper", JSON: doc})
 			}
 			if cmd.Flags().Changed("kebab-outer.middle.inner.deep.deeper.leaf") {
-				if overlay, err = sjson.SetBytes(overlay, "kebab_outer.middle.inner.deep.deeper.leaf", flagKebabOuterMiddleInnerDeepDeeperLeaf); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "kebab_outer.middle.inner.deep.deeper.leaf", flagKebabOuterMiddleInnerDeepDeeperLeaf)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --kebab-outer.middle.inner.deep.deeper.leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("kebab-outer.middle.inner.deep.deeper.deepest") {
+				if !json.Valid([]byte(flagKebabOuterMiddleInnerDeepDeeperDeepest)) {
+					return fmt.Errorf("flag --kebab-outer.middle.inner.deep.deeper.deepest: %q is not valid JSON", flagKebabOuterMiddleInnerDeepDeeperDeepest)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "kebab_outer.middle.inner.deep.deeper.deepest", []byte(flagKebabOuterMiddleInnerDeepDeeperDeepest))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --kebab-outer.middle.inner.deep.deeper.deepest", JSON: doc})
 			}
 			if cmd.Flags().Changed("timestamp") {
-				if overlay, err = sjson.SetBytes(overlay, "timestamp", flagTimestamp); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "timestamp", flagTimestamp)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --timestamp", JSON: doc})
 			}
 			if cmd.Flags().Changed("duration") {
-				if overlay, err = sjson.SetBytes(overlay, "duration", flagDuration); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "duration", flagDuration)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --duration", JSON: doc})
 			}
 			if cmd.Flags().Changed("field-mask") {
-				if overlay, err = sjson.SetBytes(overlay, "field_mask", flagFieldMask); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "field_mask", flagFieldMask)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --field-mask", JSON: doc})
+			}
+			if cmd.Flags().Changed("recursive") {
+				if !json.Valid([]byte(flagRecursive)) {
+					return fmt.Errorf("flag --recursive: %q is not valid JSON", flagRecursive)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "recursive", []byte(flagRecursive))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --recursive", JSON: doc})
 			}
 			if cmd.Flags().Changed("recursive.name") {
-				if overlay, err = sjson.SetBytes(overlay, "recursive.name", flagRecursiveName); err != nil {
+				doc, err := sjson.SetBytes([]byte("{}"), "recursive.name", flagRecursiveName)
+				if err != nil {
 					return err
 				}
+				frags = append(frags, Fragment{Source: "flag --recursive.name", JSON: doc})
+			}
+			if cmd.Flags().Changed("recursive.next") {
+				if !json.Valid([]byte(flagRecursiveNext)) {
+					return fmt.Errorf("flag --recursive.next: %q is not valid JSON", flagRecursiveNext)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "recursive.next", []byte(flagRecursiveNext))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --recursive.next", JSON: doc})
+			}
+			if cmd.Flags().Changed("odd") {
+				if !json.Valid([]byte(flagOdd)) {
+					return fmt.Errorf("flag --odd: %q is not valid JSON", flagOdd)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "odd", []byte(flagOdd))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --odd", JSON: doc})
+			}
+			if cmd.Flags().Changed("odd.even") {
+				if !json.Valid([]byte(flagOddEven)) {
+					return fmt.Errorf("flag --odd.even: %q is not valid JSON", flagOddEven)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "odd.even", []byte(flagOddEven))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --odd.even", JSON: doc})
+			}
+			if cmd.Flags().Changed("odd.even.odd") {
+				if !json.Valid([]byte(flagOddEvenOdd)) {
+					return fmt.Errorf("flag --odd.even.odd: %q is not valid JSON", flagOddEvenOdd)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "odd.even.odd", []byte(flagOddEvenOdd))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --odd.even.odd", JSON: doc})
 			}
 			req := &MessagesRequest{}
-			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+			if err := BuildRequest(req, frags); err != nil {
 				return err
 			}
 			resp, err := client.Messages(cmd.Context(), req)
@@ -300,22 +545,39 @@ func newFieldsServiceMessagesCommand(client FieldsServiceClient) *cobra.Command 
 			return err
 		},
 	}
+	cmd.Flags().StringVar(&flagOuter, "outer", "", "")
 	cmd.Flags().StringVar(&flagOuterStringLeaf, "outer.string-leaf", "", "")
 	cmd.Flags().Int64Var(&flagOuterInt64Leaf, "outer.int64-leaf", int64(0), "")
+	cmd.Flags().StringVar(&flagOuterMiddle, "outer.middle", "", "")
 	cmd.Flags().StringVar(&flagOuterMiddleLeaf, "outer.middle.leaf", "", "")
+	cmd.Flags().StringVar(&flagOuterMiddleInner, "outer.middle.inner", "", "")
 	cmd.Flags().StringVar(&flagOuterMiddleInnerLeaf, "outer.middle.inner.leaf", "", "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerDeep, "outer.middle.inner.deep", "", "")
 	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepLeaf, "outer.middle.inner.deep.leaf", "", "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepDeeper, "outer.middle.inner.deep.deeper", "", "")
 	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepDeeperLeaf, "outer.middle.inner.deep.deeper.leaf", "", "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepDeeperDeepest, "outer.middle.inner.deep.deeper.deepest", "", "")
+	cmd.Flags().StringVar(&flagKebabOuter, "kebab-outer", "", "")
 	cmd.Flags().StringVar(&flagKebabOuterStringLeaf, "kebab-outer.string-leaf", "", "")
 	cmd.Flags().Int64Var(&flagKebabOuterInt64Leaf, "kebab-outer.int64-leaf", int64(0), "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddle, "kebab-outer.middle", "", "")
 	cmd.Flags().StringVar(&flagKebabOuterMiddleLeaf, "kebab-outer.middle.leaf", "", "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleInner, "kebab-outer.middle.inner", "", "")
 	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerLeaf, "kebab-outer.middle.inner.leaf", "", "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeep, "kebab-outer.middle.inner.deep", "", "")
 	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeepLeaf, "kebab-outer.middle.inner.deep.leaf", "", "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeepDeeper, "kebab-outer.middle.inner.deep.deeper", "", "")
 	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeepDeeperLeaf, "kebab-outer.middle.inner.deep.deeper.leaf", "", "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeepDeeperDeepest, "kebab-outer.middle.inner.deep.deeper.deepest", "", "")
 	cmd.Flags().StringVar(&flagTimestamp, "timestamp", "", "")
 	cmd.Flags().StringVar(&flagDuration, "duration", "", "")
 	cmd.Flags().StringVar(&flagFieldMask, "field-mask", "", "")
+	cmd.Flags().StringVar(&flagRecursive, "recursive", "", "")
 	cmd.Flags().StringVar(&flagRecursiveName, "recursive.name", "", "")
+	cmd.Flags().StringVar(&flagRecursiveNext, "recursive.next", "", "")
+	cmd.Flags().StringVar(&flagOdd, "odd", "", "")
+	cmd.Flags().StringVar(&flagOddEven, "odd.even", "", "")
+	cmd.Flags().StringVar(&flagOddEvenOdd, "odd.even.odd", "", "")
 	return cmd
 }
 

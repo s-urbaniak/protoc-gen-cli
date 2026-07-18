@@ -39,8 +39,10 @@ type Command struct {
 	LongHelp  string   `json:"long_help,omitempty"`
 	Input     *Request `json:"input,omitempty"`
 	// Output is the response message's full proto name.
-	Output string  `json:"output,omitempty"`
-	Flags  []*Flag `json:"flags,omitempty"`
+	Output string `json:"output,omitempty"`
+	// Flags is ordered: a message field's own flag immediately precedes
+	// the flags derived from its fields.
+	Flags []*Flag `json:"flags,omitempty"`
 }
 
 // A Request represents an RPC's request message and the bindings needed to construct it.
@@ -69,4 +71,5 @@ const (
 	BindInt    Bind = "int"
 	BindUint   Bind = "uint"
 	BindFloat  Bind = "float"
+	BindJSON   Bind = "json" // a message field as one JSON document
 )

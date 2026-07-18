@@ -47,6 +47,11 @@
           "output": "bookstore.v1.Shelf",
           "flags": [
             {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "json"
+            },
+            {
               "proto_path": "shelf.id",
               "name": "shelf.id",
               "bind": "int"
@@ -149,6 +154,11 @@
               "bind": "int"
             },
             {
+              "proto_path": "book",
+              "name": "book",
+              "bind": "json"
+            },
+            {
               "proto_path": "book.id",
               "name": "book.id",
               "bind": "int"
@@ -245,9 +255,19 @@
           "output": "bookstore.v1.Auction",
           "flags": [
             {
+              "proto_path": "lot",
+              "name": "lot",
+              "bind": "json"
+            },
+            {
               "proto_path": "lot.id",
               "name": "lot.id",
               "bind": "int"
+            },
+            {
+              "proto_path": "lot.book",
+              "name": "lot.book",
+              "bind": "json"
             },
             {
               "proto_path": "lot.book.id",
@@ -270,9 +290,19 @@
               "bind": "float"
             },
             {
+              "proto_path": "lot.consignor",
+              "name": "lot.consignor",
+              "bind": "json"
+            },
+            {
               "proto_path": "lot.consignor.name",
               "name": "lot.consignor.name",
               "bind": "string"
+            },
+            {
+              "proto_path": "lot.consignor.address",
+              "name": "lot.consignor.address",
+              "bind": "json"
             },
             {
               "proto_path": "starts_at",

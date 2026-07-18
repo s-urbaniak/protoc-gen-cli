@@ -23,9 +23,18 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 			path := protoPrefix + string(fd.Name())
 			name := cliPrefix + strcase.KebabCase(string(fd.Name()))
 
-			bind, ok := scalarBinds[fd.Kind()]
-			if fd.Kind() == protoreflect.MessageKind {
-				bind, ok = messageBinds[fd.Message().FullName()]
+			var bind ir.Bind
+			var ok bool
+			switch fd.Kind() {
+			case protoreflect.MessageKind:
+				// protojson gives every google.protobuf message a special
+				// JSON form; only a messageBinds row carries one in a flag.
+				if bind, ok = messageBinds[fd.Message().FullName()]; !ok &&
+					!isWellKnown(fd.Message()) {
+					bind, ok = ir.BindJSON, true
+				}
+			default:
+				bind, ok = scalarBinds[fd.Kind()]
 			}
 
 			switch {
@@ -39,16 +48,13 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 				))
 			case ok:
 				flags = append(flags, &ir.Flag{ProtoPath: path, Name: name, Bind: bind})
-			case fd.Kind() != protoreflect.MessageKind:
-			case isWellKnown(fd.Message()):
-				// protojson gives every google.protobuf message a special
-				// JSON form; only a messageBinds row carries one in a flag.
-			case slices.Contains(ancestors, fd.Message().FullName()):
 				// A type already being expanded: descending again would only
 				// repeat its flags until the budget ran out.
-			case budget > 0:
-				walk(fd.Message(), path+".", name+".", budget-1,
-					append(ancestors, fd.Message().FullName()))
+				if bind == ir.BindJSON && budget > 0 &&
+					!slices.Contains(ancestors, fd.Message().FullName()) {
+					walk(fd.Message(), path+".", name+".", budget-1,
+						append(ancestors, fd.Message().FullName()))
+				}
 			}
 		}
 	}
