@@ -5,3 +5,35 @@ The dot is the proto package's ir.Model.
 // source: {{ .ProtoFile }}
 
 package {{ .FileOptions.GoPackageName }}
+
+import (
+	"errors"
+
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
+)
+
+{{ range $svc := .Services }}
+// New{{ $svc.ProtoName }}Command returns the {{ $svc.ProtoName }} command with one subcommand per RPC.
+func New{{ $svc.ProtoName }}Command(conn grpc.ClientConnInterface) *cobra.Command {
+	client := New{{ goClientType $svc }}(conn)
+	cmd := &cobra.Command{
+		Use: {{ printf "%q" $svc.Name }},
+	}
+{{- range $svc.Commands }}
+	cmd.AddCommand(New{{ goRPCName $svc . }}Command(client))
+{{- end }}
+	return cmd
+}
+{{ range $svc.Commands }}{{ $sym := goRPCName $svc . }}
+// New{{ $sym }}Command returns the cobra subcommand for {{ $svc.ProtoName }}.{{ .ProtoName }}.
+func New{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
+	return &cobra.Command{
+		Use:  {{ printf "%q" .Name }},
+		Args: cobra.NoArgs,
+		RunE: func(*cobra.Command, []string) error {
+			return errors.New("unimplemented")
+		},
+	}
+}
+{{ end }}{{ end }}

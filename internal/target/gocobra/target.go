@@ -48,7 +48,7 @@ func (t *Target) Generate(models []*ir.Model, _ target.Options) ([]target.File, 
 		)
 	}
 
-	rendered, err := target.RenderTemplate(templateFS, "template.go.tmpl", nil, model)
+	rendered, err := target.RenderTemplate(templateFS, "template.go.tmpl", funcs, model)
 	if err != nil {
 		return nil, fmt.Errorf("gocobra: %w", err)
 	}

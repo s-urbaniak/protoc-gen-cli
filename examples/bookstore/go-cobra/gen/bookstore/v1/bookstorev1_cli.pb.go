@@ -2,3 +2,115 @@
 // source: bookstore/v1/bookstore.proto
 
 package bookstorev1
+
+import (
+	"errors"
+
+	"github.com/spf13/cobra"
+	"google.golang.org/grpc"
+)
+
+// NewBookstoreServiceCommand returns the BookstoreService command with one subcommand per RPC.
+func NewBookstoreServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
+	client := NewBookstoreServiceClient(conn)
+	cmd := &cobra.Command{
+		Use: "bookstore",
+	}
+	cmd.AddCommand(NewBookstoreServiceListShelvesCommand(client))
+	cmd.AddCommand(NewBookstoreServiceCreateShelfCommand(client))
+	cmd.AddCommand(NewBookstoreServiceGetShelfCommand(client))
+	cmd.AddCommand(NewBookstoreServiceDeleteShelfCommand(client))
+	cmd.AddCommand(NewBookstoreServiceListBooksCommand(client))
+	cmd.AddCommand(NewBookstoreServiceCreateBookCommand(client))
+	cmd.AddCommand(NewBookstoreServiceGetBookCommand(client))
+	cmd.AddCommand(NewBookstoreServiceDeleteBookCommand(client))
+	return cmd
+}
+
+// NewBookstoreServiceListShelvesCommand returns the cobra subcommand for BookstoreService.ListShelves.
+func NewBookstoreServiceListShelvesCommand(client BookstoreServiceClient) *cobra.Command {
+	return &cobra.Command{
+		Use:  "list-shelves",
+		Args: cobra.NoArgs,
+		RunE: func(*cobra.Command, []string) error {
+			return errors.New("unimplemented")
+		},
+	}
+}
+
+// NewBookstoreServiceCreateShelfCommand returns the cobra subcommand for BookstoreService.CreateShelf.
+func NewBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra.Command {
+	return &cobra.Command{
+		Use:  "create-shelf",
+		Args: cobra.NoArgs,
+		RunE: func(*cobra.Command, []string) error {
+			return errors.New("unimplemented")
+		},
+	}
+}
+
+// NewBookstoreServiceGetShelfCommand returns the cobra subcommand for BookstoreService.GetShelf.
+func NewBookstoreServiceGetShelfCommand(client BookstoreServiceClient) *cobra.Command {
+	return &cobra.Command{
+		Use:  "get-shelf",
+		Args: cobra.NoArgs,
+		RunE: func(*cobra.Command, []string) error {
+			return errors.New("unimplemented")
+		},
+	}
+}
+
+// NewBookstoreServiceDeleteShelfCommand returns the cobra subcommand for BookstoreService.DeleteShelf.
+func NewBookstoreServiceDeleteShelfCommand(client BookstoreServiceClient) *cobra.Command {
+	return &cobra.Command{
+		Use:  "delete-shelf",
+		Args: cobra.NoArgs,
+		RunE: func(*cobra.Command, []string) error {
+			return errors.New("unimplemented")
+		},
+	}
+}
+
+// NewBookstoreServiceListBooksCommand returns the cobra subcommand for BookstoreService.ListBooks.
+func NewBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.Command {
+	return &cobra.Command{
+		Use:  "list-books",
+		Args: cobra.NoArgs,
+		RunE: func(*cobra.Command, []string) error {
+			return errors.New("unimplemented")
+		},
+	}
+}
+
+// NewBookstoreServiceCreateBookCommand returns the cobra subcommand for BookstoreService.CreateBook.
+func NewBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.Command {
+	return &cobra.Command{
+		Use:  "create-book",
+		Args: cobra.NoArgs,
+		RunE: func(*cobra.Command, []string) error {
+			return errors.New("unimplemented")
+		},
+	}
+}
+
+// NewBookstoreServiceGetBookCommand returns the cobra subcommand for BookstoreService.GetBook.
+func NewBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Command {
+	return &cobra.Command{
+		Use:  "get-book",
+		Args: cobra.NoArgs,
+		RunE: func(*cobra.Command, []string) error {
+			return errors.New("unimplemented")
+		},
+	}
+}
+
+// NewBookstoreServiceDeleteBookCommand returns the cobra subcommand for BookstoreService.DeleteBook.
+func NewBookstoreServiceDeleteBookCommand(client BookstoreServiceClient) *cobra.Command {
+	return &cobra.Command{
+		Use:  "delete-book",
+		Args: cobra.NoArgs,
+		RunE: func(*cobra.Command, []string) error {
+			return errors.New("unimplemented")
+		},
+	}
+}
