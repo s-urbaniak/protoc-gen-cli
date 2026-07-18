@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// buildFlags flattens md into one command's flags.
+// buildFlags derives a command's flags from its request message's fields.
 func buildFlags(md protoreflect.MessageDescriptor) []*ir.Flag {
 	var flags []*ir.Flag
 	fields := md.Fields()
@@ -30,7 +30,7 @@ func buildFlags(md protoreflect.MessageDescriptor) []*ir.Flag {
 	return flags
 }
 
-// scalarLeaves maps every proto scalar kind to its JSON Bind.
+// scalarBinds maps each proto scalar kind to the Bind its flag parses into.
 var scalarBinds = map[protoreflect.Kind]ir.Bind{
 	protoreflect.BoolKind:     ir.BindBool,
 	protoreflect.StringKind:   ir.BindString,

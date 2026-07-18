@@ -1,0 +1,31 @@
+package target
+
+import (
+	"bytes"
+	"fmt"
+	"io/fs"
+	"text/template"
+
+	"github.com/braveokafor/proto-to-cli/internal/ir"
+)
+
+// RenderTemplate renders the template file name from templateFS against
+// model; funcs may be nil.
+func RenderTemplate(
+	templateFS fs.FS,
+	name string,
+	funcs template.FuncMap,
+	model *ir.Model,
+) ([]byte, error) {
+	t, err := template.New(name).Funcs(funcs).ParseFS(templateFS, name)
+	if err != nil {
+		return nil, fmt.Errorf("parse %s: %w", name, err)
+	}
+
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, model); err != nil {
+		return nil, fmt.Errorf("render %s: %w", name, err)
+	}
+
+	return buf.Bytes(), nil
+}

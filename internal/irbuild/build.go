@@ -12,12 +12,12 @@ import (
 
 // Options configures the IR builder.
 type Options struct {
-	PluginVersion string
-	// Files indexes every file in the invocation by path.
+	PluginVersion string // "" means "dev"
+	// Files, keyed by proto path, locates the file declaring a command's request message.
 	Files map[string]*protogen.File
 }
 
-// Build produces an *ir.Model for a proto file.
+// Build produces the ir.Model for one proto file.
 func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 	if opts.PluginVersion == "" {
 		opts.PluginVersion = "dev"
