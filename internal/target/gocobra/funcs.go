@@ -29,17 +29,17 @@ func funcMap(model *ir.Model) template.FuncMap {
 		// One aliased import per foreign request-type package, sorted by
 		// path. The alias is protogen's package name for the defining file.
 		"requestImports": func() []goImport {
-			names := map[string]string{}
+			aliases := map[string]string{}
 			for _, svc := range model.Services {
 				for _, cmd := range svc.Commands {
 					if p := cmd.Input.GoImportPath; p != model.FileOptions.GoImportPath {
-						names[p] = cmd.Input.GoPackageName
+						aliases[p] = cmd.Input.GoPackageName
 					}
 				}
 			}
-			out := make([]goImport, 0, len(names))
-			for _, p := range slices.Sorted(maps.Keys(names)) {
-				out = append(out, goImport{Alias: names[p], Path: p})
+			out := make([]goImport, 0, len(aliases))
+			for _, p := range slices.Sorted(maps.Keys(aliases)) {
+				out = append(out, goImport{Alias: aliases[p], Path: p})
 			}
 			return out
 		},

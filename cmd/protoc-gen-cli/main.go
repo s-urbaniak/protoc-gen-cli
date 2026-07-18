@@ -66,13 +66,13 @@ func main() {
 // run builds each generating file's IR and hands the models, grouped by
 // proto package, to the selected target.
 func run(plug *protogen.Plugin, cfg *Config) error {
-	names := slices.Sorted(maps.Keys(cfg.Targets))
+	targetNames := slices.Sorted(maps.Keys(cfg.Targets))
 	if cfg.Target == "" {
-		return fmt.Errorf("opt=target=<name> is required (available: %v)", names)
+		return fmt.Errorf("opt=target=<name> is required (available: %v)", targetNames)
 	}
 	tgt := cfg.Targets[cfg.Target]
 	if tgt == nil {
-		return fmt.Errorf("unknown target %q (available: %v)", cfg.Target, names)
+		return fmt.Errorf("unknown target %q (available: %v)", cfg.Target, targetNames)
 	}
 
 	plug.SupportedEditionsMinimum = descriptorpb.Edition_EDITION_PROTO2

@@ -41,10 +41,10 @@ func validateCommand(svc *Service, cmd *Command) []error {
 	}
 
 	// The command's flag namespace. A taken name maps to the proto path that claimed it.
-	names := map[string]string{}
+	flagNames := map[string]string{}
 
 	for _, f := range cmd.Flags {
-		prior, taken := names[f.Name]
+		prior, taken := flagNames[f.Name]
 
 		switch {
 		case !validName(f.Name):
@@ -59,7 +59,7 @@ func validateCommand(svc *Service, cmd *Command) []error {
 				"rpc %s: fields %q and %q both derive the flag --%s; rename one of the fields",
 				name, prior, f.ProtoPath, f.Name))
 		default:
-			names[f.Name] = f.ProtoPath
+			flagNames[f.Name] = f.ProtoPath
 		}
 	}
 

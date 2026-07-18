@@ -6,12 +6,10 @@ package bookstorev1
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"maps"
 	"os"
-	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -42,12 +40,12 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 
 // NewBookstoreServiceListShelvesCommand returns the cobra subcommand for BookstoreService.ListShelves.
 func NewBookstoreServiceListShelvesCommand(client BookstoreServiceClient) *cobra.Command {
-	var files []string
+	var files, inputs []string
 	cmd := &cobra.Command{
 		Use:  "list-shelves",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			frags, err := LoadFiles(files, cmd.InOrStdin())
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}
@@ -69,19 +67,23 @@ func NewBookstoreServiceListShelvesCommand(client BookstoreServiceClient) *cobra
 		},
 	}
 	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
-			"Repeatable; files merge in argument order, flags apply last.")
+		"Request body from a file (JSON, YAML, or any registered format),\n"+
+			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
+			"merge in that order.")
+	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
+		"Request body inline (JSON, YAML, or any registered format).\n"+
+			"Repeatable; merges after -f files and before flags.")
 	return cmd
 }
 
 // NewBookstoreServiceCreateShelfCommand returns the cobra subcommand for BookstoreService.CreateShelf.
 func NewBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra.Command {
-	var files []string
+	var files, inputs []string
 	cmd := &cobra.Command{
 		Use:  "create-shelf",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			frags, err := LoadFiles(files, cmd.InOrStdin())
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}
@@ -103,20 +105,24 @@ func NewBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra
 		},
 	}
 	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
-			"Repeatable; files merge in argument order, flags apply last.")
+		"Request body from a file (JSON, YAML, or any registered format),\n"+
+			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
+			"merge in that order.")
+	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
+		"Request body inline (JSON, YAML, or any registered format).\n"+
+			"Repeatable; merges after -f files and before flags.")
 	return cmd
 }
 
 // NewBookstoreServiceGetShelfCommand returns the cobra subcommand for BookstoreService.GetShelf.
 func NewBookstoreServiceGetShelfCommand(client BookstoreServiceClient) *cobra.Command {
-	var files []string
+	var files, inputs []string
 	var flagShelf int64
 	cmd := &cobra.Command{
 		Use:  "get-shelf",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			frags, err := LoadFiles(files, cmd.InOrStdin())
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}
@@ -143,21 +149,25 @@ func NewBookstoreServiceGetShelfCommand(client BookstoreServiceClient) *cobra.Co
 		},
 	}
 	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
-			"Repeatable; files merge in argument order, flags apply last.")
+		"Request body from a file (JSON, YAML, or any registered format),\n"+
+			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
+			"merge in that order.")
+	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
+		"Request body inline (JSON, YAML, or any registered format).\n"+
+			"Repeatable; merges after -f files and before flags.")
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
 
 // NewBookstoreServiceDeleteShelfCommand returns the cobra subcommand for BookstoreService.DeleteShelf.
 func NewBookstoreServiceDeleteShelfCommand(client BookstoreServiceClient) *cobra.Command {
-	var files []string
+	var files, inputs []string
 	var flagShelf int64
 	cmd := &cobra.Command{
 		Use:  "delete-shelf",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			frags, err := LoadFiles(files, cmd.InOrStdin())
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}
@@ -184,21 +194,25 @@ func NewBookstoreServiceDeleteShelfCommand(client BookstoreServiceClient) *cobra
 		},
 	}
 	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
-			"Repeatable; files merge in argument order, flags apply last.")
+		"Request body from a file (JSON, YAML, or any registered format),\n"+
+			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
+			"merge in that order.")
+	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
+		"Request body inline (JSON, YAML, or any registered format).\n"+
+			"Repeatable; merges after -f files and before flags.")
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
 
 // NewBookstoreServiceListBooksCommand returns the cobra subcommand for BookstoreService.ListBooks.
 func NewBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.Command {
-	var files []string
+	var files, inputs []string
 	var flagShelf int64
 	cmd := &cobra.Command{
 		Use:  "list-books",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			frags, err := LoadFiles(files, cmd.InOrStdin())
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}
@@ -225,21 +239,25 @@ func NewBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.C
 		},
 	}
 	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
-			"Repeatable; files merge in argument order, flags apply last.")
+		"Request body from a file (JSON, YAML, or any registered format),\n"+
+			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
+			"merge in that order.")
+	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
+		"Request body inline (JSON, YAML, or any registered format).\n"+
+			"Repeatable; merges after -f files and before flags.")
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
 
 // NewBookstoreServiceCreateBookCommand returns the cobra subcommand for BookstoreService.CreateBook.
 func NewBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.Command {
-	var files []string
+	var files, inputs []string
 	var flagShelf int64
 	cmd := &cobra.Command{
 		Use:  "create-book",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			frags, err := LoadFiles(files, cmd.InOrStdin())
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}
@@ -266,22 +284,26 @@ func NewBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.
 		},
 	}
 	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
-			"Repeatable; files merge in argument order, flags apply last.")
+		"Request body from a file (JSON, YAML, or any registered format),\n"+
+			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
+			"merge in that order.")
+	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
+		"Request body inline (JSON, YAML, or any registered format).\n"+
+			"Repeatable; merges after -f files and before flags.")
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
 
 // NewBookstoreServiceGetBookCommand returns the cobra subcommand for BookstoreService.GetBook.
 func NewBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Command {
-	var files []string
+	var files, inputs []string
 	var flagShelf int64
 	var flagBook int64
 	cmd := &cobra.Command{
 		Use:  "get-book",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			frags, err := LoadFiles(files, cmd.InOrStdin())
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}
@@ -313,8 +335,12 @@ func NewBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Com
 		},
 	}
 	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
-			"Repeatable; files merge in argument order, flags apply last.")
+		"Request body from a file (JSON, YAML, or any registered format),\n"+
+			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
+			"merge in that order.")
+	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
+		"Request body inline (JSON, YAML, or any registered format).\n"+
+			"Repeatable; merges after -f files and before flags.")
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	cmd.Flags().Int64Var(&flagBook, "book", int64(0), "")
 	return cmd
@@ -322,14 +348,14 @@ func NewBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Com
 
 // NewBookstoreServiceDeleteBookCommand returns the cobra subcommand for BookstoreService.DeleteBook.
 func NewBookstoreServiceDeleteBookCommand(client BookstoreServiceClient) *cobra.Command {
-	var files []string
+	var files, inputs []string
 	var flagShelf int64
 	var flagBook int64
 	cmd := &cobra.Command{
 		Use:  "delete-book",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			frags, err := LoadFiles(files, cmd.InOrStdin())
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}
@@ -361,8 +387,12 @@ func NewBookstoreServiceDeleteBookCommand(client BookstoreServiceClient) *cobra.
 		},
 	}
 	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
-			"Repeatable; files merge in argument order, flags apply last.")
+		"Request body from a file (JSON, YAML, or any registered format),\n"+
+			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
+			"merge in that order.")
+	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
+		"Request body inline (JSON, YAML, or any registered format).\n"+
+			"Repeatable; merges after -f files and before flags.")
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	cmd.Flags().Int64Var(&flagBook, "book", int64(0), "")
 	return cmd
@@ -381,12 +411,12 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 
 // NewAuctionsServiceCreateAuctionCommand returns the cobra subcommand for AuctionsService.CreateAuction.
 func NewAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra.Command {
-	var files []string
+	var files, inputs []string
 	cmd := &cobra.Command{
 		Use:  "create-auction",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			frags, err := LoadFiles(files, cmd.InOrStdin())
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}
@@ -408,19 +438,23 @@ func NewAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 		},
 	}
 	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
-			"Repeatable; files merge in argument order, flags apply last.")
+		"Request body from a file (JSON, YAML, or any registered format),\n"+
+			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
+			"merge in that order.")
+	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
+		"Request body inline (JSON, YAML, or any registered format).\n"+
+			"Repeatable; merges after -f files and before flags.")
 	return cmd
 }
 
 // NewAuctionsServiceListAuctionsCommand returns the cobra subcommand for AuctionsService.ListAuctions.
 func NewAuctionsServiceListAuctionsCommand(client AuctionsServiceClient) *cobra.Command {
-	var files []string
+	var files, inputs []string
 	cmd := &cobra.Command{
 		Use:  "list-auctions",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			frags, err := LoadFiles(files, cmd.InOrStdin())
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}
@@ -442,28 +476,48 @@ func NewAuctionsServiceListAuctionsCommand(client AuctionsServiceClient) *cobra.
 		},
 	}
 	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
-		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
-			"Repeatable; files merge in argument order, flags apply last.")
+		"Request body from a file (JSON, YAML, or any registered format),\n"+
+			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
+			"merge in that order.")
+	cmd.Flags().StringArrayVarP(&inputs, "input", "i", nil,
+		"Request body inline (JSON, YAML, or any registered format).\n"+
+			"Repeatable; merges after -f files and before flags.")
 	return cmd
 }
 
 // ---- Request assembly ----
 
-// inputFormats maps -f file extensions to decoders producing JSON;
-// RegisterInputFormat adds more.
-var inputFormats = map[string]func([]byte) ([]byte, error){
-	".json": func(body []byte) ([]byte, error) { return body, nil },
-	".yaml": yaml.YAMLToJSON,
-	".yml":  yaml.YAMLToJSON,
+// An InputFormat parses one request-document encoding to JSON.
+type InputFormat struct {
+	Name  string
+	Parse func([]byte) ([]byte, error)
 }
 
-// RegisterInputFormat makes -f accept ext (".toml") by decoding matching files
-// to JSON. Register before Execute.
-func RegisterInputFormat(ext string, decode func([]byte) ([]byte, error)) {
-	if !strings.HasPrefix(ext, ".") || decode == nil {
-		panic(`RegisterInputFormat: need a ".ext" extension and a non-nil decoder`)
+// inputFormats is the content-detection order: the first format whose parse
+// yields a JSON object claims the input.
+var inputFormats = []InputFormat{
+	{Name: "json", Parse: func(body []byte) ([]byte, error) {
+		if !json.Valid(body) {
+			return nil, errors.New("not JSON")
+		}
+		return body, nil
+	}},
+	{Name: "yaml", Parse: yaml.YAMLToJSON},
+}
+
+// RegisterInputFormat appends a format to the detection order, or replaces
+// its namesake. Register before Execute.
+func RegisterInputFormat(name string, parse func([]byte) ([]byte, error)) {
+	if name == "" || parse == nil {
+		panic("RegisterInputFormat: need a format name and a non-nil parser")
 	}
-	inputFormats[strings.ToLower(ext)] = decode
+	for i, f := range inputFormats {
+		if f.Name == name {
+			inputFormats[i].Parse = parse
+			return
+		}
+	}
+	inputFormats = append(inputFormats, InputFormat{Name: name, Parse: parse})
 }
 
 // A Fragment is one request document.
@@ -472,42 +526,55 @@ type Fragment struct {
 	JSON   []byte
 }
 
-// LoadFiles returns one fragment per non-empty file; "-" reads in as JSON,
-// labelled "stdin", other names decode by extension. Empty entries and empty
-// files are skipped.
-func LoadFiles(files []string, in io.Reader) ([]Fragment, error) {
+// LoadInputs returns the request fragments for the -f and -i values in merge
+// order: -f documents in argument order ("-" reads stdin), then -i values.
+// Content picks each input's format; empty inputs are skipped.
+func LoadInputs(files, inline []string, stdin io.Reader) ([]Fragment, error) {
 	var out []Fragment
+	add := func(source string, raw []byte) error {
+		if len(bytes.TrimSpace(raw)) == 0 {
+			return nil
+		}
+		for _, f := range inputFormats {
+			body, err := f.Parse(raw)
+			if err == nil && bytes.HasPrefix(bytes.TrimSpace(body), []byte("{")) {
+				out = append(out, Fragment{Source: source, JSON: body})
+				return nil
+			}
+		}
+		formatNames := make([]string, len(inputFormats))
+		for i, f := range inputFormats {
+			formatNames[i] = f.Name
+		}
+		return fmt.Errorf("parse %s: not an object in any input format (%s)",
+			source, strings.Join(formatNames, ", "))
+	}
 	for _, name := range files {
 		name = strings.TrimSpace(name)
-		if name == "" {
-			continue
-		}
-		if name == "-" {
-			body, err := io.ReadAll(in)
+		switch {
+		case name == "":
+		case name == "-":
+			body, err := io.ReadAll(stdin)
 			if err != nil {
 				return nil, fmt.Errorf("read stdin: %w", err)
 			}
-			if len(bytes.TrimSpace(body)) > 0 {
-				out = append(out, Fragment{Source: "stdin", JSON: body})
+			if err := add("stdin", body); err != nil {
+				return nil, err
 			}
-			continue
+		default:
+			body, err := os.ReadFile(name)
+			if err != nil {
+				return nil, fmt.Errorf("read %s: %w", name, err)
+			}
+			if err := add(name, body); err != nil {
+				return nil, err
+			}
 		}
-		decode, ok := inputFormats[strings.ToLower(filepath.Ext(name))]
-		if !ok {
-			return nil, fmt.Errorf("%s: no input format registered for %q; have %s",
-				name, filepath.Ext(name), strings.Join(slices.Sorted(maps.Keys(inputFormats)), ", "))
+	}
+	for _, s := range inline {
+		if err := add("-i", []byte(s)); err != nil {
+			return nil, err
 		}
-		body, err := os.ReadFile(name)
-		if err != nil {
-			return nil, fmt.Errorf("read %s: %w", name, err)
-		}
-		if len(bytes.TrimSpace(body)) == 0 {
-			continue
-		}
-		if body, err = decode(body); err != nil {
-			return nil, fmt.Errorf("parse %s: %w", name, err)
-		}
-		out = append(out, Fragment{Source: name, JSON: body})
 	}
 	return out, nil
 }
