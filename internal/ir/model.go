@@ -23,6 +23,7 @@ type FileOptions struct {
 // A Service is one service block: a command group with one command per RPC.
 type Service struct {
 	ProtoName string     `json:"proto_name,omitempty"`
+	GoName    string     `json:"go_name,omitempty"`
 	Name      string     `json:"name,omitempty"`
 	ShortHelp string     `json:"short_help,omitempty"`
 	LongHelp  string     `json:"long_help,omitempty"`
@@ -32,6 +33,7 @@ type Service struct {
 // A Command is one RPC method rendered as a subcommand.
 type Command struct {
 	ProtoName string   `json:"proto_name,omitempty"`
+	GoName    string   `json:"go_name,omitempty"`
 	Name      string   `json:"name,omitempty"`
 	ShortHelp string   `json:"short_help,omitempty"`
 	LongHelp  string   `json:"long_help,omitempty"`

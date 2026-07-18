@@ -4,10 +4,15 @@
 package bookstorev1
 
 import (
-	"errors"
+	"bytes"
+	"encoding/json"
+	"fmt"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // NewBookstoreServiceCommand returns the BookstoreService command with one subcommand per RPC.
@@ -32,8 +37,17 @@ func NewBookstoreServiceListShelvesCommand(client BookstoreServiceClient) *cobra
 	return &cobra.Command{
 		Use:  "list-shelves",
 		Args: cobra.NoArgs,
-		RunE: func(*cobra.Command, []string) error {
-			return errors.New("unimplemented")
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			resp, err := client.ListShelves(cmd.Context(), &emptypb.Empty{})
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
 		},
 	}
 }
@@ -43,8 +57,17 @@ func NewBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra
 	return &cobra.Command{
 		Use:  "create-shelf",
 		Args: cobra.NoArgs,
-		RunE: func(*cobra.Command, []string) error {
-			return errors.New("unimplemented")
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			resp, err := client.CreateShelf(cmd.Context(), &CreateShelfRequest{})
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
 		},
 	}
 }
@@ -54,8 +77,17 @@ func NewBookstoreServiceGetShelfCommand(client BookstoreServiceClient) *cobra.Co
 	return &cobra.Command{
 		Use:  "get-shelf",
 		Args: cobra.NoArgs,
-		RunE: func(*cobra.Command, []string) error {
-			return errors.New("unimplemented")
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			resp, err := client.GetShelf(cmd.Context(), &GetShelfRequest{})
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
 		},
 	}
 }
@@ -65,8 +97,17 @@ func NewBookstoreServiceDeleteShelfCommand(client BookstoreServiceClient) *cobra
 	return &cobra.Command{
 		Use:  "delete-shelf",
 		Args: cobra.NoArgs,
-		RunE: func(*cobra.Command, []string) error {
-			return errors.New("unimplemented")
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			resp, err := client.DeleteShelf(cmd.Context(), &DeleteShelfRequest{})
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
 		},
 	}
 }
@@ -76,8 +117,17 @@ func NewBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.C
 	return &cobra.Command{
 		Use:  "list-books",
 		Args: cobra.NoArgs,
-		RunE: func(*cobra.Command, []string) error {
-			return errors.New("unimplemented")
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			resp, err := client.ListBooks(cmd.Context(), &ListBooksRequest{})
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
 		},
 	}
 }
@@ -87,8 +137,17 @@ func NewBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.
 	return &cobra.Command{
 		Use:  "create-book",
 		Args: cobra.NoArgs,
-		RunE: func(*cobra.Command, []string) error {
-			return errors.New("unimplemented")
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			resp, err := client.CreateBook(cmd.Context(), &CreateBookRequest{})
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
 		},
 	}
 }
@@ -98,8 +157,17 @@ func NewBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Com
 	return &cobra.Command{
 		Use:  "get-book",
 		Args: cobra.NoArgs,
-		RunE: func(*cobra.Command, []string) error {
-			return errors.New("unimplemented")
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			resp, err := client.GetBook(cmd.Context(), &GetBookRequest{})
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
 		},
 	}
 }
@@ -109,8 +177,31 @@ func NewBookstoreServiceDeleteBookCommand(client BookstoreServiceClient) *cobra.
 	return &cobra.Command{
 		Use:  "delete-book",
 		Args: cobra.NoArgs,
-		RunE: func(*cobra.Command, []string) error {
-			return errors.New("unimplemented")
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			resp, err := client.DeleteBook(cmd.Context(), &DeleteBookRequest{})
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
 		},
 	}
+}
+
+// marshalJSON returns m as compact JSON. json.Compact makes protojson's
+// deliberately unstable spacing reproducible.
+func marshalJSON(m proto.Message) ([]byte, error) {
+	raw, err := protojson.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	var buf bytes.Buffer
+	if err := json.Compact(&buf, raw); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }

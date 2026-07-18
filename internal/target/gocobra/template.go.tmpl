@@ -7,15 +7,22 @@ The dot is the proto package's ir.Model.
 package {{ .FileOptions.GoPackageName }}
 
 import (
-	"errors"
+	"bytes"
+	"encoding/json"
+	"fmt"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+{{- range requestImports }}
+	{{ .Alias }} {{ printf "%q" .Path }}
+{{- end }}
 )
 
 {{ range $svc := .Services }}
-// New{{ $svc.ProtoName }}Command returns the {{ $svc.ProtoName }} command with one subcommand per RPC.
-func New{{ $svc.ProtoName }}Command(conn grpc.ClientConnInterface) *cobra.Command {
+// New{{ $svc.GoName }}Command returns the {{ $svc.ProtoName }} command with one subcommand per RPC.
+func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface) *cobra.Command {
 	client := New{{ goClientType $svc }}(conn)
 	cmd := &cobra.Command{
 		Use: {{ printf "%q" $svc.Name }},
@@ -31,9 +38,31 @@ func New{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
 	return &cobra.Command{
 		Use:  {{ printf "%q" .Name }},
 		Args: cobra.NoArgs,
-		RunE: func(*cobra.Command, []string) error {
-			return errors.New("unimplemented")
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			resp, err := client.{{ .GoName }}(cmd.Context(), &{{ goRequestType . }}{})
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
 		},
 	}
 }
 {{ end }}{{ end }}
+// marshalJSON returns m as compact JSON. json.Compact makes protojson's
+// deliberately unstable spacing reproducible.
+func marshalJSON(m proto.Message) ([]byte, error) {
+	raw, err := protojson.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	var buf bytes.Buffer
+	if err := json.Compact(&buf, raw); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}

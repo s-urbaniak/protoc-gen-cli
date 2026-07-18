@@ -9,12 +9,14 @@
   "services": [
     {
       "proto_name": "BookstoreService",
+      "go_name": "BookstoreService",
       "name": "bookstore",
       "short_help": "A simple Bookstore API.",
       "long_help": "A simple Bookstore API.\n\nThe API manages shelves and books resources. Shelves contain books.",
       "commands": [
         {
           "proto_name": "ListShelves",
+          "go_name": "ListShelves",
           "name": "list-shelves",
           "short_help": "Returns a list of all shelves in the bookstore.",
           "long_help": "Returns a list of all shelves in the bookstore.\n\nA generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:\n\n    service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }",
@@ -30,6 +32,7 @@
         },
         {
           "proto_name": "CreateShelf",
+          "go_name": "CreateShelf",
           "name": "create-shelf",
           "short_help": "Creates a new shelf in the bookstore.",
           "long_help": "Creates a new shelf in the bookstore.\n\nRequest message for CreateShelf method.",
@@ -45,6 +48,7 @@
         },
         {
           "proto_name": "GetShelf",
+          "go_name": "GetShelf",
           "name": "get-shelf",
           "short_help": "Returns a specific bookstore shelf.",
           "long_help": "Returns a specific bookstore shelf.\n\nRequest message for GetShelf method.",
@@ -67,6 +71,7 @@
         },
         {
           "proto_name": "DeleteShelf",
+          "go_name": "DeleteShelf",
           "name": "delete-shelf",
           "short_help": "Deletes a shelf, including all books that are stored on the shelf.",
           "long_help": "Deletes a shelf, including all books that are stored on the shelf.\n\nRequest message for DeleteShelf method.",
@@ -89,6 +94,7 @@
         },
         {
           "proto_name": "ListBooks",
+          "go_name": "ListBooks",
           "name": "list-books",
           "short_help": "Returns a list of books on a shelf.",
           "long_help": "Returns a list of books on a shelf.\n\nRequest message for ListBooks method.",
@@ -111,6 +117,7 @@
         },
         {
           "proto_name": "CreateBook",
+          "go_name": "CreateBook",
           "name": "create-book",
           "short_help": "Creates a new book.",
           "long_help": "Creates a new book.\n\nRequest message for CreateBook method.",
@@ -133,6 +140,7 @@
         },
         {
           "proto_name": "GetBook",
+          "go_name": "GetBook",
           "name": "get-book",
           "short_help": "Returns a specific book.",
           "long_help": "Returns a specific book.\n\nRequest message for GetBook method.",
@@ -160,6 +168,7 @@
         },
         {
           "proto_name": "DeleteBook",
+          "go_name": "DeleteBook",
           "name": "delete-book",
           "short_help": "Deletes a book from a shelf.",
           "long_help": "Deletes a book from a shelf.\n\nRequest message for DeleteBook method.",

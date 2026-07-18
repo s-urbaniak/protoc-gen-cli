@@ -42,6 +42,7 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 
 		service := &ir.Service{
 			ProtoName: string(svc.Desc.Name()),
+			GoName:    svc.GoName,
 			Name:      name,
 			ShortHelp: shortDoc(comment),
 		}
@@ -64,6 +65,7 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 			doc := cleanComment(string(m.Comments.Leading))
 			cmd := &ir.Command{
 				ProtoName: string(m.Desc.Name()),
+				GoName:    m.GoName,
 				Name:      strcase.KebabCase(string(m.Desc.Name())),
 				Input:     request,
 				Output:    string(m.Output.Desc.FullName()),
