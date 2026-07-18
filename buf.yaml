@@ -1,6 +1,7 @@
 version: v2
 modules:
   - path: examples/bookstore/proto
+  - path: examples/kitchen-sink/proto
 lint:
   use:
     - STANDARD

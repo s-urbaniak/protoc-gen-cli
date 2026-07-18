@@ -1,0 +1,107 @@
+{
+  "plugin_version": "dev",
+  "proto_file": "kitchensink/v1/fields.proto",
+  "proto_package": "kitchensink.v1",
+  "file_options": {
+    "go_package_name": "kitchensinkv1",
+    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1"
+  },
+  "services": [
+    {
+      "proto_name": "FieldsService",
+      "go_name": "FieldsService",
+      "name": "fields",
+      "short_help": "FieldsService exercises the flag surface, one RPC per field-shape family.",
+      "long_help": "FieldsService exercises the flag surface, one RPC per field-shape family.\nEvery RPC echoes its request, so the response shows exactly what arrived.",
+      "commands": [
+        {
+          "proto_name": "Scalars",
+          "go_name": "Scalars",
+          "name": "scalars",
+          "short_help": "Scalars carries every scalar width the plugin derives a flag for.",
+          "input": {
+            "full_name": "kitchensink.v1.ScalarsRequest",
+            "proto_file": "kitchensink/v1/fields.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "ScalarsRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.ScalarsRequest",
+          "flags": [
+            {
+              "proto_path": "double_field",
+              "name": "double-field",
+              "bind": "float"
+            },
+            {
+              "proto_path": "float_field",
+              "name": "float-field",
+              "bind": "float"
+            },
+            {
+              "proto_path": "int32_field",
+              "name": "int32-field",
+              "bind": "int"
+            },
+            {
+              "proto_path": "int64_field",
+              "name": "int64-field",
+              "bind": "int"
+            },
+            {
+              "proto_path": "uint32_field",
+              "name": "uint32-field",
+              "bind": "uint"
+            },
+            {
+              "proto_path": "uint64_field",
+              "name": "uint64-field",
+              "bind": "uint"
+            },
+            {
+              "proto_path": "sint32_field",
+              "name": "sint32-field",
+              "bind": "int"
+            },
+            {
+              "proto_path": "sint64_field",
+              "name": "sint64-field",
+              "bind": "int"
+            },
+            {
+              "proto_path": "fixed32_field",
+              "name": "fixed32-field",
+              "bind": "uint"
+            },
+            {
+              "proto_path": "fixed64_field",
+              "name": "fixed64-field",
+              "bind": "uint"
+            },
+            {
+              "proto_path": "sfixed32_field",
+              "name": "sfixed32-field",
+              "bind": "int"
+            },
+            {
+              "proto_path": "sfixed64_field",
+              "name": "sfixed64-field",
+              "bind": "int"
+            },
+            {
+              "proto_path": "bool_field",
+              "name": "bool-field",
+              "bind": "bool"
+            },
+            {
+              "proto_path": "string_field",
+              "name": "string-field",
+              "bind": "string"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

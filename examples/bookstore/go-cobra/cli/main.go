@@ -24,9 +24,10 @@ func main() {
 		Short: "Bookstore CLI",
 	}
 
-	// Flatten Bookstore service onto root; as a group it would stutter ("bookstore bookstore get-book").
-	books := bookstorev1.NewBookstoreServiceCommand(conn)
-	root.AddCommand(books.Commands()...)
+	catalog := bookstorev1.NewBookstoreServiceCommand(conn)
+	// Renamed in code: the generated name "bookstore" would stutter under the root.
+	catalog.Use = "catalog"
+	root.AddCommand(catalog)
 	root.AddCommand(bookstorev1.NewAuctionsServiceCommand(conn))
 	root.AddCommand(bookstorev1.NewInventoryServiceCommand(conn))
 

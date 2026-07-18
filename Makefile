@@ -45,6 +45,7 @@ gen: clean gen-examples ## Regenerate proto code
 .PHONY: gen-examples
 gen-examples: fmt ## Regenerate examples
 	cd examples/bookstore && buf generate
+	cd examples/kitchen-sink && buf generate
 
 .PHONY: verify-examples-regen
 verify-examples-regen: gen ## Fail if regenerating examples changes anything
@@ -69,3 +70,4 @@ upgrade: ## Upgrade dependencies
 clean: ## Delete build artifacts
 	rm -rf .tmp dist
 	rm -rf examples/bookstore/go-cobra/gen
+	rm -rf examples/kitchen-sink/go-cobra/gen

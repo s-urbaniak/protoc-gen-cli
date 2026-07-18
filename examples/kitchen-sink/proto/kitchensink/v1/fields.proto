@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package kitchensink.v1;
+
+option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
+
+// FieldsService exercises the flag surface, one RPC per field-shape family.
+// Every RPC echoes its request, so the response shows exactly what arrived.
+service FieldsService {
+  // Scalars carries every scalar width the plugin derives a flag for.
+  rpc Scalars(ScalarsRequest) returns (ScalarsRequest) {}
+}
+
+message ScalarsRequest {
+  double double_field = 1;
+  float float_field = 2;
+  int32 int32_field = 3;
+  int64 int64_field = 4;
+  uint32 uint32_field = 5;
+  uint64 uint64_field = 6;
+  sint32 sint32_field = 7;
+  sint64 sint64_field = 8;
+  fixed32 fixed32_field = 9;
+  fixed64 fixed64_field = 10;
+  sfixed32 sfixed32_field = 11;
+  sfixed64 sfixed64_field = 12;
+  bool bool_field = 13;
+  string string_field = 14;
+}
