@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"github.com/braveokafor/proto-to-cli/internal/ir"
+	"github.com/stoewer/go-strcase"
 )
 
 // A goImport is one foreign package imported for a request type.
@@ -42,5 +43,37 @@ func funcMap(model *ir.Model) template.FuncMap {
 			}
 			return out
 		},
+
+		// The local variable backing f's flag.
+		"goVarName": func(f *ir.Flag) string {
+			return "flag" + strcase.UpperCamelCase(f.ProtoPath)
+		},
+		"goFlagType":  func(f *ir.Flag) string { return goBindings[f.Bind].GoType },
+		"goPflagFunc": func(f *ir.Flag) string { return goBindings[f.Bind].Singular + "Var" },
+		"goZeroLiteral": func(f *ir.Flag) string {
+			switch t := goBindings[f.Bind].GoType; t {
+			case "string":
+				return `""`
+			case "bool":
+				return "false"
+			default:
+				return t + "(0)"
+			}
+		},
 	}
+}
+
+// A pflagBinding holds the pflag setter stem and Go type for one bind.
+type pflagBinding struct {
+	Singular string
+	GoType   string
+}
+
+// goBindings maps binds to pflag bindings.
+var goBindings = map[ir.Bind]pflagBinding{
+	ir.BindString: {"String", "string"},
+	ir.BindBool:   {"Bool", "bool"},
+	ir.BindInt:    {"Int64", "int64"},
+	ir.BindUint:   {"Uint64", "uint64"},
+	ir.BindFloat:  {"Float64", "float64"},
 }

@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/tidwall/sjson"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -34,11 +35,12 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 
 // NewBookstoreServiceListShelvesCommand returns the cobra subcommand for BookstoreService.ListShelves.
 func NewBookstoreServiceListShelvesCommand(client BookstoreServiceClient) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:  "list-shelves",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			resp, err := client.ListShelves(cmd.Context(), &emptypb.Empty{})
+			req := &emptypb.Empty{}
+			resp, err := client.ListShelves(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -50,15 +52,17 @@ func NewBookstoreServiceListShelvesCommand(client BookstoreServiceClient) *cobra
 			return err
 		},
 	}
+	return cmd
 }
 
 // NewBookstoreServiceCreateShelfCommand returns the cobra subcommand for BookstoreService.CreateShelf.
 func NewBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:  "create-shelf",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			resp, err := client.CreateShelf(cmd.Context(), &CreateShelfRequest{})
+			req := &CreateShelfRequest{}
+			resp, err := client.CreateShelf(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -70,15 +74,28 @@ func NewBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra
 			return err
 		},
 	}
+	return cmd
 }
 
 // NewBookstoreServiceGetShelfCommand returns the cobra subcommand for BookstoreService.GetShelf.
 func NewBookstoreServiceGetShelfCommand(client BookstoreServiceClient) *cobra.Command {
-	return &cobra.Command{
+	var flagShelf int64
+	cmd := &cobra.Command{
 		Use:  "get-shelf",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			resp, err := client.GetShelf(cmd.Context(), &GetShelfRequest{})
+			req := &GetShelfRequest{}
+			doc := []byte("{}")
+			var err error
+			if cmd.Flags().Changed("shelf") {
+				if doc, err = sjson.SetBytes(doc, "shelf", flagShelf); err != nil {
+					return err
+				}
+			}
+			if err := protojson.Unmarshal(doc, req); err != nil {
+				return err
+			}
+			resp, err := client.GetShelf(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -90,15 +107,29 @@ func NewBookstoreServiceGetShelfCommand(client BookstoreServiceClient) *cobra.Co
 			return err
 		},
 	}
+	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
+	return cmd
 }
 
 // NewBookstoreServiceDeleteShelfCommand returns the cobra subcommand for BookstoreService.DeleteShelf.
 func NewBookstoreServiceDeleteShelfCommand(client BookstoreServiceClient) *cobra.Command {
-	return &cobra.Command{
+	var flagShelf int64
+	cmd := &cobra.Command{
 		Use:  "delete-shelf",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			resp, err := client.DeleteShelf(cmd.Context(), &DeleteShelfRequest{})
+			req := &DeleteShelfRequest{}
+			doc := []byte("{}")
+			var err error
+			if cmd.Flags().Changed("shelf") {
+				if doc, err = sjson.SetBytes(doc, "shelf", flagShelf); err != nil {
+					return err
+				}
+			}
+			if err := protojson.Unmarshal(doc, req); err != nil {
+				return err
+			}
+			resp, err := client.DeleteShelf(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -110,15 +141,29 @@ func NewBookstoreServiceDeleteShelfCommand(client BookstoreServiceClient) *cobra
 			return err
 		},
 	}
+	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
+	return cmd
 }
 
 // NewBookstoreServiceListBooksCommand returns the cobra subcommand for BookstoreService.ListBooks.
 func NewBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.Command {
-	return &cobra.Command{
+	var flagShelf int64
+	cmd := &cobra.Command{
 		Use:  "list-books",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			resp, err := client.ListBooks(cmd.Context(), &ListBooksRequest{})
+			req := &ListBooksRequest{}
+			doc := []byte("{}")
+			var err error
+			if cmd.Flags().Changed("shelf") {
+				if doc, err = sjson.SetBytes(doc, "shelf", flagShelf); err != nil {
+					return err
+				}
+			}
+			if err := protojson.Unmarshal(doc, req); err != nil {
+				return err
+			}
+			resp, err := client.ListBooks(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -130,15 +175,29 @@ func NewBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.C
 			return err
 		},
 	}
+	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
+	return cmd
 }
 
 // NewBookstoreServiceCreateBookCommand returns the cobra subcommand for BookstoreService.CreateBook.
 func NewBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.Command {
-	return &cobra.Command{
+	var flagShelf int64
+	cmd := &cobra.Command{
 		Use:  "create-book",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			resp, err := client.CreateBook(cmd.Context(), &CreateBookRequest{})
+			req := &CreateBookRequest{}
+			doc := []byte("{}")
+			var err error
+			if cmd.Flags().Changed("shelf") {
+				if doc, err = sjson.SetBytes(doc, "shelf", flagShelf); err != nil {
+					return err
+				}
+			}
+			if err := protojson.Unmarshal(doc, req); err != nil {
+				return err
+			}
+			resp, err := client.CreateBook(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -150,15 +209,35 @@ func NewBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.
 			return err
 		},
 	}
+	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
+	return cmd
 }
 
 // NewBookstoreServiceGetBookCommand returns the cobra subcommand for BookstoreService.GetBook.
 func NewBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Command {
-	return &cobra.Command{
+	var flagShelf int64
+	var flagBook int64
+	cmd := &cobra.Command{
 		Use:  "get-book",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			resp, err := client.GetBook(cmd.Context(), &GetBookRequest{})
+			req := &GetBookRequest{}
+			doc := []byte("{}")
+			var err error
+			if cmd.Flags().Changed("shelf") {
+				if doc, err = sjson.SetBytes(doc, "shelf", flagShelf); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("book") {
+				if doc, err = sjson.SetBytes(doc, "book", flagBook); err != nil {
+					return err
+				}
+			}
+			if err := protojson.Unmarshal(doc, req); err != nil {
+				return err
+			}
+			resp, err := client.GetBook(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -170,15 +249,36 @@ func NewBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Com
 			return err
 		},
 	}
+	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
+	cmd.Flags().Int64Var(&flagBook, "book", int64(0), "")
+	return cmd
 }
 
 // NewBookstoreServiceDeleteBookCommand returns the cobra subcommand for BookstoreService.DeleteBook.
 func NewBookstoreServiceDeleteBookCommand(client BookstoreServiceClient) *cobra.Command {
-	return &cobra.Command{
+	var flagShelf int64
+	var flagBook int64
+	cmd := &cobra.Command{
 		Use:  "delete-book",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			resp, err := client.DeleteBook(cmd.Context(), &DeleteBookRequest{})
+			req := &DeleteBookRequest{}
+			doc := []byte("{}")
+			var err error
+			if cmd.Flags().Changed("shelf") {
+				if doc, err = sjson.SetBytes(doc, "shelf", flagShelf); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("book") {
+				if doc, err = sjson.SetBytes(doc, "book", flagBook); err != nil {
+					return err
+				}
+			}
+			if err := protojson.Unmarshal(doc, req); err != nil {
+				return err
+			}
+			resp, err := client.DeleteBook(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -190,6 +290,9 @@ func NewBookstoreServiceDeleteBookCommand(client BookstoreServiceClient) *cobra.
 			return err
 		},
 	}
+	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
+	cmd.Flags().Int64Var(&flagBook, "book", int64(0), "")
+	return cmd
 }
 
 // marshalJSON returns m as compact JSON. json.Compact makes protojson's

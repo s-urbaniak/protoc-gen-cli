@@ -12,6 +12,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/tidwall/sjson"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -35,11 +36,29 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface) *cobra.Command {
 {{ range $svc.Commands }}{{ $sym := goRPCName $svc . }}
 // New{{ $sym }}Command returns the cobra subcommand for {{ $svc.ProtoName }}.{{ .ProtoName }}.
 func New{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
-	return &cobra.Command{
+{{- range .Flags }}
+	var {{ goVarName . }} {{ goFlagType . }}
+{{- end }}
+	cmd := &cobra.Command{
 		Use:  {{ printf "%q" .Name }},
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			resp, err := client.{{ .GoName }}(cmd.Context(), &{{ goRequestType . }}{})
+			req := &{{ goRequestType . }}{}
+{{- if .Flags }}
+			doc := []byte("{}")
+			var err error
+{{- range .Flags }}
+			if cmd.Flags().Changed({{ printf "%q" .Name }}) {
+				if doc, err = sjson.SetBytes(doc, {{ printf "%q" .ProtoPath }}, {{ goVarName . }}); err != nil {
+					return err
+				}
+			}
+{{- end }}
+			if err := protojson.Unmarshal(doc, req); err != nil {
+				return err
+			}
+{{- end }}
+			resp, err := client.{{ .GoName }}(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -51,6 +70,10 @@ func New{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
 			return err
 		},
 	}
+{{- range .Flags }}
+	cmd.Flags().{{ goPflagFunc . }}(&{{ goVarName . }}, {{ printf "%q" .Name }}, {{ goZeroLiteral . }}, "")
+{{- end }}
+	return cmd
 }
 {{ end }}{{ end }}
 // marshalJSON returns m as compact JSON. json.Compact makes protojson's
