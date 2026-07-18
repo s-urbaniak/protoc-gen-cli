@@ -44,7 +44,19 @@
             "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.Shelf"
+          "output": "bookstore.v1.Shelf",
+          "flags": [
+            {
+              "proto_path": "shelf.id",
+              "name": "shelf.id",
+              "bind": "int"
+            },
+            {
+              "proto_path": "shelf.theme",
+              "name": "shelf.theme",
+              "bind": "string"
+            }
+          ]
         },
         {
           "proto_name": "GetShelf",
@@ -135,6 +147,21 @@
               "proto_path": "shelf",
               "name": "shelf",
               "bind": "int"
+            },
+            {
+              "proto_path": "book.id",
+              "name": "book.id",
+              "bind": "int"
+            },
+            {
+              "proto_path": "book.author",
+              "name": "book.author",
+              "bind": "string"
+            },
+            {
+              "proto_path": "book.title",
+              "name": "book.title",
+              "bind": "string"
             }
           ]
         },
@@ -215,7 +242,44 @@
             "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.Auction"
+          "output": "bookstore.v1.Auction",
+          "flags": [
+            {
+              "proto_path": "lot.id",
+              "name": "lot.id",
+              "bind": "int"
+            },
+            {
+              "proto_path": "lot.book.id",
+              "name": "lot.book.id",
+              "bind": "int"
+            },
+            {
+              "proto_path": "lot.book.author",
+              "name": "lot.book.author",
+              "bind": "string"
+            },
+            {
+              "proto_path": "lot.book.title",
+              "name": "lot.book.title",
+              "bind": "string"
+            },
+            {
+              "proto_path": "lot.reserve_price",
+              "name": "lot.reserve-price",
+              "bind": "float"
+            },
+            {
+              "proto_path": "lot.consignor.name",
+              "name": "lot.consignor.name",
+              "bind": "string"
+            },
+            {
+              "proto_path": "starts_at",
+              "name": "starts-at",
+              "bind": "string"
+            }
+          ]
         },
         {
           "proto_name": "ListAuctions",

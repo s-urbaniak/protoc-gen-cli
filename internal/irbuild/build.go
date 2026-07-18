@@ -17,6 +17,10 @@ type Options struct {
 	Files map[string]*protogen.File
 	// Warn receives generation warnings.
 	Warn func(string)
+	// RequestExpandDepth is how many message levels down fields still
+	// get flags: a field of a message field derives a dotted flag like
+	// --book.title. 0 stops at the request's own fields.
+	RequestExpandDepth int
 }
 
 // Build produces the ir.Model for one proto file.
@@ -74,7 +78,7 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 				ShortHelp: shortDoc(doc),
 			}
 
-			cmd.Flags = buildFlags(m.Input.Desc, opts.Warn)
+			cmd.Flags = buildFlags(m.Input.Desc, opts)
 
 			reqDoc := cleanComment(string(m.Input.Comments.Leading))
 			if doc != cmd.ShortHelp || reqDoc != "" {

@@ -27,13 +27,14 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "fields",
 	}
-	cmd.AddCommand(NewFieldsServiceScalarsCommand(client))
+	addRequestFlags(cmd.PersistentFlags())
+	cmd.AddCommand(newFieldsServiceScalarsCommand(client))
+	cmd.AddCommand(newFieldsServiceMessagesCommand(client))
 	return cmd
 }
 
-// NewFieldsServiceScalarsCommand returns the cobra subcommand for FieldsService.Scalars.
-func NewFieldsServiceScalarsCommand(client FieldsServiceClient) *cobra.Command {
-	var files, inputs []string
+// newFieldsServiceScalarsCommand returns the cobra subcommand for FieldsService.Scalars.
+func newFieldsServiceScalarsCommand(client FieldsServiceClient) *cobra.Command {
 	var flagDoubleField float64
 	var flagFloatField float64
 	var flagInt32Field int64
@@ -52,6 +53,14 @@ func NewFieldsServiceScalarsCommand(client FieldsServiceClient) *cobra.Command {
 		Use:  "scalars",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
 			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
@@ -143,7 +152,6 @@ func NewFieldsServiceScalarsCommand(client FieldsServiceClient) *cobra.Command {
 			return err
 		},
 	}
-	addRequestFlags(cmd.Flags(), &files, &inputs)
 	cmd.Flags().Float64Var(&flagDoubleField, "double-field", float64(0), "")
 	cmd.Flags().Float64Var(&flagFloatField, "float-field", float64(0), "")
 	cmd.Flags().Int64Var(&flagInt32Field, "int32-field", int64(0), "")
@@ -161,14 +169,164 @@ func NewFieldsServiceScalarsCommand(client FieldsServiceClient) *cobra.Command {
 	return cmd
 }
 
+// newFieldsServiceMessagesCommand returns the cobra subcommand for FieldsService.Messages.
+func newFieldsServiceMessagesCommand(client FieldsServiceClient) *cobra.Command {
+	var flagOuterStringLeaf string
+	var flagOuterInt64Leaf int64
+	var flagOuterMiddleLeaf string
+	var flagOuterMiddleInnerLeaf string
+	var flagOuterMiddleInnerDeepLeaf string
+	var flagOuterMiddleInnerDeepDeeperLeaf string
+	var flagKebabOuterStringLeaf string
+	var flagKebabOuterInt64Leaf int64
+	var flagKebabOuterMiddleLeaf string
+	var flagKebabOuterMiddleInnerLeaf string
+	var flagKebabOuterMiddleInnerDeepLeaf string
+	var flagKebabOuterMiddleInnerDeepDeeperLeaf string
+	var flagTimestamp string
+	var flagDuration string
+	var flagFieldMask string
+	var flagRecursiveName string
+	cmd := &cobra.Command{
+		Use:  "messages",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			overlay := []byte("{}")
+			if cmd.Flags().Changed("outer.string-leaf") {
+				if overlay, err = sjson.SetBytes(overlay, "outer.string_leaf", flagOuterStringLeaf); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("outer.int64-leaf") {
+				if overlay, err = sjson.SetBytes(overlay, "outer.int64_leaf", flagOuterInt64Leaf); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("outer.middle.leaf") {
+				if overlay, err = sjson.SetBytes(overlay, "outer.middle.leaf", flagOuterMiddleLeaf); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("outer.middle.inner.leaf") {
+				if overlay, err = sjson.SetBytes(overlay, "outer.middle.inner.leaf", flagOuterMiddleInnerLeaf); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("outer.middle.inner.deep.leaf") {
+				if overlay, err = sjson.SetBytes(overlay, "outer.middle.inner.deep.leaf", flagOuterMiddleInnerDeepLeaf); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("outer.middle.inner.deep.deeper.leaf") {
+				if overlay, err = sjson.SetBytes(overlay, "outer.middle.inner.deep.deeper.leaf", flagOuterMiddleInnerDeepDeeperLeaf); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("kebab-outer.string-leaf") {
+				if overlay, err = sjson.SetBytes(overlay, "kebab_outer.string_leaf", flagKebabOuterStringLeaf); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("kebab-outer.int64-leaf") {
+				if overlay, err = sjson.SetBytes(overlay, "kebab_outer.int64_leaf", flagKebabOuterInt64Leaf); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("kebab-outer.middle.leaf") {
+				if overlay, err = sjson.SetBytes(overlay, "kebab_outer.middle.leaf", flagKebabOuterMiddleLeaf); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("kebab-outer.middle.inner.leaf") {
+				if overlay, err = sjson.SetBytes(overlay, "kebab_outer.middle.inner.leaf", flagKebabOuterMiddleInnerLeaf); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("kebab-outer.middle.inner.deep.leaf") {
+				if overlay, err = sjson.SetBytes(overlay, "kebab_outer.middle.inner.deep.leaf", flagKebabOuterMiddleInnerDeepLeaf); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("kebab-outer.middle.inner.deep.deeper.leaf") {
+				if overlay, err = sjson.SetBytes(overlay, "kebab_outer.middle.inner.deep.deeper.leaf", flagKebabOuterMiddleInnerDeepDeeperLeaf); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("timestamp") {
+				if overlay, err = sjson.SetBytes(overlay, "timestamp", flagTimestamp); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("duration") {
+				if overlay, err = sjson.SetBytes(overlay, "duration", flagDuration); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("field-mask") {
+				if overlay, err = sjson.SetBytes(overlay, "field_mask", flagFieldMask); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("recursive.name") {
+				if overlay, err = sjson.SetBytes(overlay, "recursive.name", flagRecursiveName); err != nil {
+					return err
+				}
+			}
+			req := &MessagesRequest{}
+			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+				return err
+			}
+			resp, err := client.Messages(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
+		},
+	}
+	cmd.Flags().StringVar(&flagOuterStringLeaf, "outer.string-leaf", "", "")
+	cmd.Flags().Int64Var(&flagOuterInt64Leaf, "outer.int64-leaf", int64(0), "")
+	cmd.Flags().StringVar(&flagOuterMiddleLeaf, "outer.middle.leaf", "", "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerLeaf, "outer.middle.inner.leaf", "", "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepLeaf, "outer.middle.inner.deep.leaf", "", "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepDeeperLeaf, "outer.middle.inner.deep.deeper.leaf", "", "")
+	cmd.Flags().StringVar(&flagKebabOuterStringLeaf, "kebab-outer.string-leaf", "", "")
+	cmd.Flags().Int64Var(&flagKebabOuterInt64Leaf, "kebab-outer.int64-leaf", int64(0), "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleLeaf, "kebab-outer.middle.leaf", "", "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerLeaf, "kebab-outer.middle.inner.leaf", "", "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeepLeaf, "kebab-outer.middle.inner.deep.leaf", "", "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeepDeeperLeaf, "kebab-outer.middle.inner.deep.deeper.leaf", "", "")
+	cmd.Flags().StringVar(&flagTimestamp, "timestamp", "", "")
+	cmd.Flags().StringVar(&flagDuration, "duration", "", "")
+	cmd.Flags().StringVar(&flagFieldMask, "field-mask", "", "")
+	cmd.Flags().StringVar(&flagRecursiveName, "recursive.name", "", "")
+	return cmd
+}
+
 // ---- Request flags ----
 
-func addRequestFlags(fs *pflag.FlagSet, files, inputs *[]string) {
-	fs.StringArrayVarP(files, "filename", "f", nil,
+func addRequestFlags(fs *pflag.FlagSet) {
+	fs.StringArrayP("filename", "f", nil,
 		"Request body from a file (JSON, YAML, or any registered format),\n"+
 			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
 			"merge in that order.")
-	fs.StringArrayVarP(inputs, "input", "i", nil,
+	fs.StringArrayP("input", "i", nil,
 		"Request body inline (JSON, YAML, or any registered format).\n"+
 			"Repeatable; merges after -f files and before flags.")
 }

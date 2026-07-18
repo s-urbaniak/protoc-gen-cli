@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	FieldsService_Scalars_FullMethodName = "/kitchensink.v1.FieldsService/Scalars"
+	FieldsService_Scalars_FullMethodName  = "/kitchensink.v1.FieldsService/Scalars"
+	FieldsService_Messages_FullMethodName = "/kitchensink.v1.FieldsService/Messages"
 )
 
 // FieldsServiceClient is the client API for FieldsService service.
@@ -31,6 +32,8 @@ const (
 type FieldsServiceClient interface {
 	// Scalars carries every scalar width the plugin derives a flag for.
 	Scalars(ctx context.Context, in *ScalarsRequest, opts ...grpc.CallOption) (*ScalarsRequest, error)
+	// Messages carries every shape of message field.
+	Messages(ctx context.Context, in *MessagesRequest, opts ...grpc.CallOption) (*MessagesRequest, error)
 }
 
 type fieldsServiceClient struct {
@@ -51,6 +54,16 @@ func (c *fieldsServiceClient) Scalars(ctx context.Context, in *ScalarsRequest, o
 	return out, nil
 }
 
+func (c *fieldsServiceClient) Messages(ctx context.Context, in *MessagesRequest, opts ...grpc.CallOption) (*MessagesRequest, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MessagesRequest)
+	err := c.cc.Invoke(ctx, FieldsService_Messages_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FieldsServiceServer is the server API for FieldsService service.
 // All implementations must embed UnimplementedFieldsServiceServer
 // for forward compatibility.
@@ -60,6 +73,8 @@ func (c *fieldsServiceClient) Scalars(ctx context.Context, in *ScalarsRequest, o
 type FieldsServiceServer interface {
 	// Scalars carries every scalar width the plugin derives a flag for.
 	Scalars(context.Context, *ScalarsRequest) (*ScalarsRequest, error)
+	// Messages carries every shape of message field.
+	Messages(context.Context, *MessagesRequest) (*MessagesRequest, error)
 	mustEmbedUnimplementedFieldsServiceServer()
 }
 
@@ -72,6 +87,9 @@ type UnimplementedFieldsServiceServer struct{}
 
 func (UnimplementedFieldsServiceServer) Scalars(context.Context, *ScalarsRequest) (*ScalarsRequest, error) {
 	return nil, status.Error(codes.Unimplemented, "method Scalars not implemented")
+}
+func (UnimplementedFieldsServiceServer) Messages(context.Context, *MessagesRequest) (*MessagesRequest, error) {
+	return nil, status.Error(codes.Unimplemented, "method Messages not implemented")
 }
 func (UnimplementedFieldsServiceServer) mustEmbedUnimplementedFieldsServiceServer() {}
 func (UnimplementedFieldsServiceServer) testEmbeddedByValue()                       {}
@@ -112,6 +130,24 @@ func _FieldsService_Scalars_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FieldsService_Messages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MessagesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FieldsServiceServer).Messages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FieldsService_Messages_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FieldsServiceServer).Messages(ctx, req.(*MessagesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FieldsService_ServiceDesc is the grpc.ServiceDesc for FieldsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -122,6 +158,10 @@ var FieldsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Scalars",
 			Handler:    _FieldsService_Scalars_Handler,
+		},
+		{
+			MethodName: "Messages",
+			Handler:    _FieldsService_Messages_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

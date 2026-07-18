@@ -10,6 +10,12 @@ plugins:
     opt: [paths=source_relative]
   - local: [go, run, github.com/braveokafor/proto-to-cli/cmd/protoc-gen-cli]
     out: go-cobra/gen
-    opt: [paths=source_relative, target=gocobra, dump-ir=true]
+    opt:
+      [
+        paths=source_relative,
+        target=gocobra,
+        dump-ir=true,
+        request-expand-depth=2,
+      ]
 inputs:
   - directory: proto

@@ -28,24 +28,32 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "bookstore",
 	}
-	cmd.AddCommand(NewBookstoreServiceListShelvesCommand(client))
-	cmd.AddCommand(NewBookstoreServiceCreateShelfCommand(client))
-	cmd.AddCommand(NewBookstoreServiceGetShelfCommand(client))
-	cmd.AddCommand(NewBookstoreServiceDeleteShelfCommand(client))
-	cmd.AddCommand(NewBookstoreServiceListBooksCommand(client))
-	cmd.AddCommand(NewBookstoreServiceCreateBookCommand(client))
-	cmd.AddCommand(NewBookstoreServiceGetBookCommand(client))
-	cmd.AddCommand(NewBookstoreServiceDeleteBookCommand(client))
+	addRequestFlags(cmd.PersistentFlags())
+	cmd.AddCommand(newBookstoreServiceListShelvesCommand(client))
+	cmd.AddCommand(newBookstoreServiceCreateShelfCommand(client))
+	cmd.AddCommand(newBookstoreServiceGetShelfCommand(client))
+	cmd.AddCommand(newBookstoreServiceDeleteShelfCommand(client))
+	cmd.AddCommand(newBookstoreServiceListBooksCommand(client))
+	cmd.AddCommand(newBookstoreServiceCreateBookCommand(client))
+	cmd.AddCommand(newBookstoreServiceGetBookCommand(client))
+	cmd.AddCommand(newBookstoreServiceDeleteBookCommand(client))
 	return cmd
 }
 
-// NewBookstoreServiceListShelvesCommand returns the cobra subcommand for BookstoreService.ListShelves.
-func NewBookstoreServiceListShelvesCommand(client BookstoreServiceClient) *cobra.Command {
-	var files, inputs []string
+// newBookstoreServiceListShelvesCommand returns the cobra subcommand for BookstoreService.ListShelves.
+func newBookstoreServiceListShelvesCommand(client BookstoreServiceClient) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "list-shelves",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
 			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
@@ -67,22 +75,40 @@ func NewBookstoreServiceListShelvesCommand(client BookstoreServiceClient) *cobra
 			return err
 		},
 	}
-	addRequestFlags(cmd.Flags(), &files, &inputs)
 	return cmd
 }
 
-// NewBookstoreServiceCreateShelfCommand returns the cobra subcommand for BookstoreService.CreateShelf.
-func NewBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra.Command {
-	var files, inputs []string
+// newBookstoreServiceCreateShelfCommand returns the cobra subcommand for BookstoreService.CreateShelf.
+func newBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra.Command {
+	var flagShelfId int64
+	var flagShelfTheme string
 	cmd := &cobra.Command{
 		Use:  "create-shelf",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
 			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}
 			overlay := []byte("{}")
+			if cmd.Flags().Changed("shelf.id") {
+				if overlay, err = sjson.SetBytes(overlay, "shelf.id", flagShelfId); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("shelf.theme") {
+				if overlay, err = sjson.SetBytes(overlay, "shelf.theme", flagShelfTheme); err != nil {
+					return err
+				}
+			}
 			req := &CreateShelfRequest{}
 			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
 				return err
@@ -99,18 +125,26 @@ func NewBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra
 			return err
 		},
 	}
-	addRequestFlags(cmd.Flags(), &files, &inputs)
+	cmd.Flags().Int64Var(&flagShelfId, "shelf.id", int64(0), "")
+	cmd.Flags().StringVar(&flagShelfTheme, "shelf.theme", "", "")
 	return cmd
 }
 
-// NewBookstoreServiceGetShelfCommand returns the cobra subcommand for BookstoreService.GetShelf.
-func NewBookstoreServiceGetShelfCommand(client BookstoreServiceClient) *cobra.Command {
-	var files, inputs []string
+// newBookstoreServiceGetShelfCommand returns the cobra subcommand for BookstoreService.GetShelf.
+func newBookstoreServiceGetShelfCommand(client BookstoreServiceClient) *cobra.Command {
 	var flagShelf int64
 	cmd := &cobra.Command{
 		Use:  "get-shelf",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
 			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
@@ -137,19 +171,25 @@ func NewBookstoreServiceGetShelfCommand(client BookstoreServiceClient) *cobra.Co
 			return err
 		},
 	}
-	addRequestFlags(cmd.Flags(), &files, &inputs)
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
 
-// NewBookstoreServiceDeleteShelfCommand returns the cobra subcommand for BookstoreService.DeleteShelf.
-func NewBookstoreServiceDeleteShelfCommand(client BookstoreServiceClient) *cobra.Command {
-	var files, inputs []string
+// newBookstoreServiceDeleteShelfCommand returns the cobra subcommand for BookstoreService.DeleteShelf.
+func newBookstoreServiceDeleteShelfCommand(client BookstoreServiceClient) *cobra.Command {
 	var flagShelf int64
 	cmd := &cobra.Command{
 		Use:  "delete-shelf",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
 			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
@@ -176,19 +216,25 @@ func NewBookstoreServiceDeleteShelfCommand(client BookstoreServiceClient) *cobra
 			return err
 		},
 	}
-	addRequestFlags(cmd.Flags(), &files, &inputs)
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
 
-// NewBookstoreServiceListBooksCommand returns the cobra subcommand for BookstoreService.ListBooks.
-func NewBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.Command {
-	var files, inputs []string
+// newBookstoreServiceListBooksCommand returns the cobra subcommand for BookstoreService.ListBooks.
+func newBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.Command {
 	var flagShelf int64
 	cmd := &cobra.Command{
 		Use:  "list-books",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
 			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
@@ -215,19 +261,28 @@ func NewBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.C
 			return err
 		},
 	}
-	addRequestFlags(cmd.Flags(), &files, &inputs)
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
 
-// NewBookstoreServiceCreateBookCommand returns the cobra subcommand for BookstoreService.CreateBook.
-func NewBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.Command {
-	var files, inputs []string
+// newBookstoreServiceCreateBookCommand returns the cobra subcommand for BookstoreService.CreateBook.
+func newBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.Command {
 	var flagShelf int64
+	var flagBookId int64
+	var flagBookAuthor string
+	var flagBookTitle string
 	cmd := &cobra.Command{
 		Use:  "create-book",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
 			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
@@ -235,6 +290,21 @@ func NewBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.
 			overlay := []byte("{}")
 			if cmd.Flags().Changed("shelf") {
 				if overlay, err = sjson.SetBytes(overlay, "shelf", flagShelf); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("book.id") {
+				if overlay, err = sjson.SetBytes(overlay, "book.id", flagBookId); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("book.author") {
+				if overlay, err = sjson.SetBytes(overlay, "book.author", flagBookAuthor); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("book.title") {
+				if overlay, err = sjson.SetBytes(overlay, "book.title", flagBookTitle); err != nil {
 					return err
 				}
 			}
@@ -254,20 +324,29 @@ func NewBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.
 			return err
 		},
 	}
-	addRequestFlags(cmd.Flags(), &files, &inputs)
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
+	cmd.Flags().Int64Var(&flagBookId, "book.id", int64(0), "")
+	cmd.Flags().StringVar(&flagBookAuthor, "book.author", "", "")
+	cmd.Flags().StringVar(&flagBookTitle, "book.title", "", "")
 	return cmd
 }
 
-// NewBookstoreServiceGetBookCommand returns the cobra subcommand for BookstoreService.GetBook.
-func NewBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Command {
-	var files, inputs []string
+// newBookstoreServiceGetBookCommand returns the cobra subcommand for BookstoreService.GetBook.
+func newBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Command {
 	var flagShelf int64
 	var flagBook int64
 	cmd := &cobra.Command{
 		Use:  "get-book",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
 			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
@@ -299,21 +378,27 @@ func NewBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Com
 			return err
 		},
 	}
-	addRequestFlags(cmd.Flags(), &files, &inputs)
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	cmd.Flags().Int64Var(&flagBook, "book", int64(0), "")
 	return cmd
 }
 
-// NewBookstoreServiceDeleteBookCommand returns the cobra subcommand for BookstoreService.DeleteBook.
-func NewBookstoreServiceDeleteBookCommand(client BookstoreServiceClient) *cobra.Command {
-	var files, inputs []string
+// newBookstoreServiceDeleteBookCommand returns the cobra subcommand for BookstoreService.DeleteBook.
+func newBookstoreServiceDeleteBookCommand(client BookstoreServiceClient) *cobra.Command {
 	var flagShelf int64
 	var flagBook int64
 	cmd := &cobra.Command{
 		Use:  "delete-book",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
 			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
@@ -345,7 +430,6 @@ func NewBookstoreServiceDeleteBookCommand(client BookstoreServiceClient) *cobra.
 			return err
 		},
 	}
-	addRequestFlags(cmd.Flags(), &files, &inputs)
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	cmd.Flags().Int64Var(&flagBook, "book", int64(0), "")
 	return cmd
@@ -357,23 +441,73 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "auctions",
 	}
-	cmd.AddCommand(NewAuctionsServiceCreateAuctionCommand(client))
-	cmd.AddCommand(NewAuctionsServiceListAuctionsCommand(client))
+	addRequestFlags(cmd.PersistentFlags())
+	cmd.AddCommand(newAuctionsServiceCreateAuctionCommand(client))
+	cmd.AddCommand(newAuctionsServiceListAuctionsCommand(client))
 	return cmd
 }
 
-// NewAuctionsServiceCreateAuctionCommand returns the cobra subcommand for AuctionsService.CreateAuction.
-func NewAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra.Command {
-	var files, inputs []string
+// newAuctionsServiceCreateAuctionCommand returns the cobra subcommand for AuctionsService.CreateAuction.
+func newAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra.Command {
+	var flagLotId int64
+	var flagLotBookId int64
+	var flagLotBookAuthor string
+	var flagLotBookTitle string
+	var flagLotReservePrice float64
+	var flagLotConsignorName string
+	var flagStartsAt string
 	cmd := &cobra.Command{
 		Use:  "create-auction",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
 			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
 			}
 			overlay := []byte("{}")
+			if cmd.Flags().Changed("lot.id") {
+				if overlay, err = sjson.SetBytes(overlay, "lot.id", flagLotId); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("lot.book.id") {
+				if overlay, err = sjson.SetBytes(overlay, "lot.book.id", flagLotBookId); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("lot.book.author") {
+				if overlay, err = sjson.SetBytes(overlay, "lot.book.author", flagLotBookAuthor); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("lot.book.title") {
+				if overlay, err = sjson.SetBytes(overlay, "lot.book.title", flagLotBookTitle); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("lot.reserve-price") {
+				if overlay, err = sjson.SetBytes(overlay, "lot.reserve_price", flagLotReservePrice); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("lot.consignor.name") {
+				if overlay, err = sjson.SetBytes(overlay, "lot.consignor.name", flagLotConsignorName); err != nil {
+					return err
+				}
+			}
+			if cmd.Flags().Changed("starts-at") {
+				if overlay, err = sjson.SetBytes(overlay, "starts_at", flagStartsAt); err != nil {
+					return err
+				}
+			}
 			req := &CreateAuctionRequest{}
 			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
 				return err
@@ -390,17 +524,30 @@ func NewAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 			return err
 		},
 	}
-	addRequestFlags(cmd.Flags(), &files, &inputs)
+	cmd.Flags().Int64Var(&flagLotId, "lot.id", int64(0), "")
+	cmd.Flags().Int64Var(&flagLotBookId, "lot.book.id", int64(0), "")
+	cmd.Flags().StringVar(&flagLotBookAuthor, "lot.book.author", "", "")
+	cmd.Flags().StringVar(&flagLotBookTitle, "lot.book.title", "", "")
+	cmd.Flags().Float64Var(&flagLotReservePrice, "lot.reserve-price", float64(0), "")
+	cmd.Flags().StringVar(&flagLotConsignorName, "lot.consignor.name", "", "")
+	cmd.Flags().StringVar(&flagStartsAt, "starts-at", "", "")
 	return cmd
 }
 
-// NewAuctionsServiceListAuctionsCommand returns the cobra subcommand for AuctionsService.ListAuctions.
-func NewAuctionsServiceListAuctionsCommand(client AuctionsServiceClient) *cobra.Command {
-	var files, inputs []string
+// newAuctionsServiceListAuctionsCommand returns the cobra subcommand for AuctionsService.ListAuctions.
+func newAuctionsServiceListAuctionsCommand(client AuctionsServiceClient) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "list-auctions",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
 			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
@@ -422,7 +569,6 @@ func NewAuctionsServiceListAuctionsCommand(client AuctionsServiceClient) *cobra.
 			return err
 		},
 	}
-	addRequestFlags(cmd.Flags(), &files, &inputs)
 	return cmd
 }
 
@@ -432,18 +578,26 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "inventory",
 	}
-	cmd.AddCommand(NewInventoryServiceExportReportCommand(client))
+	addRequestFlags(cmd.PersistentFlags())
+	cmd.AddCommand(newInventoryServiceExportReportCommand(client))
 	return cmd
 }
 
-// NewInventoryServiceExportReportCommand returns the cobra subcommand for InventoryService.ExportReport.
-func NewInventoryServiceExportReportCommand(client InventoryServiceClient) *cobra.Command {
-	var files, inputs []string
+// newInventoryServiceExportReportCommand returns the cobra subcommand for InventoryService.ExportReport.
+func newInventoryServiceExportReportCommand(client InventoryServiceClient) *cobra.Command {
 	var flagShelf int64
 	cmd := &cobra.Command{
 		Use:  "export-report",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
 			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
@@ -470,19 +624,18 @@ func NewInventoryServiceExportReportCommand(client InventoryServiceClient) *cobr
 			return err
 		},
 	}
-	addRequestFlags(cmd.Flags(), &files, &inputs)
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
 
 // ---- Request flags ----
 
-func addRequestFlags(fs *pflag.FlagSet, files, inputs *[]string) {
-	fs.StringArrayVarP(files, "filename", "f", nil,
+func addRequestFlags(fs *pflag.FlagSet) {
+	fs.StringArrayP("filename", "f", nil,
 		"Request body from a file (JSON, YAML, or any registered format),\n"+
 			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
 			"merge in that order.")
-	fs.StringArrayVarP(inputs, "input", "i", nil,
+	fs.StringArrayP("input", "i", nil,
 		"Request body inline (JSON, YAML, or any registered format).\n"+
 			"Repeatable; merges after -f files and before flags.")
 }

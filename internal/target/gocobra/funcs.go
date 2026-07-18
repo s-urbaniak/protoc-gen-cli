@@ -3,6 +3,7 @@ package gocobra
 import (
 	"maps"
 	"slices"
+	"strings"
 	"text/template"
 
 	"github.com/braveokafor/proto-to-cli/internal/ir"
@@ -46,7 +47,11 @@ func funcMap(model *ir.Model) template.FuncMap {
 
 		// The local variable backing f's flag.
 		"goVarName": func(f *ir.Flag) string {
-			return "flag" + strcase.UpperCamelCase(f.ProtoPath)
+			name := "flag"
+			for seg := range strings.SplitSeq(f.ProtoPath, ".") {
+				name += strcase.UpperCamelCase(seg)
+			}
+			return name
 		},
 		"goFlagType":  func(f *ir.Flag) string { return goBindings[f.Bind].GoType },
 		"goPflagFunc": func(f *ir.Flag) string { return goBindings[f.Bind].Singular + "Var" },

@@ -100,6 +100,103 @@
               "bind": "string"
             }
           ]
+        },
+        {
+          "proto_name": "Messages",
+          "go_name": "Messages",
+          "name": "messages",
+          "short_help": "Messages carries every shape of message field.",
+          "input": {
+            "full_name": "kitchensink.v1.MessagesRequest",
+            "proto_file": "kitchensink/v1/fields.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "MessagesRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.MessagesRequest",
+          "flags": [
+            {
+              "proto_path": "outer.string_leaf",
+              "name": "outer.string-leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "outer.int64_leaf",
+              "name": "outer.int64-leaf",
+              "bind": "int"
+            },
+            {
+              "proto_path": "outer.middle.leaf",
+              "name": "outer.middle.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "outer.middle.inner.leaf",
+              "name": "outer.middle.inner.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "outer.middle.inner.deep.leaf",
+              "name": "outer.middle.inner.deep.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "outer.middle.inner.deep.deeper.leaf",
+              "name": "outer.middle.inner.deep.deeper.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "kebab_outer.string_leaf",
+              "name": "kebab-outer.string-leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "kebab_outer.int64_leaf",
+              "name": "kebab-outer.int64-leaf",
+              "bind": "int"
+            },
+            {
+              "proto_path": "kebab_outer.middle.leaf",
+              "name": "kebab-outer.middle.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "kebab_outer.middle.inner.leaf",
+              "name": "kebab-outer.middle.inner.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "kebab_outer.middle.inner.deep.leaf",
+              "name": "kebab-outer.middle.inner.deep.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "kebab_outer.middle.inner.deep.deeper.leaf",
+              "name": "kebab-outer.middle.inner.deep.deeper.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "timestamp",
+              "name": "timestamp",
+              "bind": "string"
+            },
+            {
+              "proto_path": "duration",
+              "name": "duration",
+              "bind": "string"
+            },
+            {
+              "proto_path": "field_mask",
+              "name": "field-mask",
+              "bind": "string"
+            },
+            {
+              "proto_path": "recursive.name",
+              "name": "recursive.name",
+              "bind": "string"
+            }
+          ]
         }
       ]
     }

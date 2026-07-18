@@ -34,15 +34,15 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: {{ printf "%q" $svc.Name }},
 	}
+	addRequestFlags(cmd.PersistentFlags())
 {{- range $svc.Commands }}
-	cmd.AddCommand(New{{ goRPCName $svc . }}Command(client))
+	cmd.AddCommand(new{{ goRPCName $svc . }}Command(client))
 {{- end }}
 	return cmd
 }
 {{ range $svc.Commands }}{{ $sym := goRPCName $svc . }}
-// New{{ $sym }}Command returns the cobra subcommand for {{ $svc.ProtoName }}.{{ .ProtoName }}.
-func New{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
-	var files, inputs []string
+// new{{ $sym }}Command returns the cobra subcommand for {{ $svc.ProtoName }}.{{ .ProtoName }}.
+func new{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
 {{- range .Flags }}
 	var {{ goVarName . }} {{ goFlagType . }}
 {{- end }}
@@ -50,6 +50,14 @@ func New{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
 		Use:  {{ printf "%q" .Name }},
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
 			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
@@ -78,7 +86,6 @@ func New{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
 			return err
 		},
 	}
-	addRequestFlags(cmd.Flags(), &files, &inputs)
 {{- range .Flags }}
 	cmd.Flags().{{ goPflagFunc . }}(&{{ goVarName . }}, {{ printf "%q" .Name }}, {{ goZeroLiteral . }}, "")
 {{- end }}
@@ -87,12 +94,12 @@ func New{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
 {{ end }}{{ end }}
 // ---- Request flags ----
 
-func addRequestFlags(fs *pflag.FlagSet, files, inputs *[]string) {
-	fs.StringArrayVarP(files, "filename", "f", nil,
+func addRequestFlags(fs *pflag.FlagSet) {
+	fs.StringArrayP("filename", "f", nil,
 		"Request body from a file (JSON, YAML, or any registered format),\n"+
 			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
 			"merge in that order.")
-	fs.StringArrayVarP(inputs, "input", "i", nil,
+	fs.StringArrayP("input", "i", nil,
 		"Request body inline (JSON, YAML, or any registered format).\n"+
 			"Repeatable; merges after -f files and before flags.")
 }

@@ -38,3 +38,10 @@ func (fieldsServer) Scalars(
 ) (*kitchensinkv1.ScalarsRequest, error) {
 	return req, nil
 }
+
+func (fieldsServer) Messages(
+	_ context.Context,
+	req *kitchensinkv1.MessagesRequest,
+) (*kitchensinkv1.MessagesRequest, error) {
+	return req, nil
+}

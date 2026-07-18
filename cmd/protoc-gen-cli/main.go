@@ -29,6 +29,10 @@ type Config struct {
 	// Parsed from opt=.
 	Target string // key into Targets
 	DumpIR bool   // also emit each file's IR beside it as <file>.cli.ir.json
+	// RequestExpandDepth is how many message levels down fields still
+	// get flags: a field of a message field derives a dotted flag like
+	// --book.title. 0 stops at the request's own fields.
+	RequestExpandDepth int
 
 	// Wired in main.
 	Version string                   // stamped into generated-file headers
@@ -53,6 +57,8 @@ func main() {
 	var flags flag.FlagSet
 	flags.BoolVar(&cfg.DumpIR, "dump-ir", false, "dump each file's IR as JSON")
 	flags.StringVar(&cfg.Target, "target", "", "target to generate with")
+	flags.IntVar(&cfg.RequestExpandDepth, "request-expand-depth", 1,
+		"how many message levels down fields still get dotted flags")
 
 	opts := &protogen.Options{
 		ParamFunc: flags.Set,
@@ -73,6 +79,12 @@ func run(plug *protogen.Plugin, cfg *Config) error {
 	tgt := cfg.Targets[cfg.Target]
 	if tgt == nil {
 		return fmt.Errorf("unknown target %q (available: %v)", cfg.Target, targetNames)
+	}
+	if cfg.RequestExpandDepth < 0 {
+		return fmt.Errorf(
+			"opt=request-expand-depth=%d is negative; use 0 or more (0 expands no message fields)",
+			cfg.RequestExpandDepth,
+		)
 	}
 
 	plug.SupportedEditionsMinimum = descriptorpb.Edition_EDITION_PROTO2
@@ -101,6 +113,7 @@ func run(plug *protogen.Plugin, cfg *Config) error {
 			Warn: func(msg string) {
 				fmt.Fprintf(os.Stderr, "protoc-gen-cli: %s: %s\n", protoPath, msg)
 			},
+			RequestExpandDepth: cfg.RequestExpandDepth,
 		})
 		if err != nil {
 			return fmt.Errorf("%s: %w", protoPath, err)

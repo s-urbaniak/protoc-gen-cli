@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 	"unicode"
+
+	"github.com/stoewer/go-strcase"
 )
 
 // Validate returns every violation found in the model, joined into one error.
@@ -40,11 +42,25 @@ func validateCommand(svc *Service, cmd *Command) []error {
 		return s != "" && !strings.HasPrefix(s, "-") && !strings.ContainsFunc(s, unicode.IsSpace)
 	}
 
-	// The command's flag namespace. A taken name maps to the proto path that claimed it.
+	// fold collapses a proto path the way targets derive identifiers from
+	// it: delimiters vanish, so a.b_c and a_b.c collide.
+	fold := func(path string) string {
+		var id string
+		for seg := range strings.SplitSeq(path, ".") {
+			id += strcase.UpperCamelCase(seg)
+		}
+		return id
+	}
+
+	// The command's flag and identifier namespaces. A taken name maps to the
+	// proto path that claimed it.
 	flagNames := map[string]string{}
+	identifiers := map[string]string{}
 
 	for _, f := range cmd.Flags {
 		prior, taken := flagNames[f.Name]
+		id := fold(f.ProtoPath)
+		priorID, idTaken := identifiers[id]
 
 		switch {
 		case !validName(f.Name):
@@ -58,8 +74,16 @@ func validateCommand(svc *Service, cmd *Command) []error {
 			errs = append(errs, fmt.Errorf(
 				"rpc %s: fields %q and %q both derive the flag --%s; rename one of the fields",
 				name, prior, f.ProtoPath, f.Name))
+		case idTaken:
+			errs = append(errs, fmt.Errorf(
+				"rpc %s: fields %q and %q derive the same identifier in generated code; rename one of the fields",
+				name,
+				priorID,
+				f.ProtoPath,
+			))
 		default:
 			flagNames[f.Name] = f.ProtoPath
+			identifiers[id] = f.ProtoPath
 		}
 	}
 

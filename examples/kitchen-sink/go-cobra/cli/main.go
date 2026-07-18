@@ -1,4 +1,4 @@
-// Command kitchen-sink mounts the fixture CLI exactly as generated..
+// Command kitchen-sink mounts the fixture CLI exactly as generated.
 package main
 
 import (
