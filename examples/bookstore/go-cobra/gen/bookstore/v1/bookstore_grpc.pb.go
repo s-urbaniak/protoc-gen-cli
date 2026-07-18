@@ -426,3 +426,151 @@ var BookstoreService_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "bookstore/v1/bookstore.proto",
 }
+
+const (
+	AuctionsService_CreateAuction_FullMethodName = "/bookstore.v1.AuctionsService/CreateAuction"
+	AuctionsService_ListAuctions_FullMethodName  = "/bookstore.v1.AuctionsService/ListAuctions"
+)
+
+// AuctionsServiceClient is the client API for AuctionsService service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// AuctionsService sells the store's rare books under the hammer.
+type AuctionsServiceClient interface {
+	// CreateAuction consigns a lot and schedules its auction.
+	CreateAuction(ctx context.Context, in *CreateAuctionRequest, opts ...grpc.CallOption) (*Auction, error)
+	// ListAuctions lists auctions, optionally filtered by state.
+	ListAuctions(ctx context.Context, in *ListAuctionsRequest, opts ...grpc.CallOption) (*ListAuctionsResponse, error)
+}
+
+type auctionsServiceClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewAuctionsServiceClient(cc grpc.ClientConnInterface) AuctionsServiceClient {
+	return &auctionsServiceClient{cc}
+}
+
+func (c *auctionsServiceClient) CreateAuction(ctx context.Context, in *CreateAuctionRequest, opts ...grpc.CallOption) (*Auction, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Auction)
+	err := c.cc.Invoke(ctx, AuctionsService_CreateAuction_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *auctionsServiceClient) ListAuctions(ctx context.Context, in *ListAuctionsRequest, opts ...grpc.CallOption) (*ListAuctionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListAuctionsResponse)
+	err := c.cc.Invoke(ctx, AuctionsService_ListAuctions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AuctionsServiceServer is the server API for AuctionsService service.
+// All implementations must embed UnimplementedAuctionsServiceServer
+// for forward compatibility.
+//
+// AuctionsService sells the store's rare books under the hammer.
+type AuctionsServiceServer interface {
+	// CreateAuction consigns a lot and schedules its auction.
+	CreateAuction(context.Context, *CreateAuctionRequest) (*Auction, error)
+	// ListAuctions lists auctions, optionally filtered by state.
+	ListAuctions(context.Context, *ListAuctionsRequest) (*ListAuctionsResponse, error)
+	mustEmbedUnimplementedAuctionsServiceServer()
+}
+
+// UnimplementedAuctionsServiceServer must be embedded to have
+// forward compatible implementations.
+//
+// NOTE: this should be embedded by value instead of pointer to avoid a nil
+// pointer dereference when methods are called.
+type UnimplementedAuctionsServiceServer struct{}
+
+func (UnimplementedAuctionsServiceServer) CreateAuction(context.Context, *CreateAuctionRequest) (*Auction, error) {
+	return nil, status.Error(codes.Unimplemented, "method CreateAuction not implemented")
+}
+func (UnimplementedAuctionsServiceServer) ListAuctions(context.Context, *ListAuctionsRequest) (*ListAuctionsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListAuctions not implemented")
+}
+func (UnimplementedAuctionsServiceServer) mustEmbedUnimplementedAuctionsServiceServer() {}
+func (UnimplementedAuctionsServiceServer) testEmbeddedByValue()                         {}
+
+// UnsafeAuctionsServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AuctionsServiceServer will
+// result in compilation errors.
+type UnsafeAuctionsServiceServer interface {
+	mustEmbedUnimplementedAuctionsServiceServer()
+}
+
+func RegisterAuctionsServiceServer(s grpc.ServiceRegistrar, srv AuctionsServiceServer) {
+	// If the following call panics, it indicates UnimplementedAuctionsServiceServer was
+	// embedded by pointer and is nil.  This will cause panics if an
+	// unimplemented method is ever invoked, so we test this at initialization
+	// time to prevent it from happening at runtime later due to I/O.
+	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
+		t.testEmbeddedByValue()
+	}
+	s.RegisterService(&AuctionsService_ServiceDesc, srv)
+}
+
+func _AuctionsService_CreateAuction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateAuctionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuctionsServiceServer).CreateAuction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuctionsService_CreateAuction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuctionsServiceServer).CreateAuction(ctx, req.(*CreateAuctionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuctionsService_ListAuctions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAuctionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuctionsServiceServer).ListAuctions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuctionsService_ListAuctions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuctionsServiceServer).ListAuctions(ctx, req.(*ListAuctionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// AuctionsService_ServiceDesc is the grpc.ServiceDesc for AuctionsService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var AuctionsService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "bookstore.v1.AuctionsService",
+	HandlerType: (*AuctionsServiceServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateAuction",
+			Handler:    _AuctionsService_CreateAuction_Handler,
+		},
+		{
+			MethodName: "ListAuctions",
+			Handler:    _AuctionsService_ListAuctions_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "bookstore/v1/bookstore.proto",
+}

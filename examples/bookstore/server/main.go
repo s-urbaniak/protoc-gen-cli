@@ -8,6 +8,7 @@ import (
 	"flag"
 	"log"
 	"net"
+	"time"
 
 	pb "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1"
 	"github.com/brianvoe/gofakeit/v7"
@@ -17,10 +18,15 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type bookstoreServer struct {
 	pb.UnimplementedBookstoreServiceServer
+}
+
+type auctionsServer struct {
+	pb.UnimplementedAuctionsServiceServer
 }
 
 func main() {
@@ -33,6 +39,7 @@ func main() {
 	}
 	srv := grpc.NewServer()
 	pb.RegisterBookstoreServiceServer(srv, bookstoreServer{})
+	pb.RegisterAuctionsServiceServer(srv, auctionsServer{})
 	log.Printf("bookstore-server listening on %s", *addr)
 	if err := srv.Serve(lis); err != nil {
 		log.Fatalf("serve: %v", err)
@@ -128,4 +135,36 @@ func (bookstoreServer) GetBook(_ context.Context, req *pb.GetBookRequest) (*pb.B
 
 func (bookstoreServer) DeleteBook(context.Context, *pb.DeleteBookRequest) (*emptypb.Empty, error) {
 	return &emptypb.Empty{}, nil
+}
+
+func (auctionsServer) CreateAuction(
+	_ context.Context,
+	req *pb.CreateAuctionRequest,
+) (*pb.Auction, error) {
+	starts := req.GetStartsAt()
+	if starts == nil {
+		starts = timestamppb.Now()
+	}
+	return &pb.Auction{
+		Id:     gofakeit.Int64(),
+		Lot:    req.GetLot(),
+		State:  pb.AuctionState_AUCTION_STATE_SCHEDULED,
+		EndsAt: timestamppb.New(starts.AsTime().Add(time.Hour)),
+	}, nil
+}
+
+func (auctionsServer) ListAuctions(
+	_ context.Context,
+	req *pb.ListAuctionsRequest,
+) (*pb.ListAuctionsResponse, error) {
+	resp := &pb.ListAuctionsResponse{}
+	if err := fake(resp); err != nil {
+		return nil, err
+	}
+	if s := req.GetState(); s != pb.AuctionState_AUCTION_STATE_UNSPECIFIED {
+		for _, a := range resp.GetAuctions() {
+			a.State = s
+		}
+	}
+	return resp, nil
 }

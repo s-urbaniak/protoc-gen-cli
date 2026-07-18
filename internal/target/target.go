@@ -2,7 +2,7 @@
 //
 // A target renders the IR of one proto package into source for one language
 // and CLI library. Implementations live in subpackages named
-// <language><library> gocobra is Go + Cobra and cmd/protoc-gen-cli
+// <language><library>: gocobra is Go + Cobra, and cmd/protoc-gen-cli
 // selects one by its opt=target= name.
 package target
 

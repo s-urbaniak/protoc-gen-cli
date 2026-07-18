@@ -195,6 +195,44 @@
           ]
         }
       ]
+    },
+    {
+      "proto_name": "AuctionsService",
+      "go_name": "AuctionsService",
+      "name": "auctions",
+      "short_help": "AuctionsService sells the store's rare books under the hammer.",
+      "commands": [
+        {
+          "proto_name": "CreateAuction",
+          "go_name": "CreateAuction",
+          "name": "create-auction",
+          "short_help": "CreateAuction consigns a lot and schedules its auction.",
+          "input": {
+            "full_name": "bookstore.v1.CreateAuctionRequest",
+            "proto_file": "bookstore/v1/bookstore.proto",
+            "proto_package": "bookstore.v1",
+            "go_name": "CreateAuctionRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_package_name": "bookstorev1"
+          },
+          "output": "bookstore.v1.Auction"
+        },
+        {
+          "proto_name": "ListAuctions",
+          "go_name": "ListAuctions",
+          "name": "list-auctions",
+          "short_help": "ListAuctions lists auctions, optionally filtered by state.",
+          "input": {
+            "full_name": "bookstore.v1.ListAuctionsRequest",
+            "proto_file": "bookstore/v1/bookstore.proto",
+            "proto_package": "bookstore.v1",
+            "go_name": "ListAuctionsRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_package_name": "bookstorev1"
+          },
+          "output": "bookstore.v1.ListAuctionsResponse"
+        }
+      ]
     }
   ]
 }

@@ -27,6 +27,7 @@ func main() {
 	// Flatten Bookstore service onto root; as a group it would stutter ("bookstore bookstore get-book").
 	books := bookstorev1.NewBookstoreServiceCommand(conn)
 	root.AddCommand(books.Commands()...)
+	root.AddCommand(bookstorev1.NewAuctionsServiceCommand(conn))
 
 	if err := root.Execute(); err != nil {
 		os.Exit(1)

@@ -7,6 +7,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"maps"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tidwall/sjson"
@@ -14,6 +20,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
+	"sigs.k8s.io/yaml"
 )
 
 // NewBookstoreServiceCommand returns the BookstoreService command with one subcommand per RPC.
@@ -35,11 +42,20 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 
 // NewBookstoreServiceListShelvesCommand returns the cobra subcommand for BookstoreService.ListShelves.
 func NewBookstoreServiceListShelvesCommand(client BookstoreServiceClient) *cobra.Command {
+	var files []string
 	cmd := &cobra.Command{
 		Use:  "list-shelves",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			frags, err := LoadFiles(files, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			overlay := []byte("{}")
 			req := &emptypb.Empty{}
+			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+				return err
+			}
 			resp, err := client.ListShelves(cmd.Context(), req)
 			if err != nil {
 				return err
@@ -52,16 +68,28 @@ func NewBookstoreServiceListShelvesCommand(client BookstoreServiceClient) *cobra
 			return err
 		},
 	}
+	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
+		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
+			"Repeatable; files merge in argument order, flags apply last.")
 	return cmd
 }
 
 // NewBookstoreServiceCreateShelfCommand returns the cobra subcommand for BookstoreService.CreateShelf.
 func NewBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra.Command {
+	var files []string
 	cmd := &cobra.Command{
 		Use:  "create-shelf",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			frags, err := LoadFiles(files, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			overlay := []byte("{}")
 			req := &CreateShelfRequest{}
+			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+				return err
+			}
 			resp, err := client.CreateShelf(cmd.Context(), req)
 			if err != nil {
 				return err
@@ -74,25 +102,32 @@ func NewBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra
 			return err
 		},
 	}
+	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
+		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
+			"Repeatable; files merge in argument order, flags apply last.")
 	return cmd
 }
 
 // NewBookstoreServiceGetShelfCommand returns the cobra subcommand for BookstoreService.GetShelf.
 func NewBookstoreServiceGetShelfCommand(client BookstoreServiceClient) *cobra.Command {
+	var files []string
 	var flagShelf int64
 	cmd := &cobra.Command{
 		Use:  "get-shelf",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := &GetShelfRequest{}
-			doc := []byte("{}")
-			var err error
+			frags, err := LoadFiles(files, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			overlay := []byte("{}")
 			if cmd.Flags().Changed("shelf") {
-				if doc, err = sjson.SetBytes(doc, "shelf", flagShelf); err != nil {
+				if overlay, err = sjson.SetBytes(overlay, "shelf", flagShelf); err != nil {
 					return err
 				}
 			}
-			if err := protojson.Unmarshal(doc, req); err != nil {
+			req := &GetShelfRequest{}
+			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
 				return err
 			}
 			resp, err := client.GetShelf(cmd.Context(), req)
@@ -107,26 +142,33 @@ func NewBookstoreServiceGetShelfCommand(client BookstoreServiceClient) *cobra.Co
 			return err
 		},
 	}
+	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
+		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
+			"Repeatable; files merge in argument order, flags apply last.")
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
 
 // NewBookstoreServiceDeleteShelfCommand returns the cobra subcommand for BookstoreService.DeleteShelf.
 func NewBookstoreServiceDeleteShelfCommand(client BookstoreServiceClient) *cobra.Command {
+	var files []string
 	var flagShelf int64
 	cmd := &cobra.Command{
 		Use:  "delete-shelf",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := &DeleteShelfRequest{}
-			doc := []byte("{}")
-			var err error
+			frags, err := LoadFiles(files, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			overlay := []byte("{}")
 			if cmd.Flags().Changed("shelf") {
-				if doc, err = sjson.SetBytes(doc, "shelf", flagShelf); err != nil {
+				if overlay, err = sjson.SetBytes(overlay, "shelf", flagShelf); err != nil {
 					return err
 				}
 			}
-			if err := protojson.Unmarshal(doc, req); err != nil {
+			req := &DeleteShelfRequest{}
+			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
 				return err
 			}
 			resp, err := client.DeleteShelf(cmd.Context(), req)
@@ -141,26 +183,33 @@ func NewBookstoreServiceDeleteShelfCommand(client BookstoreServiceClient) *cobra
 			return err
 		},
 	}
+	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
+		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
+			"Repeatable; files merge in argument order, flags apply last.")
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
 
 // NewBookstoreServiceListBooksCommand returns the cobra subcommand for BookstoreService.ListBooks.
 func NewBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.Command {
+	var files []string
 	var flagShelf int64
 	cmd := &cobra.Command{
 		Use:  "list-books",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := &ListBooksRequest{}
-			doc := []byte("{}")
-			var err error
+			frags, err := LoadFiles(files, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			overlay := []byte("{}")
 			if cmd.Flags().Changed("shelf") {
-				if doc, err = sjson.SetBytes(doc, "shelf", flagShelf); err != nil {
+				if overlay, err = sjson.SetBytes(overlay, "shelf", flagShelf); err != nil {
 					return err
 				}
 			}
-			if err := protojson.Unmarshal(doc, req); err != nil {
+			req := &ListBooksRequest{}
+			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
 				return err
 			}
 			resp, err := client.ListBooks(cmd.Context(), req)
@@ -175,26 +224,33 @@ func NewBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.C
 			return err
 		},
 	}
+	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
+		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
+			"Repeatable; files merge in argument order, flags apply last.")
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
 
 // NewBookstoreServiceCreateBookCommand returns the cobra subcommand for BookstoreService.CreateBook.
 func NewBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.Command {
+	var files []string
 	var flagShelf int64
 	cmd := &cobra.Command{
 		Use:  "create-book",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := &CreateBookRequest{}
-			doc := []byte("{}")
-			var err error
+			frags, err := LoadFiles(files, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			overlay := []byte("{}")
 			if cmd.Flags().Changed("shelf") {
-				if doc, err = sjson.SetBytes(doc, "shelf", flagShelf); err != nil {
+				if overlay, err = sjson.SetBytes(overlay, "shelf", flagShelf); err != nil {
 					return err
 				}
 			}
-			if err := protojson.Unmarshal(doc, req); err != nil {
+			req := &CreateBookRequest{}
+			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
 				return err
 			}
 			resp, err := client.CreateBook(cmd.Context(), req)
@@ -209,32 +265,39 @@ func NewBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.
 			return err
 		},
 	}
+	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
+		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
+			"Repeatable; files merge in argument order, flags apply last.")
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	return cmd
 }
 
 // NewBookstoreServiceGetBookCommand returns the cobra subcommand for BookstoreService.GetBook.
 func NewBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Command {
+	var files []string
 	var flagShelf int64
 	var flagBook int64
 	cmd := &cobra.Command{
 		Use:  "get-book",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := &GetBookRequest{}
-			doc := []byte("{}")
-			var err error
+			frags, err := LoadFiles(files, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			overlay := []byte("{}")
 			if cmd.Flags().Changed("shelf") {
-				if doc, err = sjson.SetBytes(doc, "shelf", flagShelf); err != nil {
+				if overlay, err = sjson.SetBytes(overlay, "shelf", flagShelf); err != nil {
 					return err
 				}
 			}
 			if cmd.Flags().Changed("book") {
-				if doc, err = sjson.SetBytes(doc, "book", flagBook); err != nil {
+				if overlay, err = sjson.SetBytes(overlay, "book", flagBook); err != nil {
 					return err
 				}
 			}
-			if err := protojson.Unmarshal(doc, req); err != nil {
+			req := &GetBookRequest{}
+			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
 				return err
 			}
 			resp, err := client.GetBook(cmd.Context(), req)
@@ -249,6 +312,9 @@ func NewBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Com
 			return err
 		},
 	}
+	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
+		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
+			"Repeatable; files merge in argument order, flags apply last.")
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	cmd.Flags().Int64Var(&flagBook, "book", int64(0), "")
 	return cmd
@@ -256,26 +322,30 @@ func NewBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Com
 
 // NewBookstoreServiceDeleteBookCommand returns the cobra subcommand for BookstoreService.DeleteBook.
 func NewBookstoreServiceDeleteBookCommand(client BookstoreServiceClient) *cobra.Command {
+	var files []string
 	var flagShelf int64
 	var flagBook int64
 	cmd := &cobra.Command{
 		Use:  "delete-book",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := &DeleteBookRequest{}
-			doc := []byte("{}")
-			var err error
+			frags, err := LoadFiles(files, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			overlay := []byte("{}")
 			if cmd.Flags().Changed("shelf") {
-				if doc, err = sjson.SetBytes(doc, "shelf", flagShelf); err != nil {
+				if overlay, err = sjson.SetBytes(overlay, "shelf", flagShelf); err != nil {
 					return err
 				}
 			}
 			if cmd.Flags().Changed("book") {
-				if doc, err = sjson.SetBytes(doc, "book", flagBook); err != nil {
+				if overlay, err = sjson.SetBytes(overlay, "book", flagBook); err != nil {
 					return err
 				}
 			}
-			if err := protojson.Unmarshal(doc, req); err != nil {
+			req := &DeleteBookRequest{}
+			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
 				return err
 			}
 			resp, err := client.DeleteBook(cmd.Context(), req)
@@ -290,9 +360,175 @@ func NewBookstoreServiceDeleteBookCommand(client BookstoreServiceClient) *cobra.
 			return err
 		},
 	}
+	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
+		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
+			"Repeatable; files merge in argument order, flags apply last.")
 	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
 	cmd.Flags().Int64Var(&flagBook, "book", int64(0), "")
 	return cmd
+}
+
+// NewAuctionsServiceCommand returns the AuctionsService command with one subcommand per RPC.
+func NewAuctionsServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
+	client := NewAuctionsServiceClient(conn)
+	cmd := &cobra.Command{
+		Use: "auctions",
+	}
+	cmd.AddCommand(NewAuctionsServiceCreateAuctionCommand(client))
+	cmd.AddCommand(NewAuctionsServiceListAuctionsCommand(client))
+	return cmd
+}
+
+// NewAuctionsServiceCreateAuctionCommand returns the cobra subcommand for AuctionsService.CreateAuction.
+func NewAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra.Command {
+	var files []string
+	cmd := &cobra.Command{
+		Use:  "create-auction",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			frags, err := LoadFiles(files, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			overlay := []byte("{}")
+			req := &CreateAuctionRequest{}
+			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+				return err
+			}
+			resp, err := client.CreateAuction(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
+		},
+	}
+	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
+		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
+			"Repeatable; files merge in argument order, flags apply last.")
+	return cmd
+}
+
+// NewAuctionsServiceListAuctionsCommand returns the cobra subcommand for AuctionsService.ListAuctions.
+func NewAuctionsServiceListAuctionsCommand(client AuctionsServiceClient) *cobra.Command {
+	var files []string
+	cmd := &cobra.Command{
+		Use:  "list-auctions",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			frags, err := LoadFiles(files, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			overlay := []byte("{}")
+			req := &ListAuctionsRequest{}
+			if err := BuildRequest(req, append(frags, Fragment{Source: "flags", JSON: overlay})); err != nil {
+				return err
+			}
+			resp, err := client.ListAuctions(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
+		},
+	}
+	cmd.Flags().StringArrayVarP(&files, "filename", "f", nil,
+		"Request body from a JSON or YAML file, or '-' for JSON on stdin.\n"+
+			"Repeatable; files merge in argument order, flags apply last.")
+	return cmd
+}
+
+// ---- Request assembly ----
+
+// inputFormats maps -f file extensions to decoders producing JSON;
+// RegisterInputFormat adds more.
+var inputFormats = map[string]func([]byte) ([]byte, error){
+	".json": func(body []byte) ([]byte, error) { return body, nil },
+	".yaml": yaml.YAMLToJSON,
+	".yml":  yaml.YAMLToJSON,
+}
+
+// RegisterInputFormat makes -f accept ext (".toml") by decoding matching files
+// to JSON. Register before Execute.
+func RegisterInputFormat(ext string, decode func([]byte) ([]byte, error)) {
+	if !strings.HasPrefix(ext, ".") || decode == nil {
+		panic(`RegisterInputFormat: need a ".ext" extension and a non-nil decoder`)
+	}
+	inputFormats[strings.ToLower(ext)] = decode
+}
+
+// A Fragment is one request document.
+type Fragment struct {
+	Source string
+	JSON   []byte
+}
+
+// LoadFiles returns one fragment per non-empty file; "-" reads in as JSON,
+// labelled "stdin", other names decode by extension. Empty entries and empty
+// files are skipped.
+func LoadFiles(files []string, in io.Reader) ([]Fragment, error) {
+	var out []Fragment
+	for _, name := range files {
+		name = strings.TrimSpace(name)
+		if name == "" {
+			continue
+		}
+		if name == "-" {
+			body, err := io.ReadAll(in)
+			if err != nil {
+				return nil, fmt.Errorf("read stdin: %w", err)
+			}
+			if len(bytes.TrimSpace(body)) > 0 {
+				out = append(out, Fragment{Source: "stdin", JSON: body})
+			}
+			continue
+		}
+		decode, ok := inputFormats[strings.ToLower(filepath.Ext(name))]
+		if !ok {
+			return nil, fmt.Errorf("%s: no input format registered for %q; have %s",
+				name, filepath.Ext(name), strings.Join(slices.Sorted(maps.Keys(inputFormats)), ", "))
+		}
+		body, err := os.ReadFile(name)
+		if err != nil {
+			return nil, fmt.Errorf("read %s: %w", name, err)
+		}
+		if len(bytes.TrimSpace(body)) == 0 {
+			continue
+		}
+		if body, err = decode(body); err != nil {
+			return nil, fmt.Errorf("parse %s: %w", name, err)
+		}
+		out = append(out, Fragment{Source: name, JSON: body})
+	}
+	return out, nil
+}
+
+// BuildRequest merges the fragments into req in order. Merging follows
+// proto.Merge: scalars and oneofs replace, messages merge field-wise,
+// repeated fields append, map entries merge per key.
+func BuildRequest(req proto.Message, frags []Fragment) error {
+	// A fragment is partial by definition; required fields are a property
+	// of the assembled request, checked once after the merge.
+	for _, frag := range frags {
+		next := req.ProtoReflect().New().Interface()
+		if err := (protojson.UnmarshalOptions{AllowPartial: true}).Unmarshal(frag.JSON, next); err != nil {
+			return fmt.Errorf("decode %s: %w", frag.Source, err)
+		}
+		proto.Merge(req, next)
+	}
+	if err := proto.CheckInitialized(req); err != nil {
+		return fmt.Errorf("request: %w", err)
+	}
+	return nil
 }
 
 // marshalJSON returns m as compact JSON. json.Compact makes protojson's

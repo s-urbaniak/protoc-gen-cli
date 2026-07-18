@@ -11,6 +11,7 @@ require (
 	golang.org/x/tools v0.48.0
 	google.golang.org/grpc v1.82.0
 	google.golang.org/protobuf v1.36.11
+	sigs.k8s.io/yaml v1.6.0
 )
 
 require (
@@ -31,6 +32,7 @@ require (
 	github.com/tidwall/gjson v1.14.2 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
+	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20260709172345-9ea1abe57597 // indirect
 	golang.org/x/mod v0.38.0 // indirect

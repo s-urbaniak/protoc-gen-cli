@@ -69,7 +69,6 @@ type pflagBinding struct {
 	GoType   string
 }
 
-// goBindings maps binds to pflag bindings.
 var goBindings = map[ir.Bind]pflagBinding{
 	ir.BindString: {"String", "string"},
 	ir.BindBool:   {"Bool", "bool"},

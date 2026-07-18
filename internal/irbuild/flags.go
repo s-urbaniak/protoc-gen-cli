@@ -30,7 +30,6 @@ func buildFlags(md protoreflect.MessageDescriptor) []*ir.Flag {
 	return flags
 }
 
-// scalarBinds maps each proto scalar kind to the Bind its flag parses into.
 var scalarBinds = map[protoreflect.Kind]ir.Bind{
 	protoreflect.BoolKind:     ir.BindBool,
 	protoreflect.StringKind:   ir.BindString,

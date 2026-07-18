@@ -19,6 +19,7 @@ syntax = "proto3";
 package bookstore.v1;
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1;bookstorev1";
 
@@ -120,4 +121,94 @@ message DeleteBookRequest {
   int64 shelf = 1;
   // The ID of the book to delete.
   int64 book = 2;
+}
+
+// AuctionsService sells the store's rare books under the hammer.
+service AuctionsService {
+  // CreateAuction consigns a lot and schedules its auction.
+  rpc CreateAuction(CreateAuctionRequest) returns (Auction);
+
+  // ListAuctions lists auctions, optionally filtered by state.
+  rpc ListAuctions(ListAuctionsRequest) returns (ListAuctionsResponse);
+}
+
+// Condition grades a lot on the book trade's scale.
+enum Condition {
+  CONDITION_UNSPECIFIED = 0;
+  CONDITION_FINE = 1;
+  CONDITION_VERY_GOOD = 2;
+  CONDITION_GOOD = 3;
+  CONDITION_FAIR = 4;
+  CONDITION_POOR = 5;
+}
+
+// AuctionState tracks an auction from consignment to settlement.
+enum AuctionState {
+  AUCTION_STATE_UNSPECIFIED = 0;
+  AUCTION_STATE_SCHEDULED = 1;
+  AUCTION_STATE_OPEN = 2;
+  AUCTION_STATE_HAMMERED = 3;
+  AUCTION_STATE_SETTLED = 4;
+}
+
+// Country is a nation by ISO code.
+message Country {
+  string code = 1;
+  string name = 2;
+}
+
+// Address is a postal address, nested under a consignor.
+message Address {
+  string street = 1;
+  string city = 2;
+  Country country = 3;
+}
+
+// Consignor is who entrusted a lot for sale.
+message Consignor {
+  string name = 1;
+  Address address = 2;
+}
+
+// Flaw is one defect in a lot's condition.
+message Flaw {
+  string kind = 1;
+  string detail = 2;
+}
+
+// Lot is a book consigned for auction.
+message Lot {
+  int64 id = 1;
+  Book book = 2;
+  Condition condition = 3;
+  double reserve_price = 4;
+  // Chain of custody, oldest first.
+  repeated string provenance = 5;
+  repeated Flaw flaws = 6;
+  // Collector attributes, e.g. signed=true.
+  map<string, string> attributes = 7;
+  Consignor consignor = 8;
+}
+
+// Auction is one lot under the hammer.
+message Auction {
+  int64 id = 1;
+  Lot lot = 2;
+  AuctionState state = 3;
+  double high_bid = 4;
+  string high_bidder = 5;
+  google.protobuf.Timestamp ends_at = 6;
+}
+
+message CreateAuctionRequest {
+  Lot lot = 1;
+  google.protobuf.Timestamp starts_at = 2;
+}
+
+message ListAuctionsRequest {
+  AuctionState state = 1;
+}
+
+message ListAuctionsResponse {
+  repeated Auction auctions = 1;
 }
