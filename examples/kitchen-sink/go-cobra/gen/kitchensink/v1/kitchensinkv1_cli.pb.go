@@ -30,6 +30,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 	addRequestFlags(cmd.PersistentFlags())
 	cmd.AddCommand(newFieldsServiceScalarsCommand(client))
 	cmd.AddCommand(newFieldsServiceMessagesCommand(client))
+	cmd.AddCommand(newFieldsServiceRepeatedCommand(client))
 	return cmd
 }
 
@@ -179,20 +180,20 @@ func newFieldsServiceScalarsCommand(client FieldsServiceClient) *cobra.Command {
 			return err
 		},
 	}
-	cmd.Flags().Float64Var(&flagDoubleField, "double-field", float64(0), "")
-	cmd.Flags().Float64Var(&flagFloatField, "float-field", float64(0), "")
-	cmd.Flags().Int64Var(&flagInt32Field, "int32-field", int64(0), "")
-	cmd.Flags().Int64Var(&flagInt64Field, "int64-field", int64(0), "")
-	cmd.Flags().Uint64Var(&flagUint32Field, "uint32-field", uint64(0), "")
-	cmd.Flags().Uint64Var(&flagUint64Field, "uint64-field", uint64(0), "")
-	cmd.Flags().Int64Var(&flagSint32Field, "sint32-field", int64(0), "")
-	cmd.Flags().Int64Var(&flagSint64Field, "sint64-field", int64(0), "")
-	cmd.Flags().Uint64Var(&flagFixed32Field, "fixed32-field", uint64(0), "")
-	cmd.Flags().Uint64Var(&flagFixed64Field, "fixed64-field", uint64(0), "")
-	cmd.Flags().Int64Var(&flagSfixed32Field, "sfixed32-field", int64(0), "")
-	cmd.Flags().Int64Var(&flagSfixed64Field, "sfixed64-field", int64(0), "")
-	cmd.Flags().BoolVar(&flagBoolField, "bool-field", false, "")
-	cmd.Flags().StringVar(&flagStringField, "string-field", "", "")
+	cmd.Flags().Float64Var(&flagDoubleField, "double-field", flagDoubleField, "")
+	cmd.Flags().Float64Var(&flagFloatField, "float-field", flagFloatField, "")
+	cmd.Flags().Int64Var(&flagInt32Field, "int32-field", flagInt32Field, "")
+	cmd.Flags().Int64Var(&flagInt64Field, "int64-field", flagInt64Field, "")
+	cmd.Flags().Uint64Var(&flagUint32Field, "uint32-field", flagUint32Field, "")
+	cmd.Flags().Uint64Var(&flagUint64Field, "uint64-field", flagUint64Field, "")
+	cmd.Flags().Int64Var(&flagSint32Field, "sint32-field", flagSint32Field, "")
+	cmd.Flags().Int64Var(&flagSint64Field, "sint64-field", flagSint64Field, "")
+	cmd.Flags().Uint64Var(&flagFixed32Field, "fixed32-field", flagFixed32Field, "")
+	cmd.Flags().Uint64Var(&flagFixed64Field, "fixed64-field", flagFixed64Field, "")
+	cmd.Flags().Int64Var(&flagSfixed32Field, "sfixed32-field", flagSfixed32Field, "")
+	cmd.Flags().Int64Var(&flagSfixed64Field, "sfixed64-field", flagSfixed64Field, "")
+	cmd.Flags().BoolVar(&flagBoolField, "bool-field", flagBoolField, "")
+	cmd.Flags().StringVar(&flagStringField, "string-field", flagStringField, "")
 	return cmd
 }
 
@@ -223,6 +224,7 @@ func newFieldsServiceMessagesCommand(client FieldsServiceClient) *cobra.Command 
 	var flagKebabOuterMiddleInnerDeepDeeperLeaf string
 	var flagKebabOuterMiddleInnerDeepDeeperDeepest string
 	var flagTimestamp string
+	var flagOuters []string
 	var flagDuration string
 	var flagFieldMask string
 	var flagRecursive string
@@ -458,6 +460,18 @@ func newFieldsServiceMessagesCommand(client FieldsServiceClient) *cobra.Command 
 				}
 				frags = append(frags, Fragment{Source: "flag --timestamp", JSON: doc})
 			}
+			if cmd.Flags().Changed("outers") {
+				for _, v := range flagOuters {
+					if !json.Valid([]byte(v)) {
+						return fmt.Errorf("flag --outers: %q is not valid JSON", v)
+					}
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "outers", []byte("["+strings.Join(flagOuters, ",")+"]"))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outers", JSON: doc})
+			}
 			if cmd.Flags().Changed("duration") {
 				doc, err := sjson.SetBytes([]byte("{}"), "duration", flagDuration)
 				if err != nil {
@@ -545,39 +559,145 @@ func newFieldsServiceMessagesCommand(client FieldsServiceClient) *cobra.Command 
 			return err
 		},
 	}
-	cmd.Flags().StringVar(&flagOuter, "outer", "", "")
-	cmd.Flags().StringVar(&flagOuterStringLeaf, "outer.string-leaf", "", "")
-	cmd.Flags().Int64Var(&flagOuterInt64Leaf, "outer.int64-leaf", int64(0), "")
-	cmd.Flags().StringVar(&flagOuterMiddle, "outer.middle", "", "")
-	cmd.Flags().StringVar(&flagOuterMiddleLeaf, "outer.middle.leaf", "", "")
-	cmd.Flags().StringVar(&flagOuterMiddleInner, "outer.middle.inner", "", "")
-	cmd.Flags().StringVar(&flagOuterMiddleInnerLeaf, "outer.middle.inner.leaf", "", "")
-	cmd.Flags().StringVar(&flagOuterMiddleInnerDeep, "outer.middle.inner.deep", "", "")
-	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepLeaf, "outer.middle.inner.deep.leaf", "", "")
-	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepDeeper, "outer.middle.inner.deep.deeper", "", "")
-	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepDeeperLeaf, "outer.middle.inner.deep.deeper.leaf", "", "")
-	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepDeeperDeepest, "outer.middle.inner.deep.deeper.deepest", "", "")
-	cmd.Flags().StringVar(&flagKebabOuter, "kebab-outer", "", "")
-	cmd.Flags().StringVar(&flagKebabOuterStringLeaf, "kebab-outer.string-leaf", "", "")
-	cmd.Flags().Int64Var(&flagKebabOuterInt64Leaf, "kebab-outer.int64-leaf", int64(0), "")
-	cmd.Flags().StringVar(&flagKebabOuterMiddle, "kebab-outer.middle", "", "")
-	cmd.Flags().StringVar(&flagKebabOuterMiddleLeaf, "kebab-outer.middle.leaf", "", "")
-	cmd.Flags().StringVar(&flagKebabOuterMiddleInner, "kebab-outer.middle.inner", "", "")
-	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerLeaf, "kebab-outer.middle.inner.leaf", "", "")
-	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeep, "kebab-outer.middle.inner.deep", "", "")
-	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeepLeaf, "kebab-outer.middle.inner.deep.leaf", "", "")
-	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeepDeeper, "kebab-outer.middle.inner.deep.deeper", "", "")
-	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeepDeeperLeaf, "kebab-outer.middle.inner.deep.deeper.leaf", "", "")
-	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeepDeeperDeepest, "kebab-outer.middle.inner.deep.deeper.deepest", "", "")
-	cmd.Flags().StringVar(&flagTimestamp, "timestamp", "", "")
-	cmd.Flags().StringVar(&flagDuration, "duration", "", "")
-	cmd.Flags().StringVar(&flagFieldMask, "field-mask", "", "")
-	cmd.Flags().StringVar(&flagRecursive, "recursive", "", "")
-	cmd.Flags().StringVar(&flagRecursiveName, "recursive.name", "", "")
-	cmd.Flags().StringVar(&flagRecursiveNext, "recursive.next", "", "")
-	cmd.Flags().StringVar(&flagOdd, "odd", "", "")
-	cmd.Flags().StringVar(&flagOddEven, "odd.even", "", "")
-	cmd.Flags().StringVar(&flagOddEvenOdd, "odd.even.odd", "", "")
+	cmd.Flags().StringVar(&flagOuter, "outer", flagOuter, "")
+	cmd.Flags().StringVar(&flagOuterStringLeaf, "outer.string-leaf", flagOuterStringLeaf, "")
+	cmd.Flags().Int64Var(&flagOuterInt64Leaf, "outer.int64-leaf", flagOuterInt64Leaf, "")
+	cmd.Flags().StringVar(&flagOuterMiddle, "outer.middle", flagOuterMiddle, "")
+	cmd.Flags().StringVar(&flagOuterMiddleLeaf, "outer.middle.leaf", flagOuterMiddleLeaf, "")
+	cmd.Flags().StringVar(&flagOuterMiddleInner, "outer.middle.inner", flagOuterMiddleInner, "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerLeaf, "outer.middle.inner.leaf", flagOuterMiddleInnerLeaf, "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerDeep, "outer.middle.inner.deep", flagOuterMiddleInnerDeep, "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepLeaf, "outer.middle.inner.deep.leaf", flagOuterMiddleInnerDeepLeaf, "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepDeeper, "outer.middle.inner.deep.deeper", flagOuterMiddleInnerDeepDeeper, "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepDeeperLeaf, "outer.middle.inner.deep.deeper.leaf", flagOuterMiddleInnerDeepDeeperLeaf, "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepDeeperDeepest, "outer.middle.inner.deep.deeper.deepest", flagOuterMiddleInnerDeepDeeperDeepest, "")
+	cmd.Flags().StringVar(&flagKebabOuter, "kebab-outer", flagKebabOuter, "")
+	cmd.Flags().StringVar(&flagKebabOuterStringLeaf, "kebab-outer.string-leaf", flagKebabOuterStringLeaf, "")
+	cmd.Flags().Int64Var(&flagKebabOuterInt64Leaf, "kebab-outer.int64-leaf", flagKebabOuterInt64Leaf, "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddle, "kebab-outer.middle", flagKebabOuterMiddle, "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleLeaf, "kebab-outer.middle.leaf", flagKebabOuterMiddleLeaf, "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleInner, "kebab-outer.middle.inner", flagKebabOuterMiddleInner, "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerLeaf, "kebab-outer.middle.inner.leaf", flagKebabOuterMiddleInnerLeaf, "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeep, "kebab-outer.middle.inner.deep", flagKebabOuterMiddleInnerDeep, "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeepLeaf, "kebab-outer.middle.inner.deep.leaf", flagKebabOuterMiddleInnerDeepLeaf, "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeepDeeper, "kebab-outer.middle.inner.deep.deeper", flagKebabOuterMiddleInnerDeepDeeper, "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeepDeeperLeaf, "kebab-outer.middle.inner.deep.deeper.leaf", flagKebabOuterMiddleInnerDeepDeeperLeaf, "")
+	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeepDeeperDeepest, "kebab-outer.middle.inner.deep.deeper.deepest", flagKebabOuterMiddleInnerDeepDeeperDeepest, "")
+	cmd.Flags().StringVar(&flagTimestamp, "timestamp", flagTimestamp, "")
+	cmd.Flags().StringArrayVar(&flagOuters, "outers", flagOuters, "")
+	cmd.Flags().StringVar(&flagDuration, "duration", flagDuration, "")
+	cmd.Flags().StringVar(&flagFieldMask, "field-mask", flagFieldMask, "")
+	cmd.Flags().StringVar(&flagRecursive, "recursive", flagRecursive, "")
+	cmd.Flags().StringVar(&flagRecursiveName, "recursive.name", flagRecursiveName, "")
+	cmd.Flags().StringVar(&flagRecursiveNext, "recursive.next", flagRecursiveNext, "")
+	cmd.Flags().StringVar(&flagOdd, "odd", flagOdd, "")
+	cmd.Flags().StringVar(&flagOddEven, "odd.even", flagOddEven, "")
+	cmd.Flags().StringVar(&flagOddEvenOdd, "odd.even.odd", flagOddEvenOdd, "")
+	return cmd
+}
+
+// newFieldsServiceRepeatedCommand returns the cobra subcommand for FieldsService.Repeated.
+func newFieldsServiceRepeatedCommand(client FieldsServiceClient) *cobra.Command {
+	var flagStrings []string
+	var flagBools []bool
+	var flagInts []int64
+	var flagUints []uint
+	var flagDoubles []float64
+	var flagTimestamps []string
+	var flagOuters []string
+	cmd := &cobra.Command{
+		Use:  "repeated",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			if cmd.Flags().Changed("strings") {
+				doc, err := sjson.SetBytes([]byte("{}"), "strings", flagStrings)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --strings", JSON: doc})
+			}
+			if cmd.Flags().Changed("bools") {
+				doc, err := sjson.SetBytes([]byte("{}"), "bools", flagBools)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --bools", JSON: doc})
+			}
+			if cmd.Flags().Changed("ints") {
+				doc, err := sjson.SetBytes([]byte("{}"), "ints", flagInts)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --ints", JSON: doc})
+			}
+			if cmd.Flags().Changed("uints") {
+				doc, err := sjson.SetBytes([]byte("{}"), "uints", flagUints)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --uints", JSON: doc})
+			}
+			if cmd.Flags().Changed("doubles") {
+				doc, err := sjson.SetBytes([]byte("{}"), "doubles", flagDoubles)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --doubles", JSON: doc})
+			}
+			if cmd.Flags().Changed("timestamps") {
+				doc, err := sjson.SetBytes([]byte("{}"), "timestamps", flagTimestamps)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --timestamps", JSON: doc})
+			}
+			if cmd.Flags().Changed("outers") {
+				for _, v := range flagOuters {
+					if !json.Valid([]byte(v)) {
+						return fmt.Errorf("flag --outers: %q is not valid JSON", v)
+					}
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "outers", []byte("["+strings.Join(flagOuters, ",")+"]"))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outers", JSON: doc})
+			}
+			req := &RepeatedRequest{}
+			if err := BuildRequest(req, frags); err != nil {
+				return err
+			}
+			resp, err := client.Repeated(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
+		},
+	}
+	cmd.Flags().StringArrayVar(&flagStrings, "strings", flagStrings, "")
+	cmd.Flags().BoolSliceVar(&flagBools, "bools", flagBools, "")
+	cmd.Flags().Int64SliceVar(&flagInts, "ints", flagInts, "")
+	cmd.Flags().UintSliceVar(&flagUints, "uints", flagUints, "")
+	cmd.Flags().Float64SliceVar(&flagDoubles, "doubles", flagDoubles, "")
+	cmd.Flags().StringArrayVar(&flagTimestamps, "timestamps", flagTimestamps, "")
+	cmd.Flags().StringArrayVar(&flagOuters, "outers", flagOuters, "")
 	return cmd
 }
 

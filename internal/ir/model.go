@@ -60,6 +60,8 @@ type Flag struct {
 	ProtoPath string `json:"proto_path,omitempty"`
 	Name      string `json:"name,omitempty"`
 	Bind      Bind   `json:"bind,omitempty"`
+	// Repeated marks a list field's flag: each use appends one element.
+	Repeated bool `json:"repeated,omitempty"`
 }
 
 // A Bind represents the JSON type a flag's argument parses into.
@@ -71,5 +73,5 @@ const (
 	BindInt    Bind = "int"
 	BindUint   Bind = "uint"
 	BindFloat  Bind = "float"
-	BindJSON   Bind = "json" // a message field as one JSON document
+	BindJSON   Bind = "json" // a message as one JSON document
 )

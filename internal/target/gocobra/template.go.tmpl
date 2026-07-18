@@ -44,7 +44,7 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface) *cobra.Command {
 // new{{ $sym }}Command returns the cobra subcommand for {{ $svc.ProtoName }}.{{ .ProtoName }}.
 func new{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
 {{- range .Flags }}
-	var {{ goVarName . }} {{ goFlagType . }}
+	var {{ goVarName . }} {{ (goBinding .).GoType }}
 {{- end }}
 	cmd := &cobra.Command{
 		Use:  {{ printf "%q" .Name }},
@@ -65,10 +65,19 @@ func new{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
 {{- range .Flags }}
 			if cmd.Flags().Changed({{ printf "%q" .Name }}) {
 {{- if isJSONBind . }}
+{{- if .Repeated }}
+				for _, v := range {{ goVarName . }} {
+					if !json.Valid([]byte(v)) {
+						return fmt.Errorf("flag --{{ .Name }}: %q is not valid JSON", v)
+					}
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), {{ printf "%q" .ProtoPath }}, []byte("["+strings.Join({{ goVarName . }}, ",")+"]"))
+{{- else }}
 				if !json.Valid([]byte({{ goVarName . }})) {
 					return fmt.Errorf("flag --{{ .Name }}: %q is not valid JSON", {{ goVarName . }})
 				}
 				doc, err := sjson.SetRawBytes([]byte("{}"), {{ printf "%q" .ProtoPath }}, []byte({{ goVarName . }}))
+{{- end }}
 {{- else }}
 				doc, err := sjson.SetBytes([]byte("{}"), {{ printf "%q" .ProtoPath }}, {{ goVarName . }})
 {{- end }}
@@ -95,7 +104,7 @@ func new{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
 		},
 	}
 {{- range .Flags }}
-	cmd.Flags().{{ goPflagFunc . }}(&{{ goVarName . }}, {{ printf "%q" .Name }}, {{ goZeroLiteral . }}, "")
+	cmd.Flags().{{ (goBinding .).Setter }}Var(&{{ goVarName . }}, {{ printf "%q" .Name }}, {{ goVarName . }}, "")
 {{- end }}
 	return cmd
 }

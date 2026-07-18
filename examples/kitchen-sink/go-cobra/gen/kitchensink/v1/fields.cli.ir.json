@@ -242,6 +242,12 @@
               "bind": "string"
             },
             {
+              "proto_path": "outers",
+              "name": "outers",
+              "bind": "json",
+              "repeated": true
+            },
+            {
               "proto_path": "duration",
               "name": "duration",
               "bind": "string"
@@ -280,6 +286,65 @@
               "proto_path": "odd.even.odd",
               "name": "odd.even.odd",
               "bind": "json"
+            }
+          ]
+        },
+        {
+          "proto_name": "Repeated",
+          "go_name": "Repeated",
+          "name": "repeated",
+          "short_help": "Repeated carries one repeated field per bind family.",
+          "input": {
+            "full_name": "kitchensink.v1.RepeatedRequest",
+            "proto_file": "kitchensink/v1/fields.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "RepeatedRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.RepeatedRequest",
+          "flags": [
+            {
+              "proto_path": "strings",
+              "name": "strings",
+              "bind": "string",
+              "repeated": true
+            },
+            {
+              "proto_path": "bools",
+              "name": "bools",
+              "bind": "bool",
+              "repeated": true
+            },
+            {
+              "proto_path": "ints",
+              "name": "ints",
+              "bind": "int",
+              "repeated": true
+            },
+            {
+              "proto_path": "uints",
+              "name": "uints",
+              "bind": "uint",
+              "repeated": true
+            },
+            {
+              "proto_path": "doubles",
+              "name": "doubles",
+              "bind": "float",
+              "repeated": true
+            },
+            {
+              "proto_path": "timestamps",
+              "name": "timestamps",
+              "bind": "string",
+              "repeated": true
+            },
+            {
+              "proto_path": "outers",
+              "name": "outers",
+              "bind": "json",
+              "repeated": true
             }
           ]
         }

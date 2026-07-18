@@ -138,9 +138,9 @@ func newBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra
 			return err
 		},
 	}
-	cmd.Flags().StringVar(&flagShelf, "shelf", "", "")
-	cmd.Flags().Int64Var(&flagShelfId, "shelf.id", int64(0), "")
-	cmd.Flags().StringVar(&flagShelfTheme, "shelf.theme", "", "")
+	cmd.Flags().StringVar(&flagShelf, "shelf", flagShelf, "")
+	cmd.Flags().Int64Var(&flagShelfId, "shelf.id", flagShelfId, "")
+	cmd.Flags().StringVar(&flagShelfTheme, "shelf.theme", flagShelfTheme, "")
 	return cmd
 }
 
@@ -186,7 +186,7 @@ func newBookstoreServiceGetShelfCommand(client BookstoreServiceClient) *cobra.Co
 			return err
 		},
 	}
-	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
+	cmd.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
 	return cmd
 }
 
@@ -232,7 +232,7 @@ func newBookstoreServiceDeleteShelfCommand(client BookstoreServiceClient) *cobra
 			return err
 		},
 	}
-	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
+	cmd.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
 	return cmd
 }
 
@@ -278,7 +278,7 @@ func newBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.C
 			return err
 		},
 	}
-	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
+	cmd.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
 	return cmd
 }
 
@@ -359,11 +359,11 @@ func newBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.
 			return err
 		},
 	}
-	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
-	cmd.Flags().StringVar(&flagBook, "book", "", "")
-	cmd.Flags().Int64Var(&flagBookId, "book.id", int64(0), "")
-	cmd.Flags().StringVar(&flagBookAuthor, "book.author", "", "")
-	cmd.Flags().StringVar(&flagBookTitle, "book.title", "", "")
+	cmd.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
+	cmd.Flags().StringVar(&flagBook, "book", flagBook, "")
+	cmd.Flags().Int64Var(&flagBookId, "book.id", flagBookId, "")
+	cmd.Flags().StringVar(&flagBookAuthor, "book.author", flagBookAuthor, "")
+	cmd.Flags().StringVar(&flagBookTitle, "book.title", flagBookTitle, "")
 	return cmd
 }
 
@@ -417,8 +417,8 @@ func newBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Com
 			return err
 		},
 	}
-	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
-	cmd.Flags().Int64Var(&flagBook, "book", int64(0), "")
+	cmd.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
+	cmd.Flags().Int64Var(&flagBook, "book", flagBook, "")
 	return cmd
 }
 
@@ -472,8 +472,8 @@ func newBookstoreServiceDeleteBookCommand(client BookstoreServiceClient) *cobra.
 			return err
 		},
 	}
-	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
-	cmd.Flags().Int64Var(&flagBook, "book", int64(0), "")
+	cmd.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
+	cmd.Flags().Int64Var(&flagBook, "book", flagBook, "")
 	return cmd
 }
 
@@ -498,6 +498,8 @@ func newAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 	var flagLotBookAuthor string
 	var flagLotBookTitle string
 	var flagLotReservePrice float64
+	var flagLotProvenance []string
+	var flagLotFlaws []string
 	var flagLotConsignor string
 	var flagLotConsignorName string
 	var flagLotConsignorAddress string
@@ -573,6 +575,25 @@ func newAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 				}
 				frags = append(frags, Fragment{Source: "flag --lot.reserve-price", JSON: doc})
 			}
+			if cmd.Flags().Changed("lot.provenance") {
+				doc, err := sjson.SetBytes([]byte("{}"), "lot.provenance", flagLotProvenance)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --lot.provenance", JSON: doc})
+			}
+			if cmd.Flags().Changed("lot.flaws") {
+				for _, v := range flagLotFlaws {
+					if !json.Valid([]byte(v)) {
+						return fmt.Errorf("flag --lot.flaws: %q is not valid JSON", v)
+					}
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "lot.flaws", []byte("["+strings.Join(flagLotFlaws, ",")+"]"))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --lot.flaws", JSON: doc})
+			}
 			if cmd.Flags().Changed("lot.consignor") {
 				if !json.Valid([]byte(flagLotConsignor)) {
 					return fmt.Errorf("flag --lot.consignor: %q is not valid JSON", flagLotConsignor)
@@ -623,17 +644,19 @@ func newAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 			return err
 		},
 	}
-	cmd.Flags().StringVar(&flagLot, "lot", "", "")
-	cmd.Flags().Int64Var(&flagLotId, "lot.id", int64(0), "")
-	cmd.Flags().StringVar(&flagLotBook, "lot.book", "", "")
-	cmd.Flags().Int64Var(&flagLotBookId, "lot.book.id", int64(0), "")
-	cmd.Flags().StringVar(&flagLotBookAuthor, "lot.book.author", "", "")
-	cmd.Flags().StringVar(&flagLotBookTitle, "lot.book.title", "", "")
-	cmd.Flags().Float64Var(&flagLotReservePrice, "lot.reserve-price", float64(0), "")
-	cmd.Flags().StringVar(&flagLotConsignor, "lot.consignor", "", "")
-	cmd.Flags().StringVar(&flagLotConsignorName, "lot.consignor.name", "", "")
-	cmd.Flags().StringVar(&flagLotConsignorAddress, "lot.consignor.address", "", "")
-	cmd.Flags().StringVar(&flagStartsAt, "starts-at", "", "")
+	cmd.Flags().StringVar(&flagLot, "lot", flagLot, "")
+	cmd.Flags().Int64Var(&flagLotId, "lot.id", flagLotId, "")
+	cmd.Flags().StringVar(&flagLotBook, "lot.book", flagLotBook, "")
+	cmd.Flags().Int64Var(&flagLotBookId, "lot.book.id", flagLotBookId, "")
+	cmd.Flags().StringVar(&flagLotBookAuthor, "lot.book.author", flagLotBookAuthor, "")
+	cmd.Flags().StringVar(&flagLotBookTitle, "lot.book.title", flagLotBookTitle, "")
+	cmd.Flags().Float64Var(&flagLotReservePrice, "lot.reserve-price", flagLotReservePrice, "")
+	cmd.Flags().StringArrayVar(&flagLotProvenance, "lot.provenance", flagLotProvenance, "")
+	cmd.Flags().StringArrayVar(&flagLotFlaws, "lot.flaws", flagLotFlaws, "")
+	cmd.Flags().StringVar(&flagLotConsignor, "lot.consignor", flagLotConsignor, "")
+	cmd.Flags().StringVar(&flagLotConsignorName, "lot.consignor.name", flagLotConsignorName, "")
+	cmd.Flags().StringVar(&flagLotConsignorAddress, "lot.consignor.address", flagLotConsignorAddress, "")
+	cmd.Flags().StringVar(&flagStartsAt, "starts-at", flagStartsAt, "")
 	return cmd
 }
 
@@ -727,7 +750,7 @@ func newInventoryServiceExportReportCommand(client InventoryServiceClient) *cobr
 			return err
 		},
 	}
-	cmd.Flags().Int64Var(&flagShelf, "shelf", int64(0), "")
+	cmd.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
 	return cmd
 }
 

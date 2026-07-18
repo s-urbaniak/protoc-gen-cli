@@ -28,24 +28,20 @@ func funcMap(model *ir.Model) template.FuncMap {
 			return name
 		},
 		"goClientType": func(svc *ir.Service) string { return svc.GoName + "Client" },
-		"goFlagType":   func(f *ir.Flag) string { return goBindings[f.Bind].GoType },
+		"goBinding": func(f *ir.Flag) pflagBinding {
+			switch {
+			case f.Repeated:
+				return repeatedBindings[f.Bind]
+			default:
+				return singularBindings[f.Bind]
+			}
+		},
 		// The qualifier must match the alias requestImports emits.
 		"goRequestType": func(cmd *ir.Command) string {
 			if cmd.Input.GoImportPath == model.FileOptions.GoImportPath {
 				return cmd.Input.GoName
 			}
 			return cmd.Input.GoPackageName + "." + cmd.Input.GoName
-		},
-		"goPflagFunc": func(f *ir.Flag) string { return goBindings[f.Bind].Singular + "Var" },
-		"goZeroLiteral": func(f *ir.Flag) string {
-			switch t := goBindings[f.Bind].GoType; t {
-			case "string":
-				return `""`
-			case "bool":
-				return "false"
-			default:
-				return t + "(0)"
-			}
 		},
 		// One aliased import per foreign request-type package, sorted by
 		// path. The alias is protogen's package name for the defining file.
@@ -70,15 +66,25 @@ func funcMap(model *ir.Model) template.FuncMap {
 
 // A pflagBinding holds the pflag setter stem and Go type for one bind.
 type pflagBinding struct {
-	Singular string
-	GoType   string
+	Setter string
+	GoType string
 }
 
-var goBindings = map[ir.Bind]pflagBinding{
+var singularBindings = map[ir.Bind]pflagBinding{
 	ir.BindString: {"String", "string"},
 	ir.BindBool:   {"Bool", "bool"},
 	ir.BindInt:    {"Int64", "int64"},
 	ir.BindUint:   {"Uint64", "uint64"},
 	ir.BindFloat:  {"Float64", "float64"},
 	ir.BindJSON:   {"String", "string"},
+}
+
+// StringSlice splits an argument on commas; pflag ships no Uint64Slice.
+var repeatedBindings = map[ir.Bind]pflagBinding{
+	ir.BindString: {"StringArray", "[]string"},
+	ir.BindBool:   {"BoolSlice", "[]bool"},
+	ir.BindInt:    {"Int64Slice", "[]int64"},
+	ir.BindUint:   {"UintSlice", "[]uint"},
+	ir.BindFloat:  {"Float64Slice", "[]float64"},
+	ir.BindJSON:   {"StringArray", "[]string"},
 }

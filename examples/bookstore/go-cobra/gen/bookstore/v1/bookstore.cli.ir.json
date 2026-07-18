@@ -290,6 +290,18 @@
               "bind": "float"
             },
             {
+              "proto_path": "lot.provenance",
+              "name": "lot.provenance",
+              "bind": "string",
+              "repeated": true
+            },
+            {
+              "proto_path": "lot.flaws",
+              "name": "lot.flaws",
+              "bind": "json",
+              "repeated": true
+            },
+            {
               "proto_path": "lot.consignor",
               "name": "lot.consignor",
               "bind": "json"

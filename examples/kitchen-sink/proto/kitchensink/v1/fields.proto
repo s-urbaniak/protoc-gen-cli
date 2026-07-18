@@ -16,6 +16,8 @@ service FieldsService {
   rpc Scalars(ScalarsRequest) returns (ScalarsRequest) {}
   // Messages carries every shape of message field.
   rpc Messages(MessagesRequest) returns (MessagesRequest) {}
+  // Repeated carries one repeated field per bind family.
+  rpc Repeated(RepeatedRequest) returns (RepeatedRequest) {}
 }
 
 message ScalarsRequest {
@@ -46,6 +48,16 @@ message MessagesRequest {
   google.protobuf.Struct struct = 8;
   Recursive recursive = 9;
   Odd odd = 10;
+}
+
+message RepeatedRequest {
+  repeated string strings = 1;
+  repeated bool bools = 2;
+  repeated int64 ints = 3;
+  repeated uint64 uints = 4;
+  repeated double doubles = 5;
+  repeated google.protobuf.Timestamp timestamps = 6;
+  repeated Outer outers = 7;
 }
 
 message Outer {

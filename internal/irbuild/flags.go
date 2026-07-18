@@ -38,7 +38,7 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 			}
 
 			switch {
-			case fd.IsList(), fd.IsMap():
+			case fd.IsMap():
 			case ok && reservedFlagNames[name]:
 				opts.Warn(fmt.Sprintf(
 					"field %s.%s: the derived flag --%s is already reserved by a global flag; no flag generated, set the field via -f/-i, or rename it",
@@ -47,10 +47,14 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 					name,
 				))
 			case ok:
-				flags = append(flags, &ir.Flag{ProtoPath: path, Name: name, Bind: bind})
+				flags = append(
+					flags,
+					&ir.Flag{ProtoPath: path, Name: name, Bind: bind, Repeated: fd.IsList()},
+				)
 				// A type already being expanded: descending again would only
-				// repeat its flags until the budget ran out.
-				if bind == ir.BindJSON && budget > 0 &&
+				// repeat its flags until the budget ran out. A dotted flag
+				// cannot address an element of a list.
+				if bind == ir.BindJSON && !fd.IsList() && budget > 0 &&
 					!slices.Contains(ancestors, fd.Message().FullName()) {
 					walk(fd.Message(), path+".", name+".", budget-1,
 						append(ancestors, fd.Message().FullName()))

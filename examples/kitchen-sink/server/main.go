@@ -45,3 +45,10 @@ func (fieldsServer) Messages(
 ) (*kitchensinkv1.MessagesRequest, error) {
 	return req, nil
 }
+
+func (fieldsServer) Repeated(
+	_ context.Context,
+	req *kitchensinkv1.RepeatedRequest,
+) (*kitchensinkv1.RepeatedRequest, error) {
+	return req, nil
+}
