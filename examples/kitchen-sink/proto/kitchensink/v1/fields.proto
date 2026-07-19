@@ -2,10 +2,13 @@ syntax = "proto3";
 
 package kitchensink.v1;
 
+import "google/protobuf/any.proto";
 import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
 
 option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
 
@@ -20,6 +23,10 @@ service FieldsService {
   rpc Repeated(RepeatedRequest) returns (RepeatedRequest) {}
   // Maps carries one map field per bind family, plus integer and bool keys.
   rpc Maps(MapsRequest) returns (MapsRequest) {}
+  // Wrappers carries the nine wrapper types plus repeated and map compositions.
+  rpc Wrappers(WrappersRequest) returns (WrappersRequest) {}
+  // WellKnown carries the document-form well-known types.
+  rpc WellKnown(WellKnownRequest) returns (WellKnownRequest) {}
 }
 
 message ScalarsRequest {
@@ -37,6 +44,7 @@ message ScalarsRequest {
   sfixed64 sfixed64_field = 12;
   bool bool_field = 13;
   string string_field = 14;
+  bytes bytes_field = 15;
 }
 
 message MessagesRequest {
@@ -72,6 +80,28 @@ message MapsRequest {
   map<string, Outer> outer_values = 7;
   map<int64, string> int64_keys = 8;
   map<bool, string> bool_keys = 9;
+}
+
+message WrappersRequest {
+  google.protobuf.DoubleValue double_value = 1;
+  google.protobuf.FloatValue float_value = 2;
+  google.protobuf.Int64Value int64_value = 3;
+  google.protobuf.UInt64Value uint64_value = 4;
+  google.protobuf.Int32Value int32_value = 5;
+  google.protobuf.UInt32Value uint32_value = 6;
+  google.protobuf.BoolValue bool_value = 7;
+  google.protobuf.StringValue string_value = 8;
+  google.protobuf.BytesValue bytes_value = 9;
+  repeated google.protobuf.StringValue repeated_strings = 10;
+  map<string, google.protobuf.BoolValue> bool_map = 11;
+}
+
+message WellKnownRequest {
+  google.protobuf.Struct struct = 1;
+  google.protobuf.Value value = 2;
+  google.protobuf.ListValue list_value = 3;
+  google.protobuf.Any any = 4;
+  google.protobuf.Empty empty = 5;
 }
 
 message Outer {

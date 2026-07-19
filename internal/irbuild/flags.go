@@ -12,9 +12,6 @@ import (
 // buildFlags derives a command's flags from its request message's fields.
 func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 	var flags []*ir.Flag
-	isWellKnown := func(md protoreflect.MessageDescriptor) bool {
-		return md.FullName().Parent() == "google.protobuf"
-	}
 	var walk func(md protoreflect.MessageDescriptor, protoPrefix, cliPrefix string, budget int, ancestors []protoreflect.FullName)
 	walk = func(md protoreflect.MessageDescriptor, protoPrefix, cliPrefix string, budget int, ancestors []protoreflect.FullName) {
 		fields := md.Fields()
@@ -30,14 +27,11 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 			}
 
 			var bind ir.Bind
-			var ok bool
+			var ok, expand bool
 			switch elem.Kind() {
 			case protoreflect.MessageKind:
-				// protojson gives every google.protobuf message a special
-				// JSON form; only a messageBinds row carries one in a flag.
-				if bind, ok = messageBinds[elem.Message().FullName()]; !ok &&
-					!isWellKnown(elem.Message()) {
-					bind, ok = ir.BindJSON, true
+				if bind, ok = messageBinds[elem.Message().FullName()]; !ok {
+					bind, ok, expand = ir.BindJSON, true, true
 				}
 			default:
 				bind, ok = scalarBinds[elem.Kind()]
@@ -64,7 +58,7 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 				// A type already being expanded: descending again would only
 				// repeat its flags until the budget ran out. A dotted flag
 				// cannot address an element of a list or an entry of a map.
-				if bind == ir.BindJSON && !fd.IsList() && !fd.IsMap() && budget > 0 &&
+				if expand && !fd.IsList() && !fd.IsMap() && budget > 0 &&
 					!slices.Contains(ancestors, fd.Message().FullName()) {
 					walk(fd.Message(), path+".", name+".", budget-1,
 						append(ancestors, fd.Message().FullName()))
@@ -80,18 +74,33 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 // Flag names the generated code already reserve.
 var reservedFlagNames = map[string]bool{"filename": true, "input": true, "help": true}
 
-// Message types protojson renders as a single JSON value;
-// - A Timestamp is an RFC 3339 string
-// - A timestamp Duration is a "30s"-style seconds, etc.
+// messageBinds is protojson's message types rendered as a single JSON value.
 var messageBinds = map[protoreflect.FullName]ir.Bind{
 	"google.protobuf.Timestamp": ir.BindString,
 	"google.protobuf.Duration":  ir.BindString,
 	"google.protobuf.FieldMask": ir.BindString,
+
+	"google.protobuf.BoolValue":   ir.BindBool,
+	"google.protobuf.StringValue": ir.BindString,
+	"google.protobuf.BytesValue":  ir.BindString,
+	"google.protobuf.Int32Value":  ir.BindInt,
+	"google.protobuf.Int64Value":  ir.BindInt,
+	"google.protobuf.UInt32Value": ir.BindUint,
+	"google.protobuf.UInt64Value": ir.BindUint,
+	"google.protobuf.FloatValue":  ir.BindFloat,
+	"google.protobuf.DoubleValue": ir.BindFloat,
+
+	"google.protobuf.Struct":    ir.BindJSON,
+	"google.protobuf.Value":     ir.BindJSON,
+	"google.protobuf.ListValue": ir.BindJSON,
+	"google.protobuf.Any":       ir.BindJSON,
+	"google.protobuf.Empty":     ir.BindJSON,
 }
 
 var scalarBinds = map[protoreflect.Kind]ir.Bind{
 	protoreflect.BoolKind:     ir.BindBool,
 	protoreflect.StringKind:   ir.BindString,
+	protoreflect.BytesKind:    ir.BindString,
 	protoreflect.Int32Kind:    ir.BindInt,
 	protoreflect.Sint32Kind:   ir.BindInt,
 	protoreflect.Sfixed32Kind: ir.BindInt,

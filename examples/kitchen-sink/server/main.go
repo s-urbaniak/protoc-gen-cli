@@ -59,3 +59,17 @@ func (fieldsServer) Maps(
 ) (*kitchensinkv1.MapsRequest, error) {
 	return req, nil
 }
+
+func (fieldsServer) Wrappers(
+	_ context.Context,
+	req *kitchensinkv1.WrappersRequest,
+) (*kitchensinkv1.WrappersRequest, error) {
+	return req, nil
+}
+
+func (fieldsServer) WellKnown(
+	_ context.Context,
+	req *kitchensinkv1.WellKnownRequest,
+) (*kitchensinkv1.WellKnownRequest, error) {
+	return req, nil
+}

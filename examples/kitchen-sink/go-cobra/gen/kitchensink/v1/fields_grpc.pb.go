@@ -19,10 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	FieldsService_Scalars_FullMethodName  = "/kitchensink.v1.FieldsService/Scalars"
-	FieldsService_Messages_FullMethodName = "/kitchensink.v1.FieldsService/Messages"
-	FieldsService_Repeated_FullMethodName = "/kitchensink.v1.FieldsService/Repeated"
-	FieldsService_Maps_FullMethodName     = "/kitchensink.v1.FieldsService/Maps"
+	FieldsService_Scalars_FullMethodName   = "/kitchensink.v1.FieldsService/Scalars"
+	FieldsService_Messages_FullMethodName  = "/kitchensink.v1.FieldsService/Messages"
+	FieldsService_Repeated_FullMethodName  = "/kitchensink.v1.FieldsService/Repeated"
+	FieldsService_Maps_FullMethodName      = "/kitchensink.v1.FieldsService/Maps"
+	FieldsService_Wrappers_FullMethodName  = "/kitchensink.v1.FieldsService/Wrappers"
+	FieldsService_WellKnown_FullMethodName = "/kitchensink.v1.FieldsService/WellKnown"
 )
 
 // FieldsServiceClient is the client API for FieldsService service.
@@ -40,6 +42,10 @@ type FieldsServiceClient interface {
 	Repeated(ctx context.Context, in *RepeatedRequest, opts ...grpc.CallOption) (*RepeatedRequest, error)
 	// Maps carries one map field per bind family, plus integer and bool keys.
 	Maps(ctx context.Context, in *MapsRequest, opts ...grpc.CallOption) (*MapsRequest, error)
+	// Wrappers carries the nine wrapper types plus repeated and map compositions.
+	Wrappers(ctx context.Context, in *WrappersRequest, opts ...grpc.CallOption) (*WrappersRequest, error)
+	// WellKnown carries the document-form well-known types.
+	WellKnown(ctx context.Context, in *WellKnownRequest, opts ...grpc.CallOption) (*WellKnownRequest, error)
 }
 
 type fieldsServiceClient struct {
@@ -90,6 +96,26 @@ func (c *fieldsServiceClient) Maps(ctx context.Context, in *MapsRequest, opts ..
 	return out, nil
 }
 
+func (c *fieldsServiceClient) Wrappers(ctx context.Context, in *WrappersRequest, opts ...grpc.CallOption) (*WrappersRequest, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(WrappersRequest)
+	err := c.cc.Invoke(ctx, FieldsService_Wrappers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *fieldsServiceClient) WellKnown(ctx context.Context, in *WellKnownRequest, opts ...grpc.CallOption) (*WellKnownRequest, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(WellKnownRequest)
+	err := c.cc.Invoke(ctx, FieldsService_WellKnown_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FieldsServiceServer is the server API for FieldsService service.
 // All implementations must embed UnimplementedFieldsServiceServer
 // for forward compatibility.
@@ -105,6 +131,10 @@ type FieldsServiceServer interface {
 	Repeated(context.Context, *RepeatedRequest) (*RepeatedRequest, error)
 	// Maps carries one map field per bind family, plus integer and bool keys.
 	Maps(context.Context, *MapsRequest) (*MapsRequest, error)
+	// Wrappers carries the nine wrapper types plus repeated and map compositions.
+	Wrappers(context.Context, *WrappersRequest) (*WrappersRequest, error)
+	// WellKnown carries the document-form well-known types.
+	WellKnown(context.Context, *WellKnownRequest) (*WellKnownRequest, error)
 	mustEmbedUnimplementedFieldsServiceServer()
 }
 
@@ -126,6 +156,12 @@ func (UnimplementedFieldsServiceServer) Repeated(context.Context, *RepeatedReque
 }
 func (UnimplementedFieldsServiceServer) Maps(context.Context, *MapsRequest) (*MapsRequest, error) {
 	return nil, status.Error(codes.Unimplemented, "method Maps not implemented")
+}
+func (UnimplementedFieldsServiceServer) Wrappers(context.Context, *WrappersRequest) (*WrappersRequest, error) {
+	return nil, status.Error(codes.Unimplemented, "method Wrappers not implemented")
+}
+func (UnimplementedFieldsServiceServer) WellKnown(context.Context, *WellKnownRequest) (*WellKnownRequest, error) {
+	return nil, status.Error(codes.Unimplemented, "method WellKnown not implemented")
 }
 func (UnimplementedFieldsServiceServer) mustEmbedUnimplementedFieldsServiceServer() {}
 func (UnimplementedFieldsServiceServer) testEmbeddedByValue()                       {}
@@ -220,6 +256,42 @@ func _FieldsService_Maps_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FieldsService_Wrappers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WrappersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FieldsServiceServer).Wrappers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FieldsService_Wrappers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FieldsServiceServer).Wrappers(ctx, req.(*WrappersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FieldsService_WellKnown_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WellKnownRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FieldsServiceServer).WellKnown(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FieldsService_WellKnown_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FieldsServiceServer).WellKnown(ctx, req.(*WellKnownRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FieldsService_ServiceDesc is the grpc.ServiceDesc for FieldsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -242,6 +314,14 @@ var FieldsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Maps",
 			Handler:    _FieldsService_Maps_Handler,
+		},
+		{
+			MethodName: "Wrappers",
+			Handler:    _FieldsService_Wrappers_Handler,
+		},
+		{
+			MethodName: "WellKnown",
+			Handler:    _FieldsService_WellKnown_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

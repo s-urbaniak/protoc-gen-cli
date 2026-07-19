@@ -32,6 +32,8 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 	cmd.AddCommand(newFieldsServiceMessagesCommand(client))
 	cmd.AddCommand(newFieldsServiceRepeatedCommand(client))
 	cmd.AddCommand(newFieldsServiceMapsCommand(client))
+	cmd.AddCommand(newFieldsServiceWrappersCommand(client))
+	cmd.AddCommand(newFieldsServiceWellKnownCommand(client))
 	return cmd
 }
 
@@ -51,6 +53,7 @@ func newFieldsServiceScalarsCommand(client FieldsServiceClient) *cobra.Command {
 	var flagSfixed64Field int64
 	var flagBoolField bool
 	var flagStringField string
+	var flagBytesField string
 	cmd := &cobra.Command{
 		Use:  "scalars",
 		Args: cobra.NoArgs,
@@ -165,6 +168,13 @@ func newFieldsServiceScalarsCommand(client FieldsServiceClient) *cobra.Command {
 				}
 				frags = append(frags, Fragment{Source: "flag --string-field", JSON: doc})
 			}
+			if cmd.Flags().Changed("bytes-field") {
+				doc, err := sjson.SetBytes([]byte("{}"), "bytes_field", flagBytesField)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --bytes-field", JSON: doc})
+			}
 			req := &ScalarsRequest{}
 			if err := BuildRequest(req, frags); err != nil {
 				return err
@@ -195,6 +205,7 @@ func newFieldsServiceScalarsCommand(client FieldsServiceClient) *cobra.Command {
 	cmd.Flags().Int64Var(&flagSfixed64Field, "sfixed64-field", flagSfixed64Field, "")
 	cmd.Flags().BoolVar(&flagBoolField, "bool-field", flagBoolField, "")
 	cmd.Flags().StringVar(&flagStringField, "string-field", flagStringField, "")
+	cmd.Flags().StringVar(&flagBytesField, "bytes-field", flagBytesField, "")
 	return cmd
 }
 
@@ -229,6 +240,7 @@ func newFieldsServiceMessagesCommand(client FieldsServiceClient) *cobra.Command 
 	var flagLabels []string
 	var flagDuration string
 	var flagFieldMask string
+	var flagStruct string
 	var flagRecursive string
 	var flagRecursiveName string
 	var flagRecursiveNext string
@@ -503,6 +515,16 @@ func newFieldsServiceMessagesCommand(client FieldsServiceClient) *cobra.Command 
 				}
 				frags = append(frags, Fragment{Source: "flag --field-mask", JSON: doc})
 			}
+			if cmd.Flags().Changed("struct") {
+				if !json.Valid([]byte(flagStruct)) {
+					return fmt.Errorf("flag --struct: %q is not valid JSON", flagStruct)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "struct", []byte(flagStruct))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --struct", JSON: doc})
+			}
 			if cmd.Flags().Changed("recursive") {
 				if !json.Valid([]byte(flagRecursive)) {
 					return fmt.Errorf("flag --recursive: %q is not valid JSON", flagRecursive)
@@ -605,6 +627,7 @@ func newFieldsServiceMessagesCommand(client FieldsServiceClient) *cobra.Command 
 	cmd.Flags().StringArrayVar(&flagLabels, "labels", flagLabels, "")
 	cmd.Flags().StringVar(&flagDuration, "duration", flagDuration, "")
 	cmd.Flags().StringVar(&flagFieldMask, "field-mask", flagFieldMask, "")
+	cmd.Flags().StringVar(&flagStruct, "struct", flagStruct, "")
 	cmd.Flags().StringVar(&flagRecursive, "recursive", flagRecursive, "")
 	cmd.Flags().StringVar(&flagRecursiveName, "recursive.name", flagRecursiveName, "")
 	cmd.Flags().StringVar(&flagRecursiveNext, "recursive.next", flagRecursiveNext, "")
@@ -924,6 +947,250 @@ func newFieldsServiceMapsCommand(client FieldsServiceClient) *cobra.Command {
 	return cmd
 }
 
+// newFieldsServiceWrappersCommand returns the cobra subcommand for FieldsService.Wrappers.
+func newFieldsServiceWrappersCommand(client FieldsServiceClient) *cobra.Command {
+	var flagDoubleValue float64
+	var flagFloatValue float64
+	var flagInt64Value int64
+	var flagUint64Value uint64
+	var flagInt32Value int64
+	var flagUint32Value uint64
+	var flagBoolValue bool
+	var flagStringValue string
+	var flagBytesValue string
+	var flagRepeatedStrings []string
+	var flagBoolMap []string
+	cmd := &cobra.Command{
+		Use:  "wrappers",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			if cmd.Flags().Changed("double-value") {
+				doc, err := sjson.SetBytes([]byte("{}"), "double_value", flagDoubleValue)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --double-value", JSON: doc})
+			}
+			if cmd.Flags().Changed("float-value") {
+				doc, err := sjson.SetBytes([]byte("{}"), "float_value", flagFloatValue)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --float-value", JSON: doc})
+			}
+			if cmd.Flags().Changed("int64-value") {
+				doc, err := sjson.SetBytes([]byte("{}"), "int64_value", flagInt64Value)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --int64-value", JSON: doc})
+			}
+			if cmd.Flags().Changed("uint64-value") {
+				doc, err := sjson.SetBytes([]byte("{}"), "uint64_value", flagUint64Value)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --uint64-value", JSON: doc})
+			}
+			if cmd.Flags().Changed("int32-value") {
+				doc, err := sjson.SetBytes([]byte("{}"), "int32_value", flagInt32Value)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --int32-value", JSON: doc})
+			}
+			if cmd.Flags().Changed("uint32-value") {
+				doc, err := sjson.SetBytes([]byte("{}"), "uint32_value", flagUint32Value)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --uint32-value", JSON: doc})
+			}
+			if cmd.Flags().Changed("bool-value") {
+				doc, err := sjson.SetBytes([]byte("{}"), "bool_value", flagBoolValue)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --bool-value", JSON: doc})
+			}
+			if cmd.Flags().Changed("string-value") {
+				doc, err := sjson.SetBytes([]byte("{}"), "string_value", flagStringValue)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --string-value", JSON: doc})
+			}
+			if cmd.Flags().Changed("bytes-value") {
+				doc, err := sjson.SetBytes([]byte("{}"), "bytes_value", flagBytesValue)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --bytes-value", JSON: doc})
+			}
+			if cmd.Flags().Changed("repeated-strings") {
+				doc, err := sjson.SetBytes([]byte("{}"), "repeated_strings", flagRepeatedStrings)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --repeated-strings", JSON: doc})
+			}
+			if cmd.Flags().Changed("bool-map") {
+				m := map[string]json.RawMessage{}
+				for _, kv := range flagBoolMap {
+					k, v, ok := strings.Cut(kv, "=")
+					if !ok {
+						return fmt.Errorf("flag --bool-map: %q is not key=value", kv)
+					}
+					if !json.Valid([]byte(v)) {
+						return fmt.Errorf("flag --bool-map: %q is not valid JSON", v)
+					}
+					m[k] = json.RawMessage(v)
+				}
+				doc, err := sjson.SetBytes([]byte("{}"), "bool_map", m)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --bool-map", JSON: doc})
+			}
+			req := &WrappersRequest{}
+			if err := BuildRequest(req, frags); err != nil {
+				return err
+			}
+			resp, err := client.Wrappers(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
+		},
+	}
+	cmd.Flags().Float64Var(&flagDoubleValue, "double-value", flagDoubleValue, "")
+	cmd.Flags().Float64Var(&flagFloatValue, "float-value", flagFloatValue, "")
+	cmd.Flags().Int64Var(&flagInt64Value, "int64-value", flagInt64Value, "")
+	cmd.Flags().Uint64Var(&flagUint64Value, "uint64-value", flagUint64Value, "")
+	cmd.Flags().Int64Var(&flagInt32Value, "int32-value", flagInt32Value, "")
+	cmd.Flags().Uint64Var(&flagUint32Value, "uint32-value", flagUint32Value, "")
+	cmd.Flags().BoolVar(&flagBoolValue, "bool-value", flagBoolValue, "")
+	cmd.Flags().StringVar(&flagStringValue, "string-value", flagStringValue, "")
+	cmd.Flags().StringVar(&flagBytesValue, "bytes-value", flagBytesValue, "")
+	cmd.Flags().StringArrayVar(&flagRepeatedStrings, "repeated-strings", flagRepeatedStrings, "")
+	cmd.Flags().StringArrayVar(&flagBoolMap, "bool-map", flagBoolMap, "")
+	return cmd
+}
+
+// newFieldsServiceWellKnownCommand returns the cobra subcommand for FieldsService.WellKnown.
+func newFieldsServiceWellKnownCommand(client FieldsServiceClient) *cobra.Command {
+	var flagStruct string
+	var flagValue string
+	var flagListValue string
+	var flagAny string
+	var flagEmpty string
+	cmd := &cobra.Command{
+		Use:  "well-known",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			if cmd.Flags().Changed("struct") {
+				if !json.Valid([]byte(flagStruct)) {
+					return fmt.Errorf("flag --struct: %q is not valid JSON", flagStruct)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "struct", []byte(flagStruct))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --struct", JSON: doc})
+			}
+			if cmd.Flags().Changed("value") {
+				if !json.Valid([]byte(flagValue)) {
+					return fmt.Errorf("flag --value: %q is not valid JSON", flagValue)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "value", []byte(flagValue))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --value", JSON: doc})
+			}
+			if cmd.Flags().Changed("list-value") {
+				if !json.Valid([]byte(flagListValue)) {
+					return fmt.Errorf("flag --list-value: %q is not valid JSON", flagListValue)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "list_value", []byte(flagListValue))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --list-value", JSON: doc})
+			}
+			if cmd.Flags().Changed("any") {
+				if !json.Valid([]byte(flagAny)) {
+					return fmt.Errorf("flag --any: %q is not valid JSON", flagAny)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "any", []byte(flagAny))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --any", JSON: doc})
+			}
+			if cmd.Flags().Changed("empty") {
+				if !json.Valid([]byte(flagEmpty)) {
+					return fmt.Errorf("flag --empty: %q is not valid JSON", flagEmpty)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "empty", []byte(flagEmpty))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --empty", JSON: doc})
+			}
+			req := &WellKnownRequest{}
+			if err := BuildRequest(req, frags); err != nil {
+				return err
+			}
+			resp, err := client.WellKnown(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
+		},
+	}
+	cmd.Flags().StringVar(&flagStruct, "struct", flagStruct, "")
+	cmd.Flags().StringVar(&flagValue, "value", flagValue, "")
+	cmd.Flags().StringVar(&flagListValue, "list-value", flagListValue, "")
+	cmd.Flags().StringVar(&flagAny, "any", flagAny, "")
+	cmd.Flags().StringVar(&flagEmpty, "empty", flagEmpty, "")
+	return cmd
+}
+
 // ---- Request flags ----
 
 func addRequestFlags(fs *pflag.FlagSet) {
@@ -1031,8 +1298,8 @@ func LoadInputs(files, inline []string, stdin io.Reader) ([]Fragment, error) {
 }
 
 // BuildRequest merges the fragments into req in order. Merging follows
-// proto.Merge: scalars and oneofs replace, messages merge field-wise,
-// repeated fields append, map entries merge per key.
+// proto.Merge: populated scalars and oneofs replace, messages merge
+// field-wise, repeated fields append, map entries merge per key.
 func BuildRequest(req proto.Message, frags []Fragment) error {
 	// A fragment is partial by definition; required fields are a property
 	// of the assembled request, checked once after the merge.

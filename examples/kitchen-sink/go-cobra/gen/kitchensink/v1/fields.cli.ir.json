@@ -98,6 +98,11 @@
               "proto_path": "string_field",
               "name": "string-field",
               "bind": "string"
+            },
+            {
+              "proto_path": "bytes_field",
+              "name": "bytes-field",
+              "bind": "string"
             }
           ]
         },
@@ -264,6 +269,11 @@
               "bind": "string"
             },
             {
+              "proto_path": "struct",
+              "name": "struct",
+              "bind": "json"
+            },
+            {
               "proto_path": "recursive",
               "name": "recursive",
               "bind": "json"
@@ -422,6 +432,122 @@
               "name": "bool-keys",
               "bind": "string",
               "map": true
+            }
+          ]
+        },
+        {
+          "proto_name": "Wrappers",
+          "go_name": "Wrappers",
+          "name": "wrappers",
+          "short_help": "Wrappers carries the nine wrapper types plus repeated and map compositions.",
+          "input": {
+            "full_name": "kitchensink.v1.WrappersRequest",
+            "proto_file": "kitchensink/v1/fields.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "WrappersRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.WrappersRequest",
+          "flags": [
+            {
+              "proto_path": "double_value",
+              "name": "double-value",
+              "bind": "float"
+            },
+            {
+              "proto_path": "float_value",
+              "name": "float-value",
+              "bind": "float"
+            },
+            {
+              "proto_path": "int64_value",
+              "name": "int64-value",
+              "bind": "int"
+            },
+            {
+              "proto_path": "uint64_value",
+              "name": "uint64-value",
+              "bind": "uint"
+            },
+            {
+              "proto_path": "int32_value",
+              "name": "int32-value",
+              "bind": "int"
+            },
+            {
+              "proto_path": "uint32_value",
+              "name": "uint32-value",
+              "bind": "uint"
+            },
+            {
+              "proto_path": "bool_value",
+              "name": "bool-value",
+              "bind": "bool"
+            },
+            {
+              "proto_path": "string_value",
+              "name": "string-value",
+              "bind": "string"
+            },
+            {
+              "proto_path": "bytes_value",
+              "name": "bytes-value",
+              "bind": "string"
+            },
+            {
+              "proto_path": "repeated_strings",
+              "name": "repeated-strings",
+              "bind": "string",
+              "repeated": true
+            },
+            {
+              "proto_path": "bool_map",
+              "name": "bool-map",
+              "bind": "bool",
+              "map": true
+            }
+          ]
+        },
+        {
+          "proto_name": "WellKnown",
+          "go_name": "WellKnown",
+          "name": "well-known",
+          "short_help": "WellKnown carries the document-form well-known types.",
+          "input": {
+            "full_name": "kitchensink.v1.WellKnownRequest",
+            "proto_file": "kitchensink/v1/fields.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "WellKnownRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.WellKnownRequest",
+          "flags": [
+            {
+              "proto_path": "struct",
+              "name": "struct",
+              "bind": "json"
+            },
+            {
+              "proto_path": "value",
+              "name": "value",
+              "bind": "json"
+            },
+            {
+              "proto_path": "list_value",
+              "name": "list-value",
+              "bind": "json"
+            },
+            {
+              "proto_path": "any",
+              "name": "any",
+              "bind": "json"
+            },
+            {
+              "proto_path": "empty",
+              "name": "empty",
+              "bind": "json"
             }
           ]
         }

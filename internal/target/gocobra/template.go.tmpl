@@ -240,8 +240,8 @@ func LoadInputs(files, inline []string, stdin io.Reader) ([]Fragment, error) {
 }
 
 // BuildRequest merges the fragments into req in order. Merging follows
-// proto.Merge: scalars and oneofs replace, messages merge field-wise,
-// repeated fields append, map entries merge per key.
+// proto.Merge: populated scalars and oneofs replace, messages merge
+// field-wise, repeated fields append, map entries merge per key.
 func BuildRequest(req proto.Message, frags []Fragment) error {
 	// A fragment is partial by definition; required fields are a property
 	// of the assembled request, checked once after the merge.
