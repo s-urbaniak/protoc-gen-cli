@@ -63,29 +63,7 @@ func new{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
 				return err
 			}
 {{- range .Flags }}
-			if cmd.Flags().Changed({{ printf "%q" .Name }}) {
-{{- if isJSONBind . }}
-{{- if .Repeated }}
-				for _, v := range {{ goVarName . }} {
-					if !json.Valid([]byte(v)) {
-						return fmt.Errorf("flag --{{ .Name }}: %q is not valid JSON", v)
-					}
-				}
-				doc, err := sjson.SetRawBytes([]byte("{}"), {{ printf "%q" .ProtoPath }}, []byte("["+strings.Join({{ goVarName . }}, ",")+"]"))
-{{- else }}
-				if !json.Valid([]byte({{ goVarName . }})) {
-					return fmt.Errorf("flag --{{ .Name }}: %q is not valid JSON", {{ goVarName . }})
-				}
-				doc, err := sjson.SetRawBytes([]byte("{}"), {{ printf "%q" .ProtoPath }}, []byte({{ goVarName . }}))
-{{- end }}
-{{- else }}
-				doc, err := sjson.SetBytes([]byte("{}"), {{ printf "%q" .ProtoPath }}, {{ goVarName . }})
-{{- end }}
-				if err != nil {
-					return err
-				}
-				frags = append(frags, Fragment{Source: "flag --{{ .Name }}", JSON: doc})
-			}
+{{- template "flagFragment" . }}
 {{- end }}
 			req := &{{ goRequestType . }}{}
 			if err := BuildRequest(req, frags); err != nil {
@@ -109,6 +87,52 @@ func new{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
 	return cmd
 }
 {{ end }}{{ end }}
+{{- define "flagFragment" }}
+			if cmd.Flags().Changed({{ printf "%q" .Name }}) {
+{{- if and .Map (isStringBind .) }}
+				m := map[string]string{}
+				for _, kv := range {{ goVarName . }} {
+					k, v, ok := strings.Cut(kv, "=")
+					if !ok {
+						return fmt.Errorf("flag --{{ .Name }}: %q is not key=value", kv)
+					}
+					m[k] = v
+				}
+				doc, err := sjson.SetBytes([]byte("{}"), {{ printf "%q" .ProtoPath }}, m)
+{{- else if .Map }}
+				m := map[string]json.RawMessage{}
+				for _, kv := range {{ goVarName . }} {
+					k, v, ok := strings.Cut(kv, "=")
+					if !ok {
+						return fmt.Errorf("flag --{{ .Name }}: %q is not key=value", kv)
+					}
+					if !json.Valid([]byte(v)) {
+						return fmt.Errorf("flag --{{ .Name }}: %q is not valid JSON", v)
+					}
+					m[k] = json.RawMessage(v)
+				}
+				doc, err := sjson.SetBytes([]byte("{}"), {{ printf "%q" .ProtoPath }}, m)
+{{- else if and (isJSONBind .) .Repeated }}
+				for _, v := range {{ goVarName . }} {
+					if !json.Valid([]byte(v)) {
+						return fmt.Errorf("flag --{{ .Name }}: %q is not valid JSON", v)
+					}
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), {{ printf "%q" .ProtoPath }}, []byte("["+strings.Join({{ goVarName . }}, ",")+"]"))
+{{- else if isJSONBind . }}
+				if !json.Valid([]byte({{ goVarName . }})) {
+					return fmt.Errorf("flag --{{ .Name }}: %q is not valid JSON", {{ goVarName . }})
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), {{ printf "%q" .ProtoPath }}, []byte({{ goVarName . }}))
+{{- else }}
+				doc, err := sjson.SetBytes([]byte("{}"), {{ printf "%q" .ProtoPath }}, {{ goVarName . }})
+{{- end }}
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --{{ .Name }}", JSON: doc})
+			}
+{{- end }}
 // ---- Request flags ----
 
 func addRequestFlags(fs *pflag.FlagSet) {

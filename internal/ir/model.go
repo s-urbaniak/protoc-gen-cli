@@ -62,6 +62,8 @@ type Flag struct {
 	Bind      Bind   `json:"bind,omitempty"`
 	// Repeated marks a list field's flag: each use appends one element.
 	Repeated bool `json:"repeated,omitempty"`
+	// Map marks a map field's flag: each use adds one key=value entry.
+	Map bool `json:"map,omitempty"`
 }
 
 // A Bind represents the JSON type a flag's argument parses into.

@@ -52,3 +52,10 @@ func (fieldsServer) Repeated(
 ) (*kitchensinkv1.RepeatedRequest, error) {
 	return req, nil
 }
+
+func (fieldsServer) Maps(
+	_ context.Context,
+	req *kitchensinkv1.MapsRequest,
+) (*kitchensinkv1.MapsRequest, error) {
+	return req, nil
+}

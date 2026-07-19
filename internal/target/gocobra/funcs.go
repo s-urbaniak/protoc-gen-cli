@@ -30,6 +30,10 @@ func funcMap(model *ir.Model) template.FuncMap {
 		"goClientType": func(svc *ir.Service) string { return svc.GoName + "Client" },
 		"goBinding": func(f *ir.Flag) pflagBinding {
 			switch {
+			// pflag only accumulates a map flag's key=value entries;
+			// the RunE arm parses them.
+			case f.Map:
+				return pflagBinding{"StringArray", "[]string"}
 			case f.Repeated:
 				return repeatedBindings[f.Bind]
 			default:
@@ -60,7 +64,8 @@ func funcMap(model *ir.Model) template.FuncMap {
 			}
 			return out
 		},
-		"isJSONBind": func(f *ir.Flag) bool { return f.Bind == ir.BindJSON },
+		"isJSONBind":   func(f *ir.Flag) bool { return f.Bind == ir.BindJSON },
+		"isStringBind": func(f *ir.Flag) bool { return f.Bind == ir.BindString },
 	}
 }
 

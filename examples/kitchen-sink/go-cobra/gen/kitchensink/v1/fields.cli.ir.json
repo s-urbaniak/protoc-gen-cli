@@ -248,6 +248,12 @@
               "repeated": true
             },
             {
+              "proto_path": "labels",
+              "name": "labels",
+              "bind": "string",
+              "map": true
+            },
+            {
               "proto_path": "duration",
               "name": "duration",
               "bind": "string"
@@ -345,6 +351,77 @@
               "name": "outers",
               "bind": "json",
               "repeated": true
+            }
+          ]
+        },
+        {
+          "proto_name": "Maps",
+          "go_name": "Maps",
+          "name": "maps",
+          "short_help": "Maps carries one map field per bind family, plus integer and bool keys.",
+          "input": {
+            "full_name": "kitchensink.v1.MapsRequest",
+            "proto_file": "kitchensink/v1/fields.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "MapsRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.MapsRequest",
+          "flags": [
+            {
+              "proto_path": "string_values",
+              "name": "string-values",
+              "bind": "string",
+              "map": true
+            },
+            {
+              "proto_path": "bool_values",
+              "name": "bool-values",
+              "bind": "bool",
+              "map": true
+            },
+            {
+              "proto_path": "int64_values",
+              "name": "int64-values",
+              "bind": "int",
+              "map": true
+            },
+            {
+              "proto_path": "uint64_values",
+              "name": "uint64-values",
+              "bind": "uint",
+              "map": true
+            },
+            {
+              "proto_path": "double_values",
+              "name": "double-values",
+              "bind": "float",
+              "map": true
+            },
+            {
+              "proto_path": "timestamp_values",
+              "name": "timestamp-values",
+              "bind": "string",
+              "map": true
+            },
+            {
+              "proto_path": "outer_values",
+              "name": "outer-values",
+              "bind": "json",
+              "map": true
+            },
+            {
+              "proto_path": "int64_keys",
+              "name": "int64-keys",
+              "bind": "string",
+              "map": true
+            },
+            {
+              "proto_path": "bool_keys",
+              "name": "bool-keys",
+              "bind": "string",
+              "map": true
             }
           ]
         }

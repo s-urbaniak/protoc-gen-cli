@@ -500,6 +500,7 @@ func newAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 	var flagLotReservePrice float64
 	var flagLotProvenance []string
 	var flagLotFlaws []string
+	var flagLotAttributes []string
 	var flagLotConsignor string
 	var flagLotConsignorName string
 	var flagLotConsignorAddress string
@@ -594,6 +595,21 @@ func newAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 				}
 				frags = append(frags, Fragment{Source: "flag --lot.flaws", JSON: doc})
 			}
+			if cmd.Flags().Changed("lot.attributes") {
+				m := map[string]string{}
+				for _, kv := range flagLotAttributes {
+					k, v, ok := strings.Cut(kv, "=")
+					if !ok {
+						return fmt.Errorf("flag --lot.attributes: %q is not key=value", kv)
+					}
+					m[k] = v
+				}
+				doc, err := sjson.SetBytes([]byte("{}"), "lot.attributes", m)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --lot.attributes", JSON: doc})
+			}
 			if cmd.Flags().Changed("lot.consignor") {
 				if !json.Valid([]byte(flagLotConsignor)) {
 					return fmt.Errorf("flag --lot.consignor: %q is not valid JSON", flagLotConsignor)
@@ -653,6 +669,7 @@ func newAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 	cmd.Flags().Float64Var(&flagLotReservePrice, "lot.reserve-price", flagLotReservePrice, "")
 	cmd.Flags().StringArrayVar(&flagLotProvenance, "lot.provenance", flagLotProvenance, "")
 	cmd.Flags().StringArrayVar(&flagLotFlaws, "lot.flaws", flagLotFlaws, "")
+	cmd.Flags().StringArrayVar(&flagLotAttributes, "lot.attributes", flagLotAttributes, "")
 	cmd.Flags().StringVar(&flagLotConsignor, "lot.consignor", flagLotConsignor, "")
 	cmd.Flags().StringVar(&flagLotConsignorName, "lot.consignor.name", flagLotConsignorName, "")
 	cmd.Flags().StringVar(&flagLotConsignorAddress, "lot.consignor.address", flagLotConsignorAddress, "")

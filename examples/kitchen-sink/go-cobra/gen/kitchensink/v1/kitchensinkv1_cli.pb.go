@@ -31,6 +31,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 	cmd.AddCommand(newFieldsServiceScalarsCommand(client))
 	cmd.AddCommand(newFieldsServiceMessagesCommand(client))
 	cmd.AddCommand(newFieldsServiceRepeatedCommand(client))
+	cmd.AddCommand(newFieldsServiceMapsCommand(client))
 	return cmd
 }
 
@@ -225,6 +226,7 @@ func newFieldsServiceMessagesCommand(client FieldsServiceClient) *cobra.Command 
 	var flagKebabOuterMiddleInnerDeepDeeperDeepest string
 	var flagTimestamp string
 	var flagOuters []string
+	var flagLabels []string
 	var flagDuration string
 	var flagFieldMask string
 	var flagRecursive string
@@ -472,6 +474,21 @@ func newFieldsServiceMessagesCommand(client FieldsServiceClient) *cobra.Command 
 				}
 				frags = append(frags, Fragment{Source: "flag --outers", JSON: doc})
 			}
+			if cmd.Flags().Changed("labels") {
+				m := map[string]string{}
+				for _, kv := range flagLabels {
+					k, v, ok := strings.Cut(kv, "=")
+					if !ok {
+						return fmt.Errorf("flag --labels: %q is not key=value", kv)
+					}
+					m[k] = v
+				}
+				doc, err := sjson.SetBytes([]byte("{}"), "labels", m)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --labels", JSON: doc})
+			}
 			if cmd.Flags().Changed("duration") {
 				doc, err := sjson.SetBytes([]byte("{}"), "duration", flagDuration)
 				if err != nil {
@@ -585,6 +602,7 @@ func newFieldsServiceMessagesCommand(client FieldsServiceClient) *cobra.Command 
 	cmd.Flags().StringVar(&flagKebabOuterMiddleInnerDeepDeeperDeepest, "kebab-outer.middle.inner.deep.deeper.deepest", flagKebabOuterMiddleInnerDeepDeeperDeepest, "")
 	cmd.Flags().StringVar(&flagTimestamp, "timestamp", flagTimestamp, "")
 	cmd.Flags().StringArrayVar(&flagOuters, "outers", flagOuters, "")
+	cmd.Flags().StringArrayVar(&flagLabels, "labels", flagLabels, "")
 	cmd.Flags().StringVar(&flagDuration, "duration", flagDuration, "")
 	cmd.Flags().StringVar(&flagFieldMask, "field-mask", flagFieldMask, "")
 	cmd.Flags().StringVar(&flagRecursive, "recursive", flagRecursive, "")
@@ -698,6 +716,211 @@ func newFieldsServiceRepeatedCommand(client FieldsServiceClient) *cobra.Command 
 	cmd.Flags().Float64SliceVar(&flagDoubles, "doubles", flagDoubles, "")
 	cmd.Flags().StringArrayVar(&flagTimestamps, "timestamps", flagTimestamps, "")
 	cmd.Flags().StringArrayVar(&flagOuters, "outers", flagOuters, "")
+	return cmd
+}
+
+// newFieldsServiceMapsCommand returns the cobra subcommand for FieldsService.Maps.
+func newFieldsServiceMapsCommand(client FieldsServiceClient) *cobra.Command {
+	var flagStringValues []string
+	var flagBoolValues []string
+	var flagInt64Values []string
+	var flagUint64Values []string
+	var flagDoubleValues []string
+	var flagTimestampValues []string
+	var flagOuterValues []string
+	var flagInt64Keys []string
+	var flagBoolKeys []string
+	cmd := &cobra.Command{
+		Use:  "maps",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			if cmd.Flags().Changed("string-values") {
+				m := map[string]string{}
+				for _, kv := range flagStringValues {
+					k, v, ok := strings.Cut(kv, "=")
+					if !ok {
+						return fmt.Errorf("flag --string-values: %q is not key=value", kv)
+					}
+					m[k] = v
+				}
+				doc, err := sjson.SetBytes([]byte("{}"), "string_values", m)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --string-values", JSON: doc})
+			}
+			if cmd.Flags().Changed("bool-values") {
+				m := map[string]json.RawMessage{}
+				for _, kv := range flagBoolValues {
+					k, v, ok := strings.Cut(kv, "=")
+					if !ok {
+						return fmt.Errorf("flag --bool-values: %q is not key=value", kv)
+					}
+					if !json.Valid([]byte(v)) {
+						return fmt.Errorf("flag --bool-values: %q is not valid JSON", v)
+					}
+					m[k] = json.RawMessage(v)
+				}
+				doc, err := sjson.SetBytes([]byte("{}"), "bool_values", m)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --bool-values", JSON: doc})
+			}
+			if cmd.Flags().Changed("int64-values") {
+				m := map[string]json.RawMessage{}
+				for _, kv := range flagInt64Values {
+					k, v, ok := strings.Cut(kv, "=")
+					if !ok {
+						return fmt.Errorf("flag --int64-values: %q is not key=value", kv)
+					}
+					if !json.Valid([]byte(v)) {
+						return fmt.Errorf("flag --int64-values: %q is not valid JSON", v)
+					}
+					m[k] = json.RawMessage(v)
+				}
+				doc, err := sjson.SetBytes([]byte("{}"), "int64_values", m)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --int64-values", JSON: doc})
+			}
+			if cmd.Flags().Changed("uint64-values") {
+				m := map[string]json.RawMessage{}
+				for _, kv := range flagUint64Values {
+					k, v, ok := strings.Cut(kv, "=")
+					if !ok {
+						return fmt.Errorf("flag --uint64-values: %q is not key=value", kv)
+					}
+					if !json.Valid([]byte(v)) {
+						return fmt.Errorf("flag --uint64-values: %q is not valid JSON", v)
+					}
+					m[k] = json.RawMessage(v)
+				}
+				doc, err := sjson.SetBytes([]byte("{}"), "uint64_values", m)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --uint64-values", JSON: doc})
+			}
+			if cmd.Flags().Changed("double-values") {
+				m := map[string]json.RawMessage{}
+				for _, kv := range flagDoubleValues {
+					k, v, ok := strings.Cut(kv, "=")
+					if !ok {
+						return fmt.Errorf("flag --double-values: %q is not key=value", kv)
+					}
+					if !json.Valid([]byte(v)) {
+						return fmt.Errorf("flag --double-values: %q is not valid JSON", v)
+					}
+					m[k] = json.RawMessage(v)
+				}
+				doc, err := sjson.SetBytes([]byte("{}"), "double_values", m)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --double-values", JSON: doc})
+			}
+			if cmd.Flags().Changed("timestamp-values") {
+				m := map[string]string{}
+				for _, kv := range flagTimestampValues {
+					k, v, ok := strings.Cut(kv, "=")
+					if !ok {
+						return fmt.Errorf("flag --timestamp-values: %q is not key=value", kv)
+					}
+					m[k] = v
+				}
+				doc, err := sjson.SetBytes([]byte("{}"), "timestamp_values", m)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --timestamp-values", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer-values") {
+				m := map[string]json.RawMessage{}
+				for _, kv := range flagOuterValues {
+					k, v, ok := strings.Cut(kv, "=")
+					if !ok {
+						return fmt.Errorf("flag --outer-values: %q is not key=value", kv)
+					}
+					if !json.Valid([]byte(v)) {
+						return fmt.Errorf("flag --outer-values: %q is not valid JSON", v)
+					}
+					m[k] = json.RawMessage(v)
+				}
+				doc, err := sjson.SetBytes([]byte("{}"), "outer_values", m)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer-values", JSON: doc})
+			}
+			if cmd.Flags().Changed("int64-keys") {
+				m := map[string]string{}
+				for _, kv := range flagInt64Keys {
+					k, v, ok := strings.Cut(kv, "=")
+					if !ok {
+						return fmt.Errorf("flag --int64-keys: %q is not key=value", kv)
+					}
+					m[k] = v
+				}
+				doc, err := sjson.SetBytes([]byte("{}"), "int64_keys", m)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --int64-keys", JSON: doc})
+			}
+			if cmd.Flags().Changed("bool-keys") {
+				m := map[string]string{}
+				for _, kv := range flagBoolKeys {
+					k, v, ok := strings.Cut(kv, "=")
+					if !ok {
+						return fmt.Errorf("flag --bool-keys: %q is not key=value", kv)
+					}
+					m[k] = v
+				}
+				doc, err := sjson.SetBytes([]byte("{}"), "bool_keys", m)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --bool-keys", JSON: doc})
+			}
+			req := &MapsRequest{}
+			if err := BuildRequest(req, frags); err != nil {
+				return err
+			}
+			resp, err := client.Maps(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
+		},
+	}
+	cmd.Flags().StringArrayVar(&flagStringValues, "string-values", flagStringValues, "")
+	cmd.Flags().StringArrayVar(&flagBoolValues, "bool-values", flagBoolValues, "")
+	cmd.Flags().StringArrayVar(&flagInt64Values, "int64-values", flagInt64Values, "")
+	cmd.Flags().StringArrayVar(&flagUint64Values, "uint64-values", flagUint64Values, "")
+	cmd.Flags().StringArrayVar(&flagDoubleValues, "double-values", flagDoubleValues, "")
+	cmd.Flags().StringArrayVar(&flagTimestampValues, "timestamp-values", flagTimestampValues, "")
+	cmd.Flags().StringArrayVar(&flagOuterValues, "outer-values", flagOuterValues, "")
+	cmd.Flags().StringArrayVar(&flagInt64Keys, "int64-keys", flagInt64Keys, "")
+	cmd.Flags().StringArrayVar(&flagBoolKeys, "bool-keys", flagBoolKeys, "")
 	return cmd
 }
 

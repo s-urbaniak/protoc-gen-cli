@@ -18,6 +18,8 @@ service FieldsService {
   rpc Messages(MessagesRequest) returns (MessagesRequest) {}
   // Repeated carries one repeated field per bind family.
   rpc Repeated(RepeatedRequest) returns (RepeatedRequest) {}
+  // Maps carries one map field per bind family, plus integer and bool keys.
+  rpc Maps(MapsRequest) returns (MapsRequest) {}
 }
 
 message ScalarsRequest {
@@ -58,6 +60,18 @@ message RepeatedRequest {
   repeated double doubles = 5;
   repeated google.protobuf.Timestamp timestamps = 6;
   repeated Outer outers = 7;
+}
+
+message MapsRequest {
+  map<string, string> string_values = 1;
+  map<string, bool> bool_values = 2;
+  map<string, int64> int64_values = 3;
+  map<string, uint64> uint64_values = 4;
+  map<string, double> double_values = 5;
+  map<string, google.protobuf.Timestamp> timestamp_values = 6;
+  map<string, Outer> outer_values = 7;
+  map<int64, string> int64_keys = 8;
+  map<bool, string> bool_keys = 9;
 }
 
 message Outer {

@@ -22,6 +22,7 @@ const (
 	FieldsService_Scalars_FullMethodName  = "/kitchensink.v1.FieldsService/Scalars"
 	FieldsService_Messages_FullMethodName = "/kitchensink.v1.FieldsService/Messages"
 	FieldsService_Repeated_FullMethodName = "/kitchensink.v1.FieldsService/Repeated"
+	FieldsService_Maps_FullMethodName     = "/kitchensink.v1.FieldsService/Maps"
 )
 
 // FieldsServiceClient is the client API for FieldsService service.
@@ -37,6 +38,8 @@ type FieldsServiceClient interface {
 	Messages(ctx context.Context, in *MessagesRequest, opts ...grpc.CallOption) (*MessagesRequest, error)
 	// Repeated carries one repeated field per bind family.
 	Repeated(ctx context.Context, in *RepeatedRequest, opts ...grpc.CallOption) (*RepeatedRequest, error)
+	// Maps carries one map field per bind family, plus integer and bool keys.
+	Maps(ctx context.Context, in *MapsRequest, opts ...grpc.CallOption) (*MapsRequest, error)
 }
 
 type fieldsServiceClient struct {
@@ -77,6 +80,16 @@ func (c *fieldsServiceClient) Repeated(ctx context.Context, in *RepeatedRequest,
 	return out, nil
 }
 
+func (c *fieldsServiceClient) Maps(ctx context.Context, in *MapsRequest, opts ...grpc.CallOption) (*MapsRequest, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MapsRequest)
+	err := c.cc.Invoke(ctx, FieldsService_Maps_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FieldsServiceServer is the server API for FieldsService service.
 // All implementations must embed UnimplementedFieldsServiceServer
 // for forward compatibility.
@@ -90,6 +103,8 @@ type FieldsServiceServer interface {
 	Messages(context.Context, *MessagesRequest) (*MessagesRequest, error)
 	// Repeated carries one repeated field per bind family.
 	Repeated(context.Context, *RepeatedRequest) (*RepeatedRequest, error)
+	// Maps carries one map field per bind family, plus integer and bool keys.
+	Maps(context.Context, *MapsRequest) (*MapsRequest, error)
 	mustEmbedUnimplementedFieldsServiceServer()
 }
 
@@ -108,6 +123,9 @@ func (UnimplementedFieldsServiceServer) Messages(context.Context, *MessagesReque
 }
 func (UnimplementedFieldsServiceServer) Repeated(context.Context, *RepeatedRequest) (*RepeatedRequest, error) {
 	return nil, status.Error(codes.Unimplemented, "method Repeated not implemented")
+}
+func (UnimplementedFieldsServiceServer) Maps(context.Context, *MapsRequest) (*MapsRequest, error) {
+	return nil, status.Error(codes.Unimplemented, "method Maps not implemented")
 }
 func (UnimplementedFieldsServiceServer) mustEmbedUnimplementedFieldsServiceServer() {}
 func (UnimplementedFieldsServiceServer) testEmbeddedByValue()                       {}
@@ -184,6 +202,24 @@ func _FieldsService_Repeated_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FieldsService_Maps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MapsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FieldsServiceServer).Maps(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FieldsService_Maps_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FieldsServiceServer).Maps(ctx, req.(*MapsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FieldsService_ServiceDesc is the grpc.ServiceDesc for FieldsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -202,6 +238,10 @@ var FieldsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Repeated",
 			Handler:    _FieldsService_Repeated_Handler,
+		},
+		{
+			MethodName: "Maps",
+			Handler:    _FieldsService_Maps_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

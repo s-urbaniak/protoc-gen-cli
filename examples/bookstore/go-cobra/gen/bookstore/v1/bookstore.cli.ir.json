@@ -302,6 +302,12 @@
               "repeated": true
             },
             {
+              "proto_path": "lot.attributes",
+              "name": "lot.attributes",
+              "bind": "string",
+              "map": true
+            },
+            {
               "proto_path": "lot.consignor",
               "name": "lot.consignor",
               "bind": "json"

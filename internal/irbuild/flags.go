@@ -23,22 +23,27 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 			path := protoPrefix + string(fd.Name())
 			name := cliPrefix + strcase.KebabCase(string(fd.Name()))
 
+			// A map field's own kind is its synthetic entry message.
+			elem := fd
+			if fd.IsMap() {
+				elem = fd.MapValue()
+			}
+
 			var bind ir.Bind
 			var ok bool
-			switch fd.Kind() {
+			switch elem.Kind() {
 			case protoreflect.MessageKind:
 				// protojson gives every google.protobuf message a special
 				// JSON form; only a messageBinds row carries one in a flag.
-				if bind, ok = messageBinds[fd.Message().FullName()]; !ok &&
-					!isWellKnown(fd.Message()) {
+				if bind, ok = messageBinds[elem.Message().FullName()]; !ok &&
+					!isWellKnown(elem.Message()) {
 					bind, ok = ir.BindJSON, true
 				}
 			default:
-				bind, ok = scalarBinds[fd.Kind()]
+				bind, ok = scalarBinds[elem.Kind()]
 			}
 
 			switch {
-			case fd.IsMap():
 			case ok && reservedFlagNames[name]:
 				opts.Warn(fmt.Sprintf(
 					"field %s.%s: the derived flag --%s is already reserved by a global flag; no flag generated, set the field via -f/-i, or rename it",
@@ -49,12 +54,17 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 			case ok:
 				flags = append(
 					flags,
-					&ir.Flag{ProtoPath: path, Name: name, Bind: bind, Repeated: fd.IsList()},
-				)
+					&ir.Flag{
+						ProtoPath: path,
+						Name:      name,
+						Bind:      bind,
+						Repeated:  fd.IsList(),
+						Map:       fd.IsMap(),
+					})
 				// A type already being expanded: descending again would only
 				// repeat its flags until the budget ran out. A dotted flag
-				// cannot address an element of a list.
-				if bind == ir.BindJSON && !fd.IsList() && budget > 0 &&
+				// cannot address an element of a list or an entry of a map.
+				if bind == ir.BindJSON && !fd.IsList() && !fd.IsMap() && budget > 0 &&
 					!slices.Contains(ancestors, fd.Message().FullName()) {
 					walk(fd.Message(), path+".", name+".", budget-1,
 						append(ancestors, fd.Message().FullName()))
