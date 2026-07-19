@@ -84,6 +84,9 @@ func new{{ $sym }}Command(client {{ goClientType $svc }}) *cobra.Command {
 {{- range .Flags }}
 	cmd.Flags().{{ (goBinding .).Setter }}Var(&{{ goVarName . }}, {{ printf "%q" .Name }}, {{ goVarName . }}, "")
 {{- end }}
+{{- range oneofGroups . }}
+	cmd.MarkFlagsMutuallyExclusive({{ quoteJoin . }})
+{{- end }}
 	return cmd
 }
 {{ end }}{{ end }}

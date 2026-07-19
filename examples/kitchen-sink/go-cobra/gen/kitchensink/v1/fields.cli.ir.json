@@ -629,6 +629,163 @@
               ]
             }
           ]
+        },
+        {
+          "proto_name": "Oneofs",
+          "go_name": "Oneofs",
+          "name": "oneofs",
+          "short_help": "Oneofs carries a scalar-and-enum oneof, a message-and-scalar oneof, and a single-member oneof.",
+          "long_help": "Oneofs carries a scalar-and-enum oneof, a message-and-scalar oneof, and a\nsingle-member oneof.",
+          "input": {
+            "full_name": "kitchensink.v1.OneofsRequest",
+            "proto_file": "kitchensink/v1/fields.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "OneofsRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.OneofsRequest",
+          "flags": [
+            {
+              "proto_path": "text",
+              "name": "text",
+              "bind": "string",
+              "oneof": "choice"
+            },
+            {
+              "proto_path": "count",
+              "name": "count",
+              "bind": "int",
+              "oneof": "choice"
+            },
+            {
+              "proto_path": "pick",
+              "name": "pick",
+              "bind": "string",
+              "enum_values": [
+                "CHOICE_UNSPECIFIED",
+                "CHOICE_FIRST",
+                "CHOICE_SECOND"
+              ],
+              "oneof": "choice"
+            },
+            {
+              "proto_path": "outer",
+              "name": "outer",
+              "bind": "json",
+              "oneof": "payload"
+            },
+            {
+              "proto_path": "outer.string_leaf",
+              "name": "outer.string-leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "outer.int64_leaf",
+              "name": "outer.int64-leaf",
+              "bind": "int"
+            },
+            {
+              "proto_path": "outer.middle",
+              "name": "outer.middle",
+              "bind": "json"
+            },
+            {
+              "proto_path": "outer.middle.leaf",
+              "name": "outer.middle.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "outer.middle.inner",
+              "name": "outer.middle.inner",
+              "bind": "json"
+            },
+            {
+              "proto_path": "outer.middle.inner.leaf",
+              "name": "outer.middle.inner.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "outer.middle.inner.deep",
+              "name": "outer.middle.inner.deep",
+              "bind": "json"
+            },
+            {
+              "proto_path": "outer.middle.inner.deep.leaf",
+              "name": "outer.middle.inner.deep.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "outer.middle.inner.deep.deeper",
+              "name": "outer.middle.inner.deep.deeper",
+              "bind": "json"
+            },
+            {
+              "proto_path": "outer.middle.inner.deep.deeper.leaf",
+              "name": "outer.middle.inner.deep.deeper.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "outer.middle.inner.deep.deeper.deepest",
+              "name": "outer.middle.inner.deep.deeper.deepest",
+              "bind": "json"
+            },
+            {
+              "proto_path": "enabled",
+              "name": "enabled",
+              "bind": "bool",
+              "oneof": "payload"
+            },
+            {
+              "proto_path": "when",
+              "name": "when",
+              "bind": "string",
+              "oneof": "payload"
+            },
+            {
+              "proto_path": "only",
+              "name": "only",
+              "bind": "string",
+              "oneof": "solo"
+            }
+          ]
+        },
+        {
+          "proto_name": "Optionals",
+          "go_name": "Optionals",
+          "name": "optionals",
+          "short_help": "Optionals carries proto3 optional fields.",
+          "input": {
+            "full_name": "kitchensink.v1.OptionalsRequest",
+            "proto_file": "kitchensink/v1/fields.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "OptionalsRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.OptionalsRequest",
+          "flags": [
+            {
+              "proto_path": "name",
+              "name": "name",
+              "bind": "string"
+            },
+            {
+              "proto_path": "age",
+              "name": "age",
+              "bind": "int"
+            },
+            {
+              "proto_path": "pick",
+              "name": "pick",
+              "bind": "string",
+              "enum_values": [
+                "CHOICE_UNSPECIFIED",
+                "CHOICE_FIRST",
+                "CHOICE_SECOND"
+              ]
+            }
+          ]
         }
       ]
     }

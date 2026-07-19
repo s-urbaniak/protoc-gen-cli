@@ -66,6 +66,8 @@ type Flag struct {
 	Map bool `json:"map,omitempty"`
 	// EnumValues lists an enum field's value names.
 	EnumValues []string `json:"enum_values,omitempty"`
+	// Oneof names the field's containing oneof; empty for synthetic proto3-optional oneofs.
+	Oneof string `json:"oneof,omitempty"`
 }
 
 // A Bind represents the JSON type a flag's argument parses into.

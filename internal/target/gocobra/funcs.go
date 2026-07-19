@@ -3,6 +3,7 @@ package gocobra
 import (
 	"maps"
 	"slices"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -66,6 +67,34 @@ func funcMap(model *ir.Model) template.FuncMap {
 		},
 		"isJSONBind":   func(f *ir.Flag) bool { return f.Bind == ir.BindJSON },
 		"isStringBind": func(f *ir.Flag) bool { return f.Bind == ir.BindString },
+		// Member flag names per oneof.
+		"oneofGroups": func(cmd *ir.Command) [][]string {
+			var order []string
+			members := map[string][]string{}
+			for _, f := range cmd.Flags {
+				if f.Oneof == "" {
+					continue
+				}
+				if _, seen := members[f.Oneof]; !seen {
+					order = append(order, f.Oneof)
+				}
+				members[f.Oneof] = append(members[f.Oneof], f.Name)
+			}
+			var groups [][]string
+			for _, k := range order {
+				if len(members[k]) >= 2 {
+					groups = append(groups, members[k])
+				}
+			}
+			return groups
+		},
+		"quoteJoin": func(names []string) string {
+			quoted := make([]string, len(names))
+			for i, n := range names {
+				quoted[i] = strconv.Quote(n)
+			}
+			return strings.Join(quoted, ", ")
+		},
 	}
 }
 

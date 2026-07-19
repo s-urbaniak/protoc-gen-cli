@@ -29,6 +29,11 @@ service FieldsService {
   rpc WellKnown(WellKnownRequest) returns (WellKnownRequest) {}
   // Enums carries an enum in every shape, plus aliases and a nested enum.
   rpc Enums(EnumsRequest) returns (EnumsRequest) {}
+  // Oneofs carries a scalar-and-enum oneof, a message-and-scalar oneof, and a
+  // single-member oneof.
+  rpc Oneofs(OneofsRequest) returns (OneofsRequest) {}
+  // Optionals carries proto3 optional fields.
+  rpc Optionals(OptionalsRequest) returns (OptionalsRequest) {}
 }
 
 message ScalarsRequest {
@@ -131,6 +136,28 @@ message EnumsRequest {
   map<string, Choice> choice_map = 4;
   Aliased aliased = 5;
   Nested nested = 6;
+}
+
+message OneofsRequest {
+  oneof choice {
+    string text = 1;
+    int32 count = 2;
+    Choice pick = 3;
+  }
+  oneof payload {
+    Outer outer = 4;
+    bool enabled = 5;
+    google.protobuf.Timestamp when = 6;
+  }
+  oneof solo {
+    string only = 7;
+  }
+}
+
+message OptionalsRequest {
+  optional string name = 1;
+  optional int32 age = 2;
+  optional Choice pick = 3;
 }
 
 message Outer {

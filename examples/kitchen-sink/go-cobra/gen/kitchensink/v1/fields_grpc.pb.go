@@ -26,6 +26,8 @@ const (
 	FieldsService_Wrappers_FullMethodName  = "/kitchensink.v1.FieldsService/Wrappers"
 	FieldsService_WellKnown_FullMethodName = "/kitchensink.v1.FieldsService/WellKnown"
 	FieldsService_Enums_FullMethodName     = "/kitchensink.v1.FieldsService/Enums"
+	FieldsService_Oneofs_FullMethodName    = "/kitchensink.v1.FieldsService/Oneofs"
+	FieldsService_Optionals_FullMethodName = "/kitchensink.v1.FieldsService/Optionals"
 )
 
 // FieldsServiceClient is the client API for FieldsService service.
@@ -49,6 +51,11 @@ type FieldsServiceClient interface {
 	WellKnown(ctx context.Context, in *WellKnownRequest, opts ...grpc.CallOption) (*WellKnownRequest, error)
 	// Enums carries an enum in every shape, plus aliases and a nested enum.
 	Enums(ctx context.Context, in *EnumsRequest, opts ...grpc.CallOption) (*EnumsRequest, error)
+	// Oneofs carries a scalar-and-enum oneof, a message-and-scalar oneof, and a
+	// single-member oneof.
+	Oneofs(ctx context.Context, in *OneofsRequest, opts ...grpc.CallOption) (*OneofsRequest, error)
+	// Optionals carries proto3 optional fields.
+	Optionals(ctx context.Context, in *OptionalsRequest, opts ...grpc.CallOption) (*OptionalsRequest, error)
 }
 
 type fieldsServiceClient struct {
@@ -129,6 +136,26 @@ func (c *fieldsServiceClient) Enums(ctx context.Context, in *EnumsRequest, opts 
 	return out, nil
 }
 
+func (c *fieldsServiceClient) Oneofs(ctx context.Context, in *OneofsRequest, opts ...grpc.CallOption) (*OneofsRequest, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(OneofsRequest)
+	err := c.cc.Invoke(ctx, FieldsService_Oneofs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *fieldsServiceClient) Optionals(ctx context.Context, in *OptionalsRequest, opts ...grpc.CallOption) (*OptionalsRequest, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(OptionalsRequest)
+	err := c.cc.Invoke(ctx, FieldsService_Optionals_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FieldsServiceServer is the server API for FieldsService service.
 // All implementations must embed UnimplementedFieldsServiceServer
 // for forward compatibility.
@@ -150,6 +177,11 @@ type FieldsServiceServer interface {
 	WellKnown(context.Context, *WellKnownRequest) (*WellKnownRequest, error)
 	// Enums carries an enum in every shape, plus aliases and a nested enum.
 	Enums(context.Context, *EnumsRequest) (*EnumsRequest, error)
+	// Oneofs carries a scalar-and-enum oneof, a message-and-scalar oneof, and a
+	// single-member oneof.
+	Oneofs(context.Context, *OneofsRequest) (*OneofsRequest, error)
+	// Optionals carries proto3 optional fields.
+	Optionals(context.Context, *OptionalsRequest) (*OptionalsRequest, error)
 	mustEmbedUnimplementedFieldsServiceServer()
 }
 
@@ -180,6 +212,12 @@ func (UnimplementedFieldsServiceServer) WellKnown(context.Context, *WellKnownReq
 }
 func (UnimplementedFieldsServiceServer) Enums(context.Context, *EnumsRequest) (*EnumsRequest, error) {
 	return nil, status.Error(codes.Unimplemented, "method Enums not implemented")
+}
+func (UnimplementedFieldsServiceServer) Oneofs(context.Context, *OneofsRequest) (*OneofsRequest, error) {
+	return nil, status.Error(codes.Unimplemented, "method Oneofs not implemented")
+}
+func (UnimplementedFieldsServiceServer) Optionals(context.Context, *OptionalsRequest) (*OptionalsRequest, error) {
+	return nil, status.Error(codes.Unimplemented, "method Optionals not implemented")
 }
 func (UnimplementedFieldsServiceServer) mustEmbedUnimplementedFieldsServiceServer() {}
 func (UnimplementedFieldsServiceServer) testEmbeddedByValue()                       {}
@@ -328,6 +366,42 @@ func _FieldsService_Enums_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FieldsService_Oneofs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OneofsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FieldsServiceServer).Oneofs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FieldsService_Oneofs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FieldsServiceServer).Oneofs(ctx, req.(*OneofsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FieldsService_Optionals_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OptionalsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FieldsServiceServer).Optionals(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FieldsService_Optionals_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FieldsServiceServer).Optionals(ctx, req.(*OptionalsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FieldsService_ServiceDesc is the grpc.ServiceDesc for FieldsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -362,6 +436,14 @@ var FieldsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Enums",
 			Handler:    _FieldsService_Enums_Handler,
+		},
+		{
+			MethodName: "Oneofs",
+			Handler:    _FieldsService_Oneofs_Handler,
+		},
+		{
+			MethodName: "Optionals",
+			Handler:    _FieldsService_Optionals_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

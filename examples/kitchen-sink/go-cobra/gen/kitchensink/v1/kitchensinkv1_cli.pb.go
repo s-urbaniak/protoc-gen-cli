@@ -35,6 +35,8 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 	cmd.AddCommand(newFieldsServiceWrappersCommand(client))
 	cmd.AddCommand(newFieldsServiceWellKnownCommand(client))
 	cmd.AddCommand(newFieldsServiceEnumsCommand(client))
+	cmd.AddCommand(newFieldsServiceOneofsCommand(client))
+	cmd.AddCommand(newFieldsServiceOptionalsCommand(client))
 	return cmd
 }
 
@@ -1288,6 +1290,289 @@ func newFieldsServiceEnumsCommand(client FieldsServiceClient) *cobra.Command {
 	cmd.Flags().StringArrayVar(&flagChoiceMap, "choice-map", flagChoiceMap, "")
 	cmd.Flags().StringVar(&flagAliased, "aliased", flagAliased, "")
 	cmd.Flags().StringVar(&flagNested, "nested", flagNested, "")
+	return cmd
+}
+
+// newFieldsServiceOneofsCommand returns the cobra subcommand for FieldsService.Oneofs.
+func newFieldsServiceOneofsCommand(client FieldsServiceClient) *cobra.Command {
+	var flagText string
+	var flagCount int64
+	var flagPick string
+	var flagOuter string
+	var flagOuterStringLeaf string
+	var flagOuterInt64Leaf int64
+	var flagOuterMiddle string
+	var flagOuterMiddleLeaf string
+	var flagOuterMiddleInner string
+	var flagOuterMiddleInnerLeaf string
+	var flagOuterMiddleInnerDeep string
+	var flagOuterMiddleInnerDeepLeaf string
+	var flagOuterMiddleInnerDeepDeeper string
+	var flagOuterMiddleInnerDeepDeeperLeaf string
+	var flagOuterMiddleInnerDeepDeeperDeepest string
+	var flagEnabled bool
+	var flagWhen string
+	var flagOnly string
+	cmd := &cobra.Command{
+		Use:  "oneofs",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			if cmd.Flags().Changed("text") {
+				doc, err := sjson.SetBytes([]byte("{}"), "text", flagText)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --text", JSON: doc})
+			}
+			if cmd.Flags().Changed("count") {
+				doc, err := sjson.SetBytes([]byte("{}"), "count", flagCount)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --count", JSON: doc})
+			}
+			if cmd.Flags().Changed("pick") {
+				doc, err := sjson.SetBytes([]byte("{}"), "pick", flagPick)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --pick", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer") {
+				if !json.Valid([]byte(flagOuter)) {
+					return fmt.Errorf("flag --outer: %q is not valid JSON", flagOuter)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "outer", []byte(flagOuter))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.string-leaf") {
+				doc, err := sjson.SetBytes([]byte("{}"), "outer.string_leaf", flagOuterStringLeaf)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.string-leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.int64-leaf") {
+				doc, err := sjson.SetBytes([]byte("{}"), "outer.int64_leaf", flagOuterInt64Leaf)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.int64-leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.middle") {
+				if !json.Valid([]byte(flagOuterMiddle)) {
+					return fmt.Errorf("flag --outer.middle: %q is not valid JSON", flagOuterMiddle)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "outer.middle", []byte(flagOuterMiddle))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.middle.leaf") {
+				doc, err := sjson.SetBytes([]byte("{}"), "outer.middle.leaf", flagOuterMiddleLeaf)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.middle.inner") {
+				if !json.Valid([]byte(flagOuterMiddleInner)) {
+					return fmt.Errorf("flag --outer.middle.inner: %q is not valid JSON", flagOuterMiddleInner)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "outer.middle.inner", []byte(flagOuterMiddleInner))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.inner", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.middle.inner.leaf") {
+				doc, err := sjson.SetBytes([]byte("{}"), "outer.middle.inner.leaf", flagOuterMiddleInnerLeaf)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.inner.leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.middle.inner.deep") {
+				if !json.Valid([]byte(flagOuterMiddleInnerDeep)) {
+					return fmt.Errorf("flag --outer.middle.inner.deep: %q is not valid JSON", flagOuterMiddleInnerDeep)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "outer.middle.inner.deep", []byte(flagOuterMiddleInnerDeep))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.inner.deep", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.middle.inner.deep.leaf") {
+				doc, err := sjson.SetBytes([]byte("{}"), "outer.middle.inner.deep.leaf", flagOuterMiddleInnerDeepLeaf)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.inner.deep.leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.middle.inner.deep.deeper") {
+				if !json.Valid([]byte(flagOuterMiddleInnerDeepDeeper)) {
+					return fmt.Errorf("flag --outer.middle.inner.deep.deeper: %q is not valid JSON", flagOuterMiddleInnerDeepDeeper)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "outer.middle.inner.deep.deeper", []byte(flagOuterMiddleInnerDeepDeeper))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.inner.deep.deeper", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.middle.inner.deep.deeper.leaf") {
+				doc, err := sjson.SetBytes([]byte("{}"), "outer.middle.inner.deep.deeper.leaf", flagOuterMiddleInnerDeepDeeperLeaf)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.inner.deep.deeper.leaf", JSON: doc})
+			}
+			if cmd.Flags().Changed("outer.middle.inner.deep.deeper.deepest") {
+				if !json.Valid([]byte(flagOuterMiddleInnerDeepDeeperDeepest)) {
+					return fmt.Errorf("flag --outer.middle.inner.deep.deeper.deepest: %q is not valid JSON", flagOuterMiddleInnerDeepDeeperDeepest)
+				}
+				doc, err := sjson.SetRawBytes([]byte("{}"), "outer.middle.inner.deep.deeper.deepest", []byte(flagOuterMiddleInnerDeepDeeperDeepest))
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --outer.middle.inner.deep.deeper.deepest", JSON: doc})
+			}
+			if cmd.Flags().Changed("enabled") {
+				doc, err := sjson.SetBytes([]byte("{}"), "enabled", flagEnabled)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --enabled", JSON: doc})
+			}
+			if cmd.Flags().Changed("when") {
+				doc, err := sjson.SetBytes([]byte("{}"), "when", flagWhen)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --when", JSON: doc})
+			}
+			if cmd.Flags().Changed("only") {
+				doc, err := sjson.SetBytes([]byte("{}"), "only", flagOnly)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --only", JSON: doc})
+			}
+			req := &OneofsRequest{}
+			if err := BuildRequest(req, frags); err != nil {
+				return err
+			}
+			resp, err := client.Oneofs(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
+		},
+	}
+	cmd.Flags().StringVar(&flagText, "text", flagText, "")
+	cmd.Flags().Int64Var(&flagCount, "count", flagCount, "")
+	cmd.Flags().StringVar(&flagPick, "pick", flagPick, "")
+	cmd.Flags().StringVar(&flagOuter, "outer", flagOuter, "")
+	cmd.Flags().StringVar(&flagOuterStringLeaf, "outer.string-leaf", flagOuterStringLeaf, "")
+	cmd.Flags().Int64Var(&flagOuterInt64Leaf, "outer.int64-leaf", flagOuterInt64Leaf, "")
+	cmd.Flags().StringVar(&flagOuterMiddle, "outer.middle", flagOuterMiddle, "")
+	cmd.Flags().StringVar(&flagOuterMiddleLeaf, "outer.middle.leaf", flagOuterMiddleLeaf, "")
+	cmd.Flags().StringVar(&flagOuterMiddleInner, "outer.middle.inner", flagOuterMiddleInner, "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerLeaf, "outer.middle.inner.leaf", flagOuterMiddleInnerLeaf, "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerDeep, "outer.middle.inner.deep", flagOuterMiddleInnerDeep, "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepLeaf, "outer.middle.inner.deep.leaf", flagOuterMiddleInnerDeepLeaf, "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepDeeper, "outer.middle.inner.deep.deeper", flagOuterMiddleInnerDeepDeeper, "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepDeeperLeaf, "outer.middle.inner.deep.deeper.leaf", flagOuterMiddleInnerDeepDeeperLeaf, "")
+	cmd.Flags().StringVar(&flagOuterMiddleInnerDeepDeeperDeepest, "outer.middle.inner.deep.deeper.deepest", flagOuterMiddleInnerDeepDeeperDeepest, "")
+	cmd.Flags().BoolVar(&flagEnabled, "enabled", flagEnabled, "")
+	cmd.Flags().StringVar(&flagWhen, "when", flagWhen, "")
+	cmd.Flags().StringVar(&flagOnly, "only", flagOnly, "")
+	cmd.MarkFlagsMutuallyExclusive("text", "count", "pick")
+	cmd.MarkFlagsMutuallyExclusive("outer", "enabled", "when")
+	return cmd
+}
+
+// newFieldsServiceOptionalsCommand returns the cobra subcommand for FieldsService.Optionals.
+func newFieldsServiceOptionalsCommand(client FieldsServiceClient) *cobra.Command {
+	var flagName string
+	var flagAge int64
+	var flagPick string
+	cmd := &cobra.Command{
+		Use:  "optionals",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			if cmd.Flags().Changed("name") {
+				doc, err := sjson.SetBytes([]byte("{}"), "name", flagName)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --name", JSON: doc})
+			}
+			if cmd.Flags().Changed("age") {
+				doc, err := sjson.SetBytes([]byte("{}"), "age", flagAge)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --age", JSON: doc})
+			}
+			if cmd.Flags().Changed("pick") {
+				doc, err := sjson.SetBytes([]byte("{}"), "pick", flagPick)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --pick", JSON: doc})
+			}
+			req := &OptionalsRequest{}
+			if err := BuildRequest(req, frags); err != nil {
+				return err
+			}
+			resp, err := client.Optionals(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
+		},
+	}
+	cmd.Flags().StringVar(&flagName, "name", flagName, "")
+	cmd.Flags().Int64Var(&flagAge, "age", flagAge, "")
+	cmd.Flags().StringVar(&flagPick, "pick", flagPick, "")
 	return cmd
 }
 

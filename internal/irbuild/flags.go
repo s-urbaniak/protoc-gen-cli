@@ -44,6 +44,11 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 				bind, ok = scalarBinds[elem.Kind()]
 			}
 
+			var oneof string
+			if oo := fd.ContainingOneof(); oo != nil && !oo.IsSynthetic() {
+				oneof = protoPrefix + string(oo.Name())
+			}
+
 			switch {
 			case ok && reservedFlagNames[name]:
 				opts.Warn(fmt.Sprintf(
@@ -62,6 +67,7 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 						Repeated:   fd.IsList(),
 						Map:        fd.IsMap(),
 						EnumValues: enumValues,
+						Oneof:      oneof,
 					})
 				// A type already being expanded: descending again would only
 				// repeat its flags until the budget ran out. A dotted flag

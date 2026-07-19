@@ -80,3 +80,17 @@ func (fieldsServer) Enums(
 ) (*kitchensinkv1.EnumsRequest, error) {
 	return req, nil
 }
+
+func (fieldsServer) Oneofs(
+	_ context.Context,
+	req *kitchensinkv1.OneofsRequest,
+) (*kitchensinkv1.OneofsRequest, error) {
+	return req, nil
+}
+
+func (fieldsServer) Optionals(
+	_ context.Context,
+	req *kitchensinkv1.OptionalsRequest,
+) (*kitchensinkv1.OptionalsRequest, error) {
+	return req, nil
+}

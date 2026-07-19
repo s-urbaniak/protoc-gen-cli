@@ -931,6 +931,256 @@ func (x *EnumsRequest) GetNested() EnumsRequest_Nested {
 	return EnumsRequest_NESTED_UNSPECIFIED
 }
 
+type OneofsRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Choice:
+	//
+	//	*OneofsRequest_Text
+	//	*OneofsRequest_Count
+	//	*OneofsRequest_Pick
+	Choice isOneofsRequest_Choice `protobuf_oneof:"choice"`
+	// Types that are valid to be assigned to Payload:
+	//
+	//	*OneofsRequest_Outer
+	//	*OneofsRequest_Enabled
+	//	*OneofsRequest_When
+	Payload isOneofsRequest_Payload `protobuf_oneof:"payload"`
+	// Types that are valid to be assigned to Solo:
+	//
+	//	*OneofsRequest_Only
+	Solo          isOneofsRequest_Solo `protobuf_oneof:"solo"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OneofsRequest) Reset() {
+	*x = OneofsRequest{}
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OneofsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OneofsRequest) ProtoMessage() {}
+
+func (x *OneofsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OneofsRequest.ProtoReflect.Descriptor instead.
+func (*OneofsRequest) Descriptor() ([]byte, []int) {
+	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *OneofsRequest) GetChoice() isOneofsRequest_Choice {
+	if x != nil {
+		return x.Choice
+	}
+	return nil
+}
+
+func (x *OneofsRequest) GetText() string {
+	if x != nil {
+		if x, ok := x.Choice.(*OneofsRequest_Text); ok {
+			return x.Text
+		}
+	}
+	return ""
+}
+
+func (x *OneofsRequest) GetCount() int32 {
+	if x != nil {
+		if x, ok := x.Choice.(*OneofsRequest_Count); ok {
+			return x.Count
+		}
+	}
+	return 0
+}
+
+func (x *OneofsRequest) GetPick() Choice {
+	if x != nil {
+		if x, ok := x.Choice.(*OneofsRequest_Pick); ok {
+			return x.Pick
+		}
+	}
+	return Choice_CHOICE_UNSPECIFIED
+}
+
+func (x *OneofsRequest) GetPayload() isOneofsRequest_Payload {
+	if x != nil {
+		return x.Payload
+	}
+	return nil
+}
+
+func (x *OneofsRequest) GetOuter() *Outer {
+	if x != nil {
+		if x, ok := x.Payload.(*OneofsRequest_Outer); ok {
+			return x.Outer
+		}
+	}
+	return nil
+}
+
+func (x *OneofsRequest) GetEnabled() bool {
+	if x != nil {
+		if x, ok := x.Payload.(*OneofsRequest_Enabled); ok {
+			return x.Enabled
+		}
+	}
+	return false
+}
+
+func (x *OneofsRequest) GetWhen() *timestamppb.Timestamp {
+	if x != nil {
+		if x, ok := x.Payload.(*OneofsRequest_When); ok {
+			return x.When
+		}
+	}
+	return nil
+}
+
+func (x *OneofsRequest) GetSolo() isOneofsRequest_Solo {
+	if x != nil {
+		return x.Solo
+	}
+	return nil
+}
+
+func (x *OneofsRequest) GetOnly() string {
+	if x != nil {
+		if x, ok := x.Solo.(*OneofsRequest_Only); ok {
+			return x.Only
+		}
+	}
+	return ""
+}
+
+type isOneofsRequest_Choice interface {
+	isOneofsRequest_Choice()
+}
+
+type OneofsRequest_Text struct {
+	Text string `protobuf:"bytes,1,opt,name=text,proto3,oneof"`
+}
+
+type OneofsRequest_Count struct {
+	Count int32 `protobuf:"varint,2,opt,name=count,proto3,oneof"`
+}
+
+type OneofsRequest_Pick struct {
+	Pick Choice `protobuf:"varint,3,opt,name=pick,proto3,enum=kitchensink.v1.Choice,oneof"`
+}
+
+func (*OneofsRequest_Text) isOneofsRequest_Choice() {}
+
+func (*OneofsRequest_Count) isOneofsRequest_Choice() {}
+
+func (*OneofsRequest_Pick) isOneofsRequest_Choice() {}
+
+type isOneofsRequest_Payload interface {
+	isOneofsRequest_Payload()
+}
+
+type OneofsRequest_Outer struct {
+	Outer *Outer `protobuf:"bytes,4,opt,name=outer,proto3,oneof"`
+}
+
+type OneofsRequest_Enabled struct {
+	Enabled bool `protobuf:"varint,5,opt,name=enabled,proto3,oneof"`
+}
+
+type OneofsRequest_When struct {
+	When *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=when,proto3,oneof"`
+}
+
+func (*OneofsRequest_Outer) isOneofsRequest_Payload() {}
+
+func (*OneofsRequest_Enabled) isOneofsRequest_Payload() {}
+
+func (*OneofsRequest_When) isOneofsRequest_Payload() {}
+
+type isOneofsRequest_Solo interface {
+	isOneofsRequest_Solo()
+}
+
+type OneofsRequest_Only struct {
+	Only string `protobuf:"bytes,7,opt,name=only,proto3,oneof"`
+}
+
+func (*OneofsRequest_Only) isOneofsRequest_Solo() {}
+
+type OptionalsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          *string                `protobuf:"bytes,1,opt,name=name,proto3,oneof" json:"name,omitempty"`
+	Age           *int32                 `protobuf:"varint,2,opt,name=age,proto3,oneof" json:"age,omitempty"`
+	Pick          *Choice                `protobuf:"varint,3,opt,name=pick,proto3,enum=kitchensink.v1.Choice,oneof" json:"pick,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OptionalsRequest) Reset() {
+	*x = OptionalsRequest{}
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OptionalsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OptionalsRequest) ProtoMessage() {}
+
+func (x *OptionalsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OptionalsRequest.ProtoReflect.Descriptor instead.
+func (*OptionalsRequest) Descriptor() ([]byte, []int) {
+	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *OptionalsRequest) GetName() string {
+	if x != nil && x.Name != nil {
+		return *x.Name
+	}
+	return ""
+}
+
+func (x *OptionalsRequest) GetAge() int32 {
+	if x != nil && x.Age != nil {
+		return *x.Age
+	}
+	return 0
+}
+
+func (x *OptionalsRequest) GetPick() Choice {
+	if x != nil && x.Pick != nil {
+		return *x.Pick
+	}
+	return Choice_CHOICE_UNSPECIFIED
+}
+
 type Outer struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	StringLeaf    string                 `protobuf:"bytes,1,opt,name=string_leaf,json=stringLeaf,proto3" json:"string_leaf,omitempty"`
@@ -942,7 +1192,7 @@ type Outer struct {
 
 func (x *Outer) Reset() {
 	*x = Outer{}
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[7]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -954,7 +1204,7 @@ func (x *Outer) String() string {
 func (*Outer) ProtoMessage() {}
 
 func (x *Outer) ProtoReflect() protoreflect.Message {
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[7]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -967,7 +1217,7 @@ func (x *Outer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Outer.ProtoReflect.Descriptor instead.
 func (*Outer) Descriptor() ([]byte, []int) {
-	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{7}
+	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *Outer) GetStringLeaf() string {
@@ -1001,7 +1251,7 @@ type Middle struct {
 
 func (x *Middle) Reset() {
 	*x = Middle{}
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[8]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1013,7 +1263,7 @@ func (x *Middle) String() string {
 func (*Middle) ProtoMessage() {}
 
 func (x *Middle) ProtoReflect() protoreflect.Message {
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[8]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1026,7 +1276,7 @@ func (x *Middle) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Middle.ProtoReflect.Descriptor instead.
 func (*Middle) Descriptor() ([]byte, []int) {
-	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{8}
+	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Middle) GetLeaf() string {
@@ -1053,7 +1303,7 @@ type Inner struct {
 
 func (x *Inner) Reset() {
 	*x = Inner{}
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[9]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1065,7 +1315,7 @@ func (x *Inner) String() string {
 func (*Inner) ProtoMessage() {}
 
 func (x *Inner) ProtoReflect() protoreflect.Message {
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[9]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1078,7 +1328,7 @@ func (x *Inner) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Inner.ProtoReflect.Descriptor instead.
 func (*Inner) Descriptor() ([]byte, []int) {
-	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{9}
+	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *Inner) GetLeaf() string {
@@ -1105,7 +1355,7 @@ type Deep struct {
 
 func (x *Deep) Reset() {
 	*x = Deep{}
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[10]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1117,7 +1367,7 @@ func (x *Deep) String() string {
 func (*Deep) ProtoMessage() {}
 
 func (x *Deep) ProtoReflect() protoreflect.Message {
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[10]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1130,7 +1380,7 @@ func (x *Deep) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Deep.ProtoReflect.Descriptor instead.
 func (*Deep) Descriptor() ([]byte, []int) {
-	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{10}
+	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *Deep) GetLeaf() string {
@@ -1157,7 +1407,7 @@ type Deeper struct {
 
 func (x *Deeper) Reset() {
 	*x = Deeper{}
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[11]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1169,7 +1419,7 @@ func (x *Deeper) String() string {
 func (*Deeper) ProtoMessage() {}
 
 func (x *Deeper) ProtoReflect() protoreflect.Message {
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[11]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1182,7 +1432,7 @@ func (x *Deeper) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Deeper.ProtoReflect.Descriptor instead.
 func (*Deeper) Descriptor() ([]byte, []int) {
-	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{11}
+	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *Deeper) GetLeaf() string {
@@ -1208,7 +1458,7 @@ type Deepest struct {
 
 func (x *Deepest) Reset() {
 	*x = Deepest{}
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[12]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1220,7 +1470,7 @@ func (x *Deepest) String() string {
 func (*Deepest) ProtoMessage() {}
 
 func (x *Deepest) ProtoReflect() protoreflect.Message {
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[12]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1233,7 +1483,7 @@ func (x *Deepest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Deepest.ProtoReflect.Descriptor instead.
 func (*Deepest) Descriptor() ([]byte, []int) {
-	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{12}
+	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *Deepest) GetLeaf() string {
@@ -1253,7 +1503,7 @@ type Recursive struct {
 
 func (x *Recursive) Reset() {
 	*x = Recursive{}
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[13]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1265,7 +1515,7 @@ func (x *Recursive) String() string {
 func (*Recursive) ProtoMessage() {}
 
 func (x *Recursive) ProtoReflect() protoreflect.Message {
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[13]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1278,7 +1528,7 @@ func (x *Recursive) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Recursive.ProtoReflect.Descriptor instead.
 func (*Recursive) Descriptor() ([]byte, []int) {
-	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{13}
+	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *Recursive) GetName() string {
@@ -1304,7 +1554,7 @@ type Odd struct {
 
 func (x *Odd) Reset() {
 	*x = Odd{}
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[14]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1316,7 +1566,7 @@ func (x *Odd) String() string {
 func (*Odd) ProtoMessage() {}
 
 func (x *Odd) ProtoReflect() protoreflect.Message {
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[14]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1329,7 +1579,7 @@ func (x *Odd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Odd.ProtoReflect.Descriptor instead.
 func (*Odd) Descriptor() ([]byte, []int) {
-	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{14}
+	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *Odd) GetEven() *Even {
@@ -1348,7 +1598,7 @@ type Even struct {
 
 func (x *Even) Reset() {
 	*x = Even{}
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[15]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1360,7 +1610,7 @@ func (x *Even) String() string {
 func (*Even) ProtoMessage() {}
 
 func (x *Even) ProtoReflect() protoreflect.Message {
-	mi := &file_kitchensink_v1_fields_proto_msgTypes[15]
+	mi := &file_kitchensink_v1_fields_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1373,7 +1623,7 @@ func (x *Even) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Even.ProtoReflect.Descriptor instead.
 func (*Even) Descriptor() ([]byte, []int) {
-	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{15}
+	return file_kitchensink_v1_fields_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *Even) GetOdd() *Odd {
@@ -1520,7 +1770,25 @@ const file_kitchensink_v1_fields_proto_rawDesc = "" +
 	"\x12NESTED_UNSPECIFIED\x10\x00\x12\x0e\n" +
 	"\n" +
 	"NESTED_ONE\x10\x01B\x12\n" +
-	"\x10_optional_choice\"w\n" +
+	"\x10_optional_choice\"\x9b\x02\n" +
+	"\rOneofsRequest\x12\x14\n" +
+	"\x04text\x18\x01 \x01(\tH\x00R\x04text\x12\x16\n" +
+	"\x05count\x18\x02 \x01(\x05H\x00R\x05count\x12,\n" +
+	"\x04pick\x18\x03 \x01(\x0e2\x16.kitchensink.v1.ChoiceH\x00R\x04pick\x12-\n" +
+	"\x05outer\x18\x04 \x01(\v2\x15.kitchensink.v1.OuterH\x01R\x05outer\x12\x1a\n" +
+	"\aenabled\x18\x05 \x01(\bH\x01R\aenabled\x120\n" +
+	"\x04when\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampH\x01R\x04when\x12\x14\n" +
+	"\x04only\x18\a \x01(\tH\x02R\x04onlyB\b\n" +
+	"\x06choiceB\t\n" +
+	"\apayloadB\x06\n" +
+	"\x04solo\"\x8d\x01\n" +
+	"\x10OptionalsRequest\x12\x17\n" +
+	"\x04name\x18\x01 \x01(\tH\x00R\x04name\x88\x01\x01\x12\x15\n" +
+	"\x03age\x18\x02 \x01(\x05H\x01R\x03age\x88\x01\x01\x12/\n" +
+	"\x04pick\x18\x03 \x01(\x0e2\x16.kitchensink.v1.ChoiceH\x02R\x04pick\x88\x01\x01B\a\n" +
+	"\x05_nameB\x06\n" +
+	"\x04_ageB\a\n" +
+	"\x05_pick\"w\n" +
 	"\x05Outer\x12\x1f\n" +
 	"\vstring_leaf\x18\x01 \x01(\tR\n" +
 	"stringLeaf\x12\x1d\n" +
@@ -1556,7 +1824,7 @@ const file_kitchensink_v1_fields_proto_rawDesc = "" +
 	"\x13ALIASED_UNSPECIFIED\x10\x00\x12\r\n" +
 	"\tALIASED_A\x10\x01\x12\x11\n" +
 	"\rALIASED_ALPHA\x10\x01\x12\r\n" +
-	"\tALIASED_B\x10\x02\x1a\x02\x10\x012\xaa\x04\n" +
+	"\tALIASED_B\x10\x02\x1a\x02\x10\x012\xc7\x05\n" +
 	"\rFieldsService\x12K\n" +
 	"\aScalars\x12\x1e.kitchensink.v1.ScalarsRequest\x1a\x1e.kitchensink.v1.ScalarsRequest\"\x00\x12N\n" +
 	"\bMessages\x12\x1f.kitchensink.v1.MessagesRequest\x1a\x1f.kitchensink.v1.MessagesRequest\"\x00\x12N\n" +
@@ -1564,7 +1832,9 @@ const file_kitchensink_v1_fields_proto_rawDesc = "" +
 	"\x04Maps\x12\x1b.kitchensink.v1.MapsRequest\x1a\x1b.kitchensink.v1.MapsRequest\"\x00\x12N\n" +
 	"\bWrappers\x12\x1f.kitchensink.v1.WrappersRequest\x1a\x1f.kitchensink.v1.WrappersRequest\"\x00\x12Q\n" +
 	"\tWellKnown\x12 .kitchensink.v1.WellKnownRequest\x1a .kitchensink.v1.WellKnownRequest\"\x00\x12E\n" +
-	"\x05Enums\x12\x1c.kitchensink.v1.EnumsRequest\x1a\x1c.kitchensink.v1.EnumsRequest\"\x00BeZcgithub.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1b\x06proto3"
+	"\x05Enums\x12\x1c.kitchensink.v1.EnumsRequest\x1a\x1c.kitchensink.v1.EnumsRequest\"\x00\x12H\n" +
+	"\x06Oneofs\x12\x1d.kitchensink.v1.OneofsRequest\x1a\x1d.kitchensink.v1.OneofsRequest\"\x00\x12Q\n" +
+	"\tOptionals\x12 .kitchensink.v1.OptionalsRequest\x1a .kitchensink.v1.OptionalsRequest\"\x00BeZcgithub.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1b\x06proto3"
 
 var (
 	file_kitchensink_v1_fields_proto_rawDescOnce sync.Once
@@ -1579,7 +1849,7 @@ func file_kitchensink_v1_fields_proto_rawDescGZIP() []byte {
 }
 
 var file_kitchensink_v1_fields_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_kitchensink_v1_fields_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_kitchensink_v1_fields_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
 var file_kitchensink_v1_fields_proto_goTypes = []any{
 	(Choice)(0),                    // 0: kitchensink.v1.Choice
 	(Aliased)(0),                   // 1: kitchensink.v1.Aliased
@@ -1591,120 +1861,130 @@ var file_kitchensink_v1_fields_proto_goTypes = []any{
 	(*WrappersRequest)(nil),        // 7: kitchensink.v1.WrappersRequest
 	(*WellKnownRequest)(nil),       // 8: kitchensink.v1.WellKnownRequest
 	(*EnumsRequest)(nil),           // 9: kitchensink.v1.EnumsRequest
-	(*Outer)(nil),                  // 10: kitchensink.v1.Outer
-	(*Middle)(nil),                 // 11: kitchensink.v1.Middle
-	(*Inner)(nil),                  // 12: kitchensink.v1.Inner
-	(*Deep)(nil),                   // 13: kitchensink.v1.Deep
-	(*Deeper)(nil),                 // 14: kitchensink.v1.Deeper
-	(*Deepest)(nil),                // 15: kitchensink.v1.Deepest
-	(*Recursive)(nil),              // 16: kitchensink.v1.Recursive
-	(*Odd)(nil),                    // 17: kitchensink.v1.Odd
-	(*Even)(nil),                   // 18: kitchensink.v1.Even
-	nil,                            // 19: kitchensink.v1.MessagesRequest.LabelsEntry
-	nil,                            // 20: kitchensink.v1.MapsRequest.StringValuesEntry
-	nil,                            // 21: kitchensink.v1.MapsRequest.BoolValuesEntry
-	nil,                            // 22: kitchensink.v1.MapsRequest.Int64ValuesEntry
-	nil,                            // 23: kitchensink.v1.MapsRequest.Uint64ValuesEntry
-	nil,                            // 24: kitchensink.v1.MapsRequest.DoubleValuesEntry
-	nil,                            // 25: kitchensink.v1.MapsRequest.TimestampValuesEntry
-	nil,                            // 26: kitchensink.v1.MapsRequest.OuterValuesEntry
-	nil,                            // 27: kitchensink.v1.MapsRequest.Int64KeysEntry
-	nil,                            // 28: kitchensink.v1.MapsRequest.BoolKeysEntry
-	nil,                            // 29: kitchensink.v1.WrappersRequest.BoolMapEntry
-	nil,                            // 30: kitchensink.v1.EnumsRequest.ChoiceMapEntry
-	(*timestamppb.Timestamp)(nil),  // 31: google.protobuf.Timestamp
-	(*durationpb.Duration)(nil),    // 32: google.protobuf.Duration
-	(*fieldmaskpb.FieldMask)(nil),  // 33: google.protobuf.FieldMask
-	(*structpb.Struct)(nil),        // 34: google.protobuf.Struct
-	(*wrapperspb.DoubleValue)(nil), // 35: google.protobuf.DoubleValue
-	(*wrapperspb.FloatValue)(nil),  // 36: google.protobuf.FloatValue
-	(*wrapperspb.Int64Value)(nil),  // 37: google.protobuf.Int64Value
-	(*wrapperspb.UInt64Value)(nil), // 38: google.protobuf.UInt64Value
-	(*wrapperspb.Int32Value)(nil),  // 39: google.protobuf.Int32Value
-	(*wrapperspb.UInt32Value)(nil), // 40: google.protobuf.UInt32Value
-	(*wrapperspb.BoolValue)(nil),   // 41: google.protobuf.BoolValue
-	(*wrapperspb.StringValue)(nil), // 42: google.protobuf.StringValue
-	(*wrapperspb.BytesValue)(nil),  // 43: google.protobuf.BytesValue
-	(*structpb.Value)(nil),         // 44: google.protobuf.Value
-	(*structpb.ListValue)(nil),     // 45: google.protobuf.ListValue
-	(*anypb.Any)(nil),              // 46: google.protobuf.Any
-	(*emptypb.Empty)(nil),          // 47: google.protobuf.Empty
+	(*OneofsRequest)(nil),          // 10: kitchensink.v1.OneofsRequest
+	(*OptionalsRequest)(nil),       // 11: kitchensink.v1.OptionalsRequest
+	(*Outer)(nil),                  // 12: kitchensink.v1.Outer
+	(*Middle)(nil),                 // 13: kitchensink.v1.Middle
+	(*Inner)(nil),                  // 14: kitchensink.v1.Inner
+	(*Deep)(nil),                   // 15: kitchensink.v1.Deep
+	(*Deeper)(nil),                 // 16: kitchensink.v1.Deeper
+	(*Deepest)(nil),                // 17: kitchensink.v1.Deepest
+	(*Recursive)(nil),              // 18: kitchensink.v1.Recursive
+	(*Odd)(nil),                    // 19: kitchensink.v1.Odd
+	(*Even)(nil),                   // 20: kitchensink.v1.Even
+	nil,                            // 21: kitchensink.v1.MessagesRequest.LabelsEntry
+	nil,                            // 22: kitchensink.v1.MapsRequest.StringValuesEntry
+	nil,                            // 23: kitchensink.v1.MapsRequest.BoolValuesEntry
+	nil,                            // 24: kitchensink.v1.MapsRequest.Int64ValuesEntry
+	nil,                            // 25: kitchensink.v1.MapsRequest.Uint64ValuesEntry
+	nil,                            // 26: kitchensink.v1.MapsRequest.DoubleValuesEntry
+	nil,                            // 27: kitchensink.v1.MapsRequest.TimestampValuesEntry
+	nil,                            // 28: kitchensink.v1.MapsRequest.OuterValuesEntry
+	nil,                            // 29: kitchensink.v1.MapsRequest.Int64KeysEntry
+	nil,                            // 30: kitchensink.v1.MapsRequest.BoolKeysEntry
+	nil,                            // 31: kitchensink.v1.WrappersRequest.BoolMapEntry
+	nil,                            // 32: kitchensink.v1.EnumsRequest.ChoiceMapEntry
+	(*timestamppb.Timestamp)(nil),  // 33: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),    // 34: google.protobuf.Duration
+	(*fieldmaskpb.FieldMask)(nil),  // 35: google.protobuf.FieldMask
+	(*structpb.Struct)(nil),        // 36: google.protobuf.Struct
+	(*wrapperspb.DoubleValue)(nil), // 37: google.protobuf.DoubleValue
+	(*wrapperspb.FloatValue)(nil),  // 38: google.protobuf.FloatValue
+	(*wrapperspb.Int64Value)(nil),  // 39: google.protobuf.Int64Value
+	(*wrapperspb.UInt64Value)(nil), // 40: google.protobuf.UInt64Value
+	(*wrapperspb.Int32Value)(nil),  // 41: google.protobuf.Int32Value
+	(*wrapperspb.UInt32Value)(nil), // 42: google.protobuf.UInt32Value
+	(*wrapperspb.BoolValue)(nil),   // 43: google.protobuf.BoolValue
+	(*wrapperspb.StringValue)(nil), // 44: google.protobuf.StringValue
+	(*wrapperspb.BytesValue)(nil),  // 45: google.protobuf.BytesValue
+	(*structpb.Value)(nil),         // 46: google.protobuf.Value
+	(*structpb.ListValue)(nil),     // 47: google.protobuf.ListValue
+	(*anypb.Any)(nil),              // 48: google.protobuf.Any
+	(*emptypb.Empty)(nil),          // 49: google.protobuf.Empty
 }
 var file_kitchensink_v1_fields_proto_depIdxs = []int32{
-	10, // 0: kitchensink.v1.MessagesRequest.outer:type_name -> kitchensink.v1.Outer
-	10, // 1: kitchensink.v1.MessagesRequest.kebab_outer:type_name -> kitchensink.v1.Outer
-	31, // 2: kitchensink.v1.MessagesRequest.timestamp:type_name -> google.protobuf.Timestamp
-	10, // 3: kitchensink.v1.MessagesRequest.outers:type_name -> kitchensink.v1.Outer
-	19, // 4: kitchensink.v1.MessagesRequest.labels:type_name -> kitchensink.v1.MessagesRequest.LabelsEntry
-	32, // 5: kitchensink.v1.MessagesRequest.duration:type_name -> google.protobuf.Duration
-	33, // 6: kitchensink.v1.MessagesRequest.field_mask:type_name -> google.protobuf.FieldMask
-	34, // 7: kitchensink.v1.MessagesRequest.struct:type_name -> google.protobuf.Struct
-	16, // 8: kitchensink.v1.MessagesRequest.recursive:type_name -> kitchensink.v1.Recursive
-	17, // 9: kitchensink.v1.MessagesRequest.odd:type_name -> kitchensink.v1.Odd
-	31, // 10: kitchensink.v1.RepeatedRequest.timestamps:type_name -> google.protobuf.Timestamp
-	10, // 11: kitchensink.v1.RepeatedRequest.outers:type_name -> kitchensink.v1.Outer
-	20, // 12: kitchensink.v1.MapsRequest.string_values:type_name -> kitchensink.v1.MapsRequest.StringValuesEntry
-	21, // 13: kitchensink.v1.MapsRequest.bool_values:type_name -> kitchensink.v1.MapsRequest.BoolValuesEntry
-	22, // 14: kitchensink.v1.MapsRequest.int64_values:type_name -> kitchensink.v1.MapsRequest.Int64ValuesEntry
-	23, // 15: kitchensink.v1.MapsRequest.uint64_values:type_name -> kitchensink.v1.MapsRequest.Uint64ValuesEntry
-	24, // 16: kitchensink.v1.MapsRequest.double_values:type_name -> kitchensink.v1.MapsRequest.DoubleValuesEntry
-	25, // 17: kitchensink.v1.MapsRequest.timestamp_values:type_name -> kitchensink.v1.MapsRequest.TimestampValuesEntry
-	26, // 18: kitchensink.v1.MapsRequest.outer_values:type_name -> kitchensink.v1.MapsRequest.OuterValuesEntry
-	27, // 19: kitchensink.v1.MapsRequest.int64_keys:type_name -> kitchensink.v1.MapsRequest.Int64KeysEntry
-	28, // 20: kitchensink.v1.MapsRequest.bool_keys:type_name -> kitchensink.v1.MapsRequest.BoolKeysEntry
-	35, // 21: kitchensink.v1.WrappersRequest.double_value:type_name -> google.protobuf.DoubleValue
-	36, // 22: kitchensink.v1.WrappersRequest.float_value:type_name -> google.protobuf.FloatValue
-	37, // 23: kitchensink.v1.WrappersRequest.int64_value:type_name -> google.protobuf.Int64Value
-	38, // 24: kitchensink.v1.WrappersRequest.uint64_value:type_name -> google.protobuf.UInt64Value
-	39, // 25: kitchensink.v1.WrappersRequest.int32_value:type_name -> google.protobuf.Int32Value
-	40, // 26: kitchensink.v1.WrappersRequest.uint32_value:type_name -> google.protobuf.UInt32Value
-	41, // 27: kitchensink.v1.WrappersRequest.bool_value:type_name -> google.protobuf.BoolValue
-	42, // 28: kitchensink.v1.WrappersRequest.string_value:type_name -> google.protobuf.StringValue
-	43, // 29: kitchensink.v1.WrappersRequest.bytes_value:type_name -> google.protobuf.BytesValue
-	42, // 30: kitchensink.v1.WrappersRequest.repeated_strings:type_name -> google.protobuf.StringValue
-	29, // 31: kitchensink.v1.WrappersRequest.bool_map:type_name -> kitchensink.v1.WrappersRequest.BoolMapEntry
-	34, // 32: kitchensink.v1.WellKnownRequest.struct:type_name -> google.protobuf.Struct
-	44, // 33: kitchensink.v1.WellKnownRequest.value:type_name -> google.protobuf.Value
-	45, // 34: kitchensink.v1.WellKnownRequest.list_value:type_name -> google.protobuf.ListValue
-	46, // 35: kitchensink.v1.WellKnownRequest.any:type_name -> google.protobuf.Any
-	47, // 36: kitchensink.v1.WellKnownRequest.empty:type_name -> google.protobuf.Empty
+	12, // 0: kitchensink.v1.MessagesRequest.outer:type_name -> kitchensink.v1.Outer
+	12, // 1: kitchensink.v1.MessagesRequest.kebab_outer:type_name -> kitchensink.v1.Outer
+	33, // 2: kitchensink.v1.MessagesRequest.timestamp:type_name -> google.protobuf.Timestamp
+	12, // 3: kitchensink.v1.MessagesRequest.outers:type_name -> kitchensink.v1.Outer
+	21, // 4: kitchensink.v1.MessagesRequest.labels:type_name -> kitchensink.v1.MessagesRequest.LabelsEntry
+	34, // 5: kitchensink.v1.MessagesRequest.duration:type_name -> google.protobuf.Duration
+	35, // 6: kitchensink.v1.MessagesRequest.field_mask:type_name -> google.protobuf.FieldMask
+	36, // 7: kitchensink.v1.MessagesRequest.struct:type_name -> google.protobuf.Struct
+	18, // 8: kitchensink.v1.MessagesRequest.recursive:type_name -> kitchensink.v1.Recursive
+	19, // 9: kitchensink.v1.MessagesRequest.odd:type_name -> kitchensink.v1.Odd
+	33, // 10: kitchensink.v1.RepeatedRequest.timestamps:type_name -> google.protobuf.Timestamp
+	12, // 11: kitchensink.v1.RepeatedRequest.outers:type_name -> kitchensink.v1.Outer
+	22, // 12: kitchensink.v1.MapsRequest.string_values:type_name -> kitchensink.v1.MapsRequest.StringValuesEntry
+	23, // 13: kitchensink.v1.MapsRequest.bool_values:type_name -> kitchensink.v1.MapsRequest.BoolValuesEntry
+	24, // 14: kitchensink.v1.MapsRequest.int64_values:type_name -> kitchensink.v1.MapsRequest.Int64ValuesEntry
+	25, // 15: kitchensink.v1.MapsRequest.uint64_values:type_name -> kitchensink.v1.MapsRequest.Uint64ValuesEntry
+	26, // 16: kitchensink.v1.MapsRequest.double_values:type_name -> kitchensink.v1.MapsRequest.DoubleValuesEntry
+	27, // 17: kitchensink.v1.MapsRequest.timestamp_values:type_name -> kitchensink.v1.MapsRequest.TimestampValuesEntry
+	28, // 18: kitchensink.v1.MapsRequest.outer_values:type_name -> kitchensink.v1.MapsRequest.OuterValuesEntry
+	29, // 19: kitchensink.v1.MapsRequest.int64_keys:type_name -> kitchensink.v1.MapsRequest.Int64KeysEntry
+	30, // 20: kitchensink.v1.MapsRequest.bool_keys:type_name -> kitchensink.v1.MapsRequest.BoolKeysEntry
+	37, // 21: kitchensink.v1.WrappersRequest.double_value:type_name -> google.protobuf.DoubleValue
+	38, // 22: kitchensink.v1.WrappersRequest.float_value:type_name -> google.protobuf.FloatValue
+	39, // 23: kitchensink.v1.WrappersRequest.int64_value:type_name -> google.protobuf.Int64Value
+	40, // 24: kitchensink.v1.WrappersRequest.uint64_value:type_name -> google.protobuf.UInt64Value
+	41, // 25: kitchensink.v1.WrappersRequest.int32_value:type_name -> google.protobuf.Int32Value
+	42, // 26: kitchensink.v1.WrappersRequest.uint32_value:type_name -> google.protobuf.UInt32Value
+	43, // 27: kitchensink.v1.WrappersRequest.bool_value:type_name -> google.protobuf.BoolValue
+	44, // 28: kitchensink.v1.WrappersRequest.string_value:type_name -> google.protobuf.StringValue
+	45, // 29: kitchensink.v1.WrappersRequest.bytes_value:type_name -> google.protobuf.BytesValue
+	44, // 30: kitchensink.v1.WrappersRequest.repeated_strings:type_name -> google.protobuf.StringValue
+	31, // 31: kitchensink.v1.WrappersRequest.bool_map:type_name -> kitchensink.v1.WrappersRequest.BoolMapEntry
+	36, // 32: kitchensink.v1.WellKnownRequest.struct:type_name -> google.protobuf.Struct
+	46, // 33: kitchensink.v1.WellKnownRequest.value:type_name -> google.protobuf.Value
+	47, // 34: kitchensink.v1.WellKnownRequest.list_value:type_name -> google.protobuf.ListValue
+	48, // 35: kitchensink.v1.WellKnownRequest.any:type_name -> google.protobuf.Any
+	49, // 36: kitchensink.v1.WellKnownRequest.empty:type_name -> google.protobuf.Empty
 	0,  // 37: kitchensink.v1.EnumsRequest.choice:type_name -> kitchensink.v1.Choice
 	0,  // 38: kitchensink.v1.EnumsRequest.choices:type_name -> kitchensink.v1.Choice
 	0,  // 39: kitchensink.v1.EnumsRequest.optional_choice:type_name -> kitchensink.v1.Choice
-	30, // 40: kitchensink.v1.EnumsRequest.choice_map:type_name -> kitchensink.v1.EnumsRequest.ChoiceMapEntry
+	32, // 40: kitchensink.v1.EnumsRequest.choice_map:type_name -> kitchensink.v1.EnumsRequest.ChoiceMapEntry
 	1,  // 41: kitchensink.v1.EnumsRequest.aliased:type_name -> kitchensink.v1.Aliased
 	2,  // 42: kitchensink.v1.EnumsRequest.nested:type_name -> kitchensink.v1.EnumsRequest.Nested
-	11, // 43: kitchensink.v1.Outer.middle:type_name -> kitchensink.v1.Middle
-	12, // 44: kitchensink.v1.Middle.inner:type_name -> kitchensink.v1.Inner
-	13, // 45: kitchensink.v1.Inner.deep:type_name -> kitchensink.v1.Deep
-	14, // 46: kitchensink.v1.Deep.deeper:type_name -> kitchensink.v1.Deeper
-	15, // 47: kitchensink.v1.Deeper.deepest:type_name -> kitchensink.v1.Deepest
-	16, // 48: kitchensink.v1.Recursive.next:type_name -> kitchensink.v1.Recursive
-	18, // 49: kitchensink.v1.Odd.even:type_name -> kitchensink.v1.Even
-	17, // 50: kitchensink.v1.Even.odd:type_name -> kitchensink.v1.Odd
-	31, // 51: kitchensink.v1.MapsRequest.TimestampValuesEntry.value:type_name -> google.protobuf.Timestamp
-	10, // 52: kitchensink.v1.MapsRequest.OuterValuesEntry.value:type_name -> kitchensink.v1.Outer
-	41, // 53: kitchensink.v1.WrappersRequest.BoolMapEntry.value:type_name -> google.protobuf.BoolValue
-	0,  // 54: kitchensink.v1.EnumsRequest.ChoiceMapEntry.value:type_name -> kitchensink.v1.Choice
-	3,  // 55: kitchensink.v1.FieldsService.Scalars:input_type -> kitchensink.v1.ScalarsRequest
-	4,  // 56: kitchensink.v1.FieldsService.Messages:input_type -> kitchensink.v1.MessagesRequest
-	5,  // 57: kitchensink.v1.FieldsService.Repeated:input_type -> kitchensink.v1.RepeatedRequest
-	6,  // 58: kitchensink.v1.FieldsService.Maps:input_type -> kitchensink.v1.MapsRequest
-	7,  // 59: kitchensink.v1.FieldsService.Wrappers:input_type -> kitchensink.v1.WrappersRequest
-	8,  // 60: kitchensink.v1.FieldsService.WellKnown:input_type -> kitchensink.v1.WellKnownRequest
-	9,  // 61: kitchensink.v1.FieldsService.Enums:input_type -> kitchensink.v1.EnumsRequest
-	3,  // 62: kitchensink.v1.FieldsService.Scalars:output_type -> kitchensink.v1.ScalarsRequest
-	4,  // 63: kitchensink.v1.FieldsService.Messages:output_type -> kitchensink.v1.MessagesRequest
-	5,  // 64: kitchensink.v1.FieldsService.Repeated:output_type -> kitchensink.v1.RepeatedRequest
-	6,  // 65: kitchensink.v1.FieldsService.Maps:output_type -> kitchensink.v1.MapsRequest
-	7,  // 66: kitchensink.v1.FieldsService.Wrappers:output_type -> kitchensink.v1.WrappersRequest
-	8,  // 67: kitchensink.v1.FieldsService.WellKnown:output_type -> kitchensink.v1.WellKnownRequest
-	9,  // 68: kitchensink.v1.FieldsService.Enums:output_type -> kitchensink.v1.EnumsRequest
-	62, // [62:69] is the sub-list for method output_type
-	55, // [55:62] is the sub-list for method input_type
-	55, // [55:55] is the sub-list for extension type_name
-	55, // [55:55] is the sub-list for extension extendee
-	0,  // [0:55] is the sub-list for field type_name
+	0,  // 43: kitchensink.v1.OneofsRequest.pick:type_name -> kitchensink.v1.Choice
+	12, // 44: kitchensink.v1.OneofsRequest.outer:type_name -> kitchensink.v1.Outer
+	33, // 45: kitchensink.v1.OneofsRequest.when:type_name -> google.protobuf.Timestamp
+	0,  // 46: kitchensink.v1.OptionalsRequest.pick:type_name -> kitchensink.v1.Choice
+	13, // 47: kitchensink.v1.Outer.middle:type_name -> kitchensink.v1.Middle
+	14, // 48: kitchensink.v1.Middle.inner:type_name -> kitchensink.v1.Inner
+	15, // 49: kitchensink.v1.Inner.deep:type_name -> kitchensink.v1.Deep
+	16, // 50: kitchensink.v1.Deep.deeper:type_name -> kitchensink.v1.Deeper
+	17, // 51: kitchensink.v1.Deeper.deepest:type_name -> kitchensink.v1.Deepest
+	18, // 52: kitchensink.v1.Recursive.next:type_name -> kitchensink.v1.Recursive
+	20, // 53: kitchensink.v1.Odd.even:type_name -> kitchensink.v1.Even
+	19, // 54: kitchensink.v1.Even.odd:type_name -> kitchensink.v1.Odd
+	33, // 55: kitchensink.v1.MapsRequest.TimestampValuesEntry.value:type_name -> google.protobuf.Timestamp
+	12, // 56: kitchensink.v1.MapsRequest.OuterValuesEntry.value:type_name -> kitchensink.v1.Outer
+	43, // 57: kitchensink.v1.WrappersRequest.BoolMapEntry.value:type_name -> google.protobuf.BoolValue
+	0,  // 58: kitchensink.v1.EnumsRequest.ChoiceMapEntry.value:type_name -> kitchensink.v1.Choice
+	3,  // 59: kitchensink.v1.FieldsService.Scalars:input_type -> kitchensink.v1.ScalarsRequest
+	4,  // 60: kitchensink.v1.FieldsService.Messages:input_type -> kitchensink.v1.MessagesRequest
+	5,  // 61: kitchensink.v1.FieldsService.Repeated:input_type -> kitchensink.v1.RepeatedRequest
+	6,  // 62: kitchensink.v1.FieldsService.Maps:input_type -> kitchensink.v1.MapsRequest
+	7,  // 63: kitchensink.v1.FieldsService.Wrappers:input_type -> kitchensink.v1.WrappersRequest
+	8,  // 64: kitchensink.v1.FieldsService.WellKnown:input_type -> kitchensink.v1.WellKnownRequest
+	9,  // 65: kitchensink.v1.FieldsService.Enums:input_type -> kitchensink.v1.EnumsRequest
+	10, // 66: kitchensink.v1.FieldsService.Oneofs:input_type -> kitchensink.v1.OneofsRequest
+	11, // 67: kitchensink.v1.FieldsService.Optionals:input_type -> kitchensink.v1.OptionalsRequest
+	3,  // 68: kitchensink.v1.FieldsService.Scalars:output_type -> kitchensink.v1.ScalarsRequest
+	4,  // 69: kitchensink.v1.FieldsService.Messages:output_type -> kitchensink.v1.MessagesRequest
+	5,  // 70: kitchensink.v1.FieldsService.Repeated:output_type -> kitchensink.v1.RepeatedRequest
+	6,  // 71: kitchensink.v1.FieldsService.Maps:output_type -> kitchensink.v1.MapsRequest
+	7,  // 72: kitchensink.v1.FieldsService.Wrappers:output_type -> kitchensink.v1.WrappersRequest
+	8,  // 73: kitchensink.v1.FieldsService.WellKnown:output_type -> kitchensink.v1.WellKnownRequest
+	9,  // 74: kitchensink.v1.FieldsService.Enums:output_type -> kitchensink.v1.EnumsRequest
+	10, // 75: kitchensink.v1.FieldsService.Oneofs:output_type -> kitchensink.v1.OneofsRequest
+	11, // 76: kitchensink.v1.FieldsService.Optionals:output_type -> kitchensink.v1.OptionalsRequest
+	68, // [68:77] is the sub-list for method output_type
+	59, // [59:68] is the sub-list for method input_type
+	59, // [59:59] is the sub-list for extension type_name
+	59, // [59:59] is the sub-list for extension extendee
+	0,  // [0:59] is the sub-list for field type_name
 }
 
 func init() { file_kitchensink_v1_fields_proto_init() }
@@ -1713,13 +1993,23 @@ func file_kitchensink_v1_fields_proto_init() {
 		return
 	}
 	file_kitchensink_v1_fields_proto_msgTypes[6].OneofWrappers = []any{}
+	file_kitchensink_v1_fields_proto_msgTypes[7].OneofWrappers = []any{
+		(*OneofsRequest_Text)(nil),
+		(*OneofsRequest_Count)(nil),
+		(*OneofsRequest_Pick)(nil),
+		(*OneofsRequest_Outer)(nil),
+		(*OneofsRequest_Enabled)(nil),
+		(*OneofsRequest_When)(nil),
+		(*OneofsRequest_Only)(nil),
+	}
+	file_kitchensink_v1_fields_proto_msgTypes[8].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kitchensink_v1_fields_proto_rawDesc), len(file_kitchensink_v1_fields_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   28,
+			NumMessages:   30,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
