@@ -27,6 +27,8 @@ service FieldsService {
   rpc Wrappers(WrappersRequest) returns (WrappersRequest) {}
   // WellKnown carries the document-form well-known types.
   rpc WellKnown(WellKnownRequest) returns (WellKnownRequest) {}
+  // Enums carries an enum in every shape, plus aliases and a nested enum.
+  rpc Enums(EnumsRequest) returns (EnumsRequest) {}
 }
 
 message ScalarsRequest {
@@ -102,6 +104,33 @@ message WellKnownRequest {
   google.protobuf.ListValue list_value = 3;
   google.protobuf.Any any = 4;
   google.protobuf.Empty empty = 5;
+}
+
+enum Choice {
+  CHOICE_UNSPECIFIED = 0;
+  CHOICE_FIRST = 1;
+  CHOICE_SECOND = 2;
+}
+
+enum Aliased {
+  option allow_alias = true;
+  ALIASED_UNSPECIFIED = 0;
+  ALIASED_A = 1;
+  ALIASED_ALPHA = 1;
+  ALIASED_B = 2;
+}
+
+message EnumsRequest {
+  enum Nested {
+    NESTED_UNSPECIFIED = 0;
+    NESTED_ONE = 1;
+  }
+  Choice choice = 1;
+  repeated Choice choices = 2;
+  optional Choice optional_choice = 3;
+  map<string, Choice> choice_map = 4;
+  Aliased aliased = 5;
+  Nested nested = 6;
 }
 
 message Outer {

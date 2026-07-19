@@ -285,6 +285,19 @@
               "bind": "string"
             },
             {
+              "proto_path": "lot.condition",
+              "name": "lot.condition",
+              "bind": "string",
+              "enum_values": [
+                "CONDITION_UNSPECIFIED",
+                "CONDITION_FINE",
+                "CONDITION_VERY_GOOD",
+                "CONDITION_GOOD",
+                "CONDITION_FAIR",
+                "CONDITION_POOR"
+              ]
+            },
+            {
               "proto_path": "lot.reserve_price",
               "name": "lot.reserve-price",
               "bind": "float"
@@ -342,7 +355,21 @@
             "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.ListAuctionsResponse"
+          "output": "bookstore.v1.ListAuctionsResponse",
+          "flags": [
+            {
+              "proto_path": "state",
+              "name": "state",
+              "bind": "string",
+              "enum_values": [
+                "AUCTION_STATE_UNSPECIFIED",
+                "AUCTION_STATE_SCHEDULED",
+                "AUCTION_STATE_OPEN",
+                "AUCTION_STATE_HAMMERED",
+                "AUCTION_STATE_SETTLED"
+              ]
+            }
+          ]
         }
       ]
     },

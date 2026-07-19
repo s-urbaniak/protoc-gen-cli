@@ -28,10 +28,17 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 
 			var bind ir.Bind
 			var ok, expand bool
+			var enumValues []string
 			switch elem.Kind() {
 			case protoreflect.MessageKind:
 				if bind, ok = messageBinds[elem.Message().FullName()]; !ok {
 					bind, ok, expand = ir.BindJSON, true, true
+				}
+			case protoreflect.EnumKind:
+				bind, ok = ir.BindString, true
+				values := elem.Enum().Values()
+				for i := range values.Len() {
+					enumValues = append(enumValues, string(values.Get(i).Name()))
 				}
 			default:
 				bind, ok = scalarBinds[elem.Kind()]
@@ -49,11 +56,12 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 				flags = append(
 					flags,
 					&ir.Flag{
-						ProtoPath: path,
-						Name:      name,
-						Bind:      bind,
-						Repeated:  fd.IsList(),
-						Map:       fd.IsMap(),
+						ProtoPath:  path,
+						Name:       name,
+						Bind:       bind,
+						Repeated:   fd.IsList(),
+						Map:        fd.IsMap(),
+						EnumValues: enumValues,
 					})
 				// A type already being expanded: descending again would only
 				// repeat its flags until the budget ran out. A dotted flag

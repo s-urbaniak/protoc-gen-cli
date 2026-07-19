@@ -550,6 +550,85 @@
               "bind": "json"
             }
           ]
+        },
+        {
+          "proto_name": "Enums",
+          "go_name": "Enums",
+          "name": "enums",
+          "short_help": "Enums carries an enum in every shape, plus aliases and a nested enum.",
+          "input": {
+            "full_name": "kitchensink.v1.EnumsRequest",
+            "proto_file": "kitchensink/v1/fields.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "EnumsRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.EnumsRequest",
+          "flags": [
+            {
+              "proto_path": "choice",
+              "name": "choice",
+              "bind": "string",
+              "enum_values": [
+                "CHOICE_UNSPECIFIED",
+                "CHOICE_FIRST",
+                "CHOICE_SECOND"
+              ]
+            },
+            {
+              "proto_path": "choices",
+              "name": "choices",
+              "bind": "string",
+              "repeated": true,
+              "enum_values": [
+                "CHOICE_UNSPECIFIED",
+                "CHOICE_FIRST",
+                "CHOICE_SECOND"
+              ]
+            },
+            {
+              "proto_path": "optional_choice",
+              "name": "optional-choice",
+              "bind": "string",
+              "enum_values": [
+                "CHOICE_UNSPECIFIED",
+                "CHOICE_FIRST",
+                "CHOICE_SECOND"
+              ]
+            },
+            {
+              "proto_path": "choice_map",
+              "name": "choice-map",
+              "bind": "string",
+              "map": true,
+              "enum_values": [
+                "CHOICE_UNSPECIFIED",
+                "CHOICE_FIRST",
+                "CHOICE_SECOND"
+              ]
+            },
+            {
+              "proto_path": "aliased",
+              "name": "aliased",
+              "bind": "string",
+              "enum_values": [
+                "ALIASED_UNSPECIFIED",
+                "ALIASED_A",
+                "ALIASED_ALPHA",
+                "ALIASED_B"
+              ]
+            },
+            {
+              "proto_path": "nested",
+              "name": "nested",
+              "bind": "string",
+              "enum_values": [
+                "NESTED_UNSPECIFIED",
+                "NESTED_ONE"
+              ]
+            }
+          ]
         }
       ]
     }

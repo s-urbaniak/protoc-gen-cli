@@ -25,6 +25,7 @@ const (
 	FieldsService_Maps_FullMethodName      = "/kitchensink.v1.FieldsService/Maps"
 	FieldsService_Wrappers_FullMethodName  = "/kitchensink.v1.FieldsService/Wrappers"
 	FieldsService_WellKnown_FullMethodName = "/kitchensink.v1.FieldsService/WellKnown"
+	FieldsService_Enums_FullMethodName     = "/kitchensink.v1.FieldsService/Enums"
 )
 
 // FieldsServiceClient is the client API for FieldsService service.
@@ -46,6 +47,8 @@ type FieldsServiceClient interface {
 	Wrappers(ctx context.Context, in *WrappersRequest, opts ...grpc.CallOption) (*WrappersRequest, error)
 	// WellKnown carries the document-form well-known types.
 	WellKnown(ctx context.Context, in *WellKnownRequest, opts ...grpc.CallOption) (*WellKnownRequest, error)
+	// Enums carries an enum in every shape, plus aliases and a nested enum.
+	Enums(ctx context.Context, in *EnumsRequest, opts ...grpc.CallOption) (*EnumsRequest, error)
 }
 
 type fieldsServiceClient struct {
@@ -116,6 +119,16 @@ func (c *fieldsServiceClient) WellKnown(ctx context.Context, in *WellKnownReques
 	return out, nil
 }
 
+func (c *fieldsServiceClient) Enums(ctx context.Context, in *EnumsRequest, opts ...grpc.CallOption) (*EnumsRequest, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EnumsRequest)
+	err := c.cc.Invoke(ctx, FieldsService_Enums_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FieldsServiceServer is the server API for FieldsService service.
 // All implementations must embed UnimplementedFieldsServiceServer
 // for forward compatibility.
@@ -135,6 +148,8 @@ type FieldsServiceServer interface {
 	Wrappers(context.Context, *WrappersRequest) (*WrappersRequest, error)
 	// WellKnown carries the document-form well-known types.
 	WellKnown(context.Context, *WellKnownRequest) (*WellKnownRequest, error)
+	// Enums carries an enum in every shape, plus aliases and a nested enum.
+	Enums(context.Context, *EnumsRequest) (*EnumsRequest, error)
 	mustEmbedUnimplementedFieldsServiceServer()
 }
 
@@ -162,6 +177,9 @@ func (UnimplementedFieldsServiceServer) Wrappers(context.Context, *WrappersReque
 }
 func (UnimplementedFieldsServiceServer) WellKnown(context.Context, *WellKnownRequest) (*WellKnownRequest, error) {
 	return nil, status.Error(codes.Unimplemented, "method WellKnown not implemented")
+}
+func (UnimplementedFieldsServiceServer) Enums(context.Context, *EnumsRequest) (*EnumsRequest, error) {
+	return nil, status.Error(codes.Unimplemented, "method Enums not implemented")
 }
 func (UnimplementedFieldsServiceServer) mustEmbedUnimplementedFieldsServiceServer() {}
 func (UnimplementedFieldsServiceServer) testEmbeddedByValue()                       {}
@@ -292,6 +310,24 @@ func _FieldsService_WellKnown_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FieldsService_Enums_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EnumsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FieldsServiceServer).Enums(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FieldsService_Enums_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FieldsServiceServer).Enums(ctx, req.(*EnumsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FieldsService_ServiceDesc is the grpc.ServiceDesc for FieldsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -322,6 +358,10 @@ var FieldsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WellKnown",
 			Handler:    _FieldsService_WellKnown_Handler,
+		},
+		{
+			MethodName: "Enums",
+			Handler:    _FieldsService_Enums_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -73,3 +73,10 @@ func (fieldsServer) WellKnown(
 ) (*kitchensinkv1.WellKnownRequest, error) {
 	return req, nil
 }
+
+func (fieldsServer) Enums(
+	_ context.Context,
+	req *kitchensinkv1.EnumsRequest,
+) (*kitchensinkv1.EnumsRequest, error) {
+	return req, nil
+}

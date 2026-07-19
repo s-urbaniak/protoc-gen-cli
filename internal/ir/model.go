@@ -64,6 +64,8 @@ type Flag struct {
 	Repeated bool `json:"repeated,omitempty"`
 	// Map marks a map field's flag: each use adds one key=value entry.
 	Map bool `json:"map,omitempty"`
+	// EnumValues lists an enum field's value names.
+	EnumValues []string `json:"enum_values,omitempty"`
 }
 
 // A Bind represents the JSON type a flag's argument parses into.

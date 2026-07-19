@@ -34,6 +34,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 	cmd.AddCommand(newFieldsServiceMapsCommand(client))
 	cmd.AddCommand(newFieldsServiceWrappersCommand(client))
 	cmd.AddCommand(newFieldsServiceWellKnownCommand(client))
+	cmd.AddCommand(newFieldsServiceEnumsCommand(client))
 	return cmd
 }
 
@@ -1188,6 +1189,105 @@ func newFieldsServiceWellKnownCommand(client FieldsServiceClient) *cobra.Command
 	cmd.Flags().StringVar(&flagListValue, "list-value", flagListValue, "")
 	cmd.Flags().StringVar(&flagAny, "any", flagAny, "")
 	cmd.Flags().StringVar(&flagEmpty, "empty", flagEmpty, "")
+	return cmd
+}
+
+// newFieldsServiceEnumsCommand returns the cobra subcommand for FieldsService.Enums.
+func newFieldsServiceEnumsCommand(client FieldsServiceClient) *cobra.Command {
+	var flagChoice string
+	var flagChoices []string
+	var flagOptionalChoice string
+	var flagChoiceMap []string
+	var flagAliased string
+	var flagNested string
+	cmd := &cobra.Command{
+		Use:  "enums",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			files, err := cmd.Flags().GetStringArray("filename")
+			if err != nil {
+				return err
+			}
+			inputs, err := cmd.Flags().GetStringArray("input")
+			if err != nil {
+				return err
+			}
+			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
+			if err != nil {
+				return err
+			}
+			if cmd.Flags().Changed("choice") {
+				doc, err := sjson.SetBytes([]byte("{}"), "choice", flagChoice)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --choice", JSON: doc})
+			}
+			if cmd.Flags().Changed("choices") {
+				doc, err := sjson.SetBytes([]byte("{}"), "choices", flagChoices)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --choices", JSON: doc})
+			}
+			if cmd.Flags().Changed("optional-choice") {
+				doc, err := sjson.SetBytes([]byte("{}"), "optional_choice", flagOptionalChoice)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --optional-choice", JSON: doc})
+			}
+			if cmd.Flags().Changed("choice-map") {
+				m := map[string]string{}
+				for _, kv := range flagChoiceMap {
+					k, v, ok := strings.Cut(kv, "=")
+					if !ok {
+						return fmt.Errorf("flag --choice-map: %q is not key=value", kv)
+					}
+					m[k] = v
+				}
+				doc, err := sjson.SetBytes([]byte("{}"), "choice_map", m)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --choice-map", JSON: doc})
+			}
+			if cmd.Flags().Changed("aliased") {
+				doc, err := sjson.SetBytes([]byte("{}"), "aliased", flagAliased)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --aliased", JSON: doc})
+			}
+			if cmd.Flags().Changed("nested") {
+				doc, err := sjson.SetBytes([]byte("{}"), "nested", flagNested)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --nested", JSON: doc})
+			}
+			req := &EnumsRequest{}
+			if err := BuildRequest(req, frags); err != nil {
+				return err
+			}
+			resp, err := client.Enums(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+			out, err := marshalJSON(resp)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
+			return err
+		},
+	}
+	cmd.Flags().StringVar(&flagChoice, "choice", flagChoice, "")
+	cmd.Flags().StringArrayVar(&flagChoices, "choices", flagChoices, "")
+	cmd.Flags().StringVar(&flagOptionalChoice, "optional-choice", flagOptionalChoice, "")
+	cmd.Flags().StringArrayVar(&flagChoiceMap, "choice-map", flagChoiceMap, "")
+	cmd.Flags().StringVar(&flagAliased, "aliased", flagAliased, "")
+	cmd.Flags().StringVar(&flagNested, "nested", flagNested, "")
 	return cmd
 }
 

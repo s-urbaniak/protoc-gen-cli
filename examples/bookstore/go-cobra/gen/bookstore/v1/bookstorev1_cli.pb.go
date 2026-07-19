@@ -497,6 +497,7 @@ func newAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 	var flagLotBookId int64
 	var flagLotBookAuthor string
 	var flagLotBookTitle string
+	var flagLotCondition string
 	var flagLotReservePrice float64
 	var flagLotProvenance []string
 	var flagLotFlaws []string
@@ -568,6 +569,13 @@ func newAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 					return err
 				}
 				frags = append(frags, Fragment{Source: "flag --lot.book.title", JSON: doc})
+			}
+			if cmd.Flags().Changed("lot.condition") {
+				doc, err := sjson.SetBytes([]byte("{}"), "lot.condition", flagLotCondition)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --lot.condition", JSON: doc})
 			}
 			if cmd.Flags().Changed("lot.reserve-price") {
 				doc, err := sjson.SetBytes([]byte("{}"), "lot.reserve_price", flagLotReservePrice)
@@ -666,6 +674,7 @@ func newAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 	cmd.Flags().Int64Var(&flagLotBookId, "lot.book.id", flagLotBookId, "")
 	cmd.Flags().StringVar(&flagLotBookAuthor, "lot.book.author", flagLotBookAuthor, "")
 	cmd.Flags().StringVar(&flagLotBookTitle, "lot.book.title", flagLotBookTitle, "")
+	cmd.Flags().StringVar(&flagLotCondition, "lot.condition", flagLotCondition, "")
 	cmd.Flags().Float64Var(&flagLotReservePrice, "lot.reserve-price", flagLotReservePrice, "")
 	cmd.Flags().StringArrayVar(&flagLotProvenance, "lot.provenance", flagLotProvenance, "")
 	cmd.Flags().StringArrayVar(&flagLotFlaws, "lot.flaws", flagLotFlaws, "")
@@ -679,6 +688,7 @@ func newAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 
 // newAuctionsServiceListAuctionsCommand returns the cobra subcommand for AuctionsService.ListAuctions.
 func newAuctionsServiceListAuctionsCommand(client AuctionsServiceClient) *cobra.Command {
+	var flagState string
 	cmd := &cobra.Command{
 		Use:  "list-auctions",
 		Args: cobra.NoArgs,
@@ -694,6 +704,13 @@ func newAuctionsServiceListAuctionsCommand(client AuctionsServiceClient) *cobra.
 			frags, err := LoadInputs(files, inputs, cmd.InOrStdin())
 			if err != nil {
 				return err
+			}
+			if cmd.Flags().Changed("state") {
+				doc, err := sjson.SetBytes([]byte("{}"), "state", flagState)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --state", JSON: doc})
 			}
 			req := &ListAuctionsRequest{}
 			if err := BuildRequest(req, frags); err != nil {
@@ -711,6 +728,7 @@ func newAuctionsServiceListAuctionsCommand(client AuctionsServiceClient) *cobra.
 			return err
 		},
 	}
+	cmd.Flags().StringVar(&flagState, "state", flagState, "")
 	return cmd
 }
 
