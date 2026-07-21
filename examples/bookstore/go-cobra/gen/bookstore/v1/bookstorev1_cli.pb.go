@@ -746,6 +746,7 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 // newInventoryServiceExportReportCommand returns the cobra subcommand for InventoryService.ExportReport.
 func newInventoryServiceExportReportCommand(client InventoryServiceClient) *cobra.Command {
 	var flagShelf int64
+	var flagFilename string
 	cmd := &cobra.Command{
 		Use:  "export-report",
 		Args: cobra.NoArgs,
@@ -769,6 +770,13 @@ func newInventoryServiceExportReportCommand(client InventoryServiceClient) *cobr
 				}
 				frags = append(frags, Fragment{Source: "flag --shelf", JSON: doc})
 			}
+			if cmd.Flags().Changed("arg-filename") {
+				doc, err := sjson.SetBytes([]byte("{}"), "filename", flagFilename)
+				if err != nil {
+					return err
+				}
+				frags = append(frags, Fragment{Source: "flag --arg-filename", JSON: doc})
+			}
 			req := &ExportReportRequest{}
 			if err := BuildRequest(req, frags); err != nil {
 				return err
@@ -786,6 +794,7 @@ func newInventoryServiceExportReportCommand(client InventoryServiceClient) *cobr
 		},
 	}
 	cmd.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
+	cmd.Flags().StringVar(&flagFilename, "arg-filename", flagFilename, "")
 	return cmd
 }
 

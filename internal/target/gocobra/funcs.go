@@ -11,28 +11,22 @@ import (
 	"github.com/stoewer/go-strcase"
 )
 
-// A goImport is one foreign package imported for a request type.
-type goImport struct{ Alias, Path string }
-
-// funcMap returns the helper-function map the template renders with.
-func funcMap(model *ir.Model) template.FuncMap {
+func funcMap(model *ir.Model, sources []string) template.FuncMap {
+	imports := requestImports(model)
 	return template.FuncMap{
+		"goVarName": goVarName,
 		"goRPCName": func(svc *ir.Service, cmd *ir.Command) string {
 			return svc.GoName + cmd.GoName
 		},
-		// The local variable backing f's flag.
-		"goVarName": func(f *ir.Flag) string {
-			name := "flag"
-			for seg := range strings.SplitSeq(f.ProtoPath, ".") {
-				name += strcase.UpperCamelCase(seg)
-			}
-			return name
-		},
 		"goClientType": func(svc *ir.Service) string { return svc.GoName + "Client" },
+		"goRequestType": func(cmd *ir.Command) string {
+			if alias, foreign := imports[cmd.Input.GoImportPath]; foreign {
+				return alias + "." + cmd.Input.GoName
+			}
+			return cmd.Input.GoName
+		},
 		"goBinding": func(f *ir.Flag) pflagBinding {
 			switch {
-			// pflag only accumulates a map flag's key=value entries;
-			// the RunE arm parses them.
 			case f.Map:
 				return pflagBinding{"StringArray", "[]string"}
 			case f.Repeated:
@@ -41,33 +35,10 @@ func funcMap(model *ir.Model) template.FuncMap {
 				return singularBindings[f.Bind]
 			}
 		},
-		// The qualifier must match the alias requestImports emits.
-		"goRequestType": func(cmd *ir.Command) string {
-			if cmd.Input.GoImportPath == model.FileOptions.GoImportPath {
-				return cmd.Input.GoName
-			}
-			return cmd.Input.GoPackageName + "." + cmd.Input.GoName
-		},
-		// One aliased import per foreign request-type package, sorted by
-		// path. The alias is protogen's package name for the defining file.
-		"requestImports": func() []goImport {
-			aliases := map[string]string{}
-			for _, svc := range model.Services {
-				for _, cmd := range svc.Commands {
-					if p := cmd.Input.GoImportPath; p != model.FileOptions.GoImportPath {
-						aliases[p] = cmd.Input.GoPackageName
-					}
-				}
-			}
-			out := make([]goImport, 0, len(aliases))
-			for _, p := range slices.Sorted(maps.Keys(aliases)) {
-				out = append(out, goImport{Alias: aliases[p], Path: p})
-			}
-			return out
-		},
-		"isJSONBind":   func(f *ir.Flag) bool { return f.Bind == ir.BindJSON },
-		"isStringBind": func(f *ir.Flag) bool { return f.Bind == ir.BindString },
-		// Member flag names per oneof.
+		"requestImports": func() map[string]string { return imports },
+		"sourceHeader":   func() string { return strings.Join(sources, ", ") },
+		"isJSONBind":     func(f *ir.Flag) bool { return f.Bind == ir.BindJSON },
+		"isStringBind":   func(f *ir.Flag) bool { return f.Bind == ir.BindString },
 		"oneofGroups": func(cmd *ir.Command) [][]string {
 			var order []string
 			members := map[string][]string{}
@@ -81,9 +52,9 @@ func funcMap(model *ir.Model) template.FuncMap {
 				members[f.Oneof] = append(members[f.Oneof], f.Name)
 			}
 			var groups [][]string
-			for _, k := range order {
-				if len(members[k]) >= 2 {
-					groups = append(groups, members[k])
+			for _, oneof := range order {
+				if len(members[oneof]) >= 2 {
+					groups = append(groups, members[oneof])
 				}
 			}
 			return groups
@@ -98,7 +69,36 @@ func funcMap(model *ir.Model) template.FuncMap {
 	}
 }
 
-// A pflagBinding holds the pflag setter stem and Go type for one bind.
+func goVarName(f *ir.Flag) string {
+	name := "flag"
+	for seg := range strings.SplitSeq(f.ProtoPath, ".") {
+		name += strcase.UpperCamelCase(seg)
+	}
+	return name
+}
+
+func requestImports(model *ir.Model) map[string]string {
+	pkgName := map[string]string{}
+	for _, svc := range model.Services {
+		for _, cmd := range svc.Commands {
+			if path := cmd.Input.GoImportPath; path != model.FileOptions.GoImportPath {
+				pkgName[path] = cmd.Input.GoPackageName
+			}
+		}
+	}
+	aliases := map[string]string{}
+	taken := map[string]bool{}
+	for _, path := range slices.Sorted(maps.Keys(pkgName)) {
+		alias := pkgName[path]
+		for i := 2; taken[alias]; i++ {
+			alias = pkgName[path] + strconv.Itoa(i)
+		}
+		taken[alias] = true
+		aliases[path] = alias
+	}
+	return aliases
+}
+
 type pflagBinding struct {
 	Setter string
 	GoType string
@@ -113,7 +113,6 @@ var singularBindings = map[ir.Bind]pflagBinding{
 	ir.BindJSON:   {"String", "string"},
 }
 
-// StringSlice splits an argument on commas; pflag ships no Uint64Slice.
 var repeatedBindings = map[ir.Bind]pflagBinding{
 	ir.BindString: {"StringArray", "[]string"},
 	ir.BindBool:   {"BoolSlice", "[]bool"},

@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package second.v1;
+
+option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/second/v1";
+
+service SecondService {
+  // Ping echoes its text.
+  rpc Ping(PingRequest) returns (PingRequest) {}
+}
+
+message PingRequest {
+  string text = 1;
+}

@@ -3,6 +3,7 @@ package irbuild
 
 import (
 	"go/doc"
+	"slices"
 	"strings"
 
 	"github.com/braveokafor/proto-to-cli/internal/ir"
@@ -44,16 +45,16 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 		if s, ok := strings.CutSuffix(name, "-service"); ok && s != "" {
 			name = s
 		}
+
 		comment := cleanComment(string(svc.Comments.Leading))
+		short, long := helpFrom(comment)
 
 		service := &ir.Service{
 			ProtoName: string(svc.Desc.Name()),
 			GoName:    svc.GoName,
 			Name:      name,
-			ShortHelp: shortDoc(comment),
-		}
-		if comment != service.ShortHelp {
-			service.LongHelp = comment
+			ShortHelp: short,
+			LongHelp:  long,
 		}
 
 		for _, m := range svc.Methods {
@@ -69,27 +70,20 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 			}
 
 			doc := cleanComment(string(m.Comments.Leading))
+			reqDoc := cleanComment(string(m.Input.Comments.Leading))
+			short, long := helpFrom(doc, reqDoc)
+
 			cmd := &ir.Command{
 				ProtoName: string(m.Desc.Name()),
 				GoName:    m.GoName,
 				Name:      strcase.KebabCase(string(m.Desc.Name())),
 				Input:     request,
 				Output:    string(m.Output.Desc.FullName()),
-				ShortHelp: shortDoc(doc),
+				ShortHelp: short,
+				LongHelp:  long,
 			}
 
 			cmd.Flags = buildFlags(m.Input.Desc, opts)
-
-			reqDoc := cleanComment(string(m.Input.Comments.Leading))
-			if doc != cmd.ShortHelp || reqDoc != "" {
-				parts := make([]string, 0, 2)
-				for _, p := range []string{doc, reqDoc} {
-					if p != "" {
-						parts = append(parts, p)
-					}
-				}
-				cmd.LongHelp = strings.Join(parts, "\n\n")
-			}
 
 			service.Commands = append(service.Commands, cmd)
 		}
@@ -104,9 +98,17 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 	return model, nil
 }
 
-// shortDoc returns the first sentence of a comment.
-func shortDoc(s string) string {
-	return new(doc.Package).Synopsis(strings.TrimSpace(s))
+// short is primary's first sentence; long is all docs joined, "" when it adds nothing to short.
+func helpFrom(primary string, extra ...string) (short, long string) {
+	short = new(doc.Package).Synopsis(strings.TrimSpace(primary))
+	parts := slices.DeleteFunc(
+		append([]string{primary}, extra...),
+		func(s string) bool { return s == "" },
+	)
+	if long = strings.Join(parts, "\n\n"); long == short {
+		long = ""
+	}
+	return short, long
 }
 
 func cleanComment(s string) string {

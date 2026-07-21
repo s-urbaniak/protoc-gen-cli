@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package imported.v1;
+
+option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/imported/v1";
+
+message ImportedRequest {
+  string id = 1;
+}

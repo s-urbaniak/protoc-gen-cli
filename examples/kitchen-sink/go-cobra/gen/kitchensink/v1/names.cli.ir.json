@@ -1,0 +1,173 @@
+{
+  "plugin_version": "dev",
+  "proto_file": "kitchensink/v1/names.proto",
+  "proto_package": "kitchensink.v1",
+  "file_options": {
+    "go_package_name": "kitchensinkv1",
+    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1"
+  },
+  "services": [
+    {
+      "proto_name": "NamesService",
+      "go_name": "NamesService",
+      "name": "names",
+      "short_help": "NamesService's RPCs echo their requests.",
+      "commands": [
+        {
+          "proto_name": "Collisions",
+          "go_name": "Collisions",
+          "name": "collisions",
+          "input": {
+            "full_name": "kitchensink.v1.CollisionsRequest",
+            "proto_file": "kitchensink/v1/names.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "CollisionsRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.CollisionsRequest",
+          "flags": [
+            {
+              "proto_path": "req",
+              "name": "req",
+              "bind": "string"
+            },
+            {
+              "proto_path": "err",
+              "name": "err",
+              "bind": "string"
+            },
+            {
+              "proto_path": "cmd",
+              "name": "cmd",
+              "bind": "string"
+            },
+            {
+              "proto_path": "resp",
+              "name": "resp",
+              "bind": "string"
+            },
+            {
+              "proto_path": "out",
+              "name": "out",
+              "bind": "string"
+            },
+            {
+              "proto_path": "frags",
+              "name": "frags",
+              "bind": "string"
+            },
+            {
+              "proto_path": "type",
+              "name": "type",
+              "bind": "string"
+            },
+            {
+              "proto_path": "func",
+              "name": "func",
+              "bind": "string"
+            },
+            {
+              "proto_path": "return",
+              "name": "return",
+              "bind": "string"
+            },
+            {
+              "proto_path": "import",
+              "name": "import",
+              "bind": "string"
+            }
+          ]
+        },
+        {
+          "proto_name": "Imported",
+          "go_name": "Imported",
+          "name": "imported",
+          "input": {
+            "full_name": "imported.v1.ImportedRequest",
+            "proto_file": "imported/v1/imported.proto",
+            "proto_package": "imported.v1",
+            "go_name": "ImportedRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/imported/v1",
+            "go_package_name": "v1"
+          },
+          "output": "imported.v1.ImportedRequest",
+          "flags": [
+            {
+              "proto_path": "id",
+              "name": "id",
+              "bind": "string"
+            }
+          ]
+        },
+        {
+          "proto_name": "Second",
+          "go_name": "Second",
+          "name": "second",
+          "input": {
+            "full_name": "second.v1.PingRequest",
+            "proto_file": "second/v1/second.proto",
+            "proto_package": "second.v1",
+            "go_name": "PingRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/second/v1",
+            "go_package_name": "v1"
+          },
+          "output": "second.v1.PingRequest",
+          "flags": [
+            {
+              "proto_path": "text",
+              "name": "text",
+              "bind": "string"
+            }
+          ]
+        },
+        {
+          "proto_name": "Reserved",
+          "go_name": "Reserved",
+          "name": "reserved",
+          "input": {
+            "full_name": "kitchensink.v1.ReservedRequest",
+            "proto_file": "kitchensink/v1/names.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "ReservedRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.ReservedRequest",
+          "flags": [
+            {
+              "proto_path": "filename",
+              "name": "arg-filename",
+              "bind": "string"
+            },
+            {
+              "proto_path": "input",
+              "name": "arg-input",
+              "bind": "string"
+            },
+            {
+              "proto_path": "help",
+              "name": "arg-help",
+              "bind": "string"
+            }
+          ]
+        },
+        {
+          "proto_name": "Empty",
+          "go_name": "Empty",
+          "name": "empty",
+          "long_help": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:\n\n    service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }",
+          "input": {
+            "full_name": "google.protobuf.Empty",
+            "proto_file": "google/protobuf/empty.proto",
+            "proto_package": "google.protobuf",
+            "go_name": "Empty",
+            "go_import_path": "google.golang.org/protobuf/types/known/emptypb",
+            "go_package_name": "emptypb"
+          },
+          "output": "google.protobuf.Empty"
+        }
+      ]
+    }
+  ]
+}

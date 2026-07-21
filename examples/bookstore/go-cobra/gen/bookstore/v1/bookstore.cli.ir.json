@@ -399,6 +399,11 @@
               "proto_path": "shelf",
               "name": "shelf",
               "bind": "int"
+            },
+            {
+              "proto_path": "filename",
+              "name": "arg-filename",
+              "bind": "string"
             }
           ]
         }
