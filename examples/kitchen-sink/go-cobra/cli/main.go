@@ -6,6 +6,7 @@ import (
 	"os"
 
 	kitchensinkv1 "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1"
+	secondv1 "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/second/v1"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -22,7 +23,11 @@ func main() {
 		Use:   "kitchen-sink",
 		Short: "Kitchen-sink fixture CLI",
 	}
-	root.AddCommand(kitchensinkv1.NewFieldsServiceCommand(conn))
+	root.AddCommand(
+		kitchensinkv1.NewFieldsServiceCommand(conn),
+		kitchensinkv1.NewNamesServiceCommand(conn),
+		secondv1.NewSecondServiceCommand(conn),
+	)
 
 	if err := root.Execute(); err != nil {
 		os.Exit(1)

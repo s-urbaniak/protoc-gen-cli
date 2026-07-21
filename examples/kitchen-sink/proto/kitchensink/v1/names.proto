@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package kitchensink.v1;
+
+import "google/protobuf/empty.proto";
+import "imported/v1/imported.proto";
+import "second/v1/second.proto";
+
+option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
+
+// NamesService's RPCs echo their requests.
+service NamesService {
+  rpc Collisions(CollisionsRequest) returns (CollisionsRequest) {}
+  rpc Imported(imported.v1.ImportedRequest) returns (imported.v1.ImportedRequest) {}
+  rpc Second(second.v1.PingRequest) returns (second.v1.PingRequest) {}
+  rpc Reserved(ReservedRequest) returns (ReservedRequest) {}
+  rpc Empty(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+message CollisionsRequest {
+  string req = 1;
+  string err = 2;
+  string cmd = 3;
+  string resp = 4;
+  string out = 5;
+  string frags = 6;
+  string type = 7;
+  string func = 8;
+  string return = 9;
+  string import = 10;
+}
+
+message ReservedRequest {
+  string filename = 1;
+  string input = 2;
+  string help = 3;
+}

@@ -1,0 +1,40 @@
+{
+  "plugin_version": "dev",
+  "proto_file": "second/v1/second.proto",
+  "proto_package": "second.v1",
+  "file_options": {
+    "go_package_name": "v1",
+    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/second/v1"
+  },
+  "services": [
+    {
+      "proto_name": "SecondService",
+      "go_name": "SecondService",
+      "name": "second",
+      "commands": [
+        {
+          "proto_name": "Ping",
+          "go_name": "Ping",
+          "name": "ping",
+          "short_help": "Ping echoes its text.",
+          "input": {
+            "full_name": "second.v1.PingRequest",
+            "proto_file": "second/v1/second.proto",
+            "proto_package": "second.v1",
+            "go_name": "PingRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/second/v1",
+            "go_package_name": "v1"
+          },
+          "output": "second.v1.PingRequest",
+          "flags": [
+            {
+              "proto_path": "text",
+              "name": "text",
+              "bind": "string"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
