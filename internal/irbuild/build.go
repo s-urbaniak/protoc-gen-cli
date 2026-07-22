@@ -18,11 +18,9 @@ type Options struct {
 	// Files, keyed by proto path, locates the file declaring a command's request message.
 	Files map[string]*protogen.File
 	// Warn receives generation warnings.
-	Warn func(string)
-	// RequestExpandDepth is how many message levels down fields still
-	// get flags: a field of a message field derives a dotted flag like
-	// --book.title. 0 stops at the request's own fields.
-	RequestExpandDepth int
+	Warn                func(string)
+	RequestExpandDepth  int // 0 = only the request's own fields get flags
+	ResponseExpandDepth int // 0 = only the response's own fields become view fields
 }
 
 // Build produces the ir.Model for one proto file.
@@ -85,7 +83,7 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 			}
 
 			cmd.Flags = buildFlags(m.Input.Desc, opts)
-			cmd.View = buildView(m.Output.Desc, 2)
+			cmd.View = buildView(m.Output.Desc, opts)
 
 			service.Commands = append(service.Commands, cmd)
 		}

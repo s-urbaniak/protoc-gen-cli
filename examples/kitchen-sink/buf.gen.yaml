@@ -16,6 +16,7 @@ plugins:
         target=gocobra,
         dump-ir=true,
         request-expand-depth=5,
+        response-expand-depth=5,
       ]
 inputs:
   - directory: proto

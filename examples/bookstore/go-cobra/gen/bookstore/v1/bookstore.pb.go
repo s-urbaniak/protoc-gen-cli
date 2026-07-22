@@ -1221,6 +1221,8 @@ func (x *ListAuctionsRequest) GetState() AuctionState {
 type ListAuctionsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Auctions      []*Auction             `protobuf:"bytes,1,rep,name=auctions,proto3" json:"auctions,omitempty"`
+	NextPageToken string                 `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	TotalSize     int32                  `protobuf:"varint,3,opt,name=total_size,json=totalSize,proto3" json:"total_size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1260,6 +1262,20 @@ func (x *ListAuctionsResponse) GetAuctions() []*Auction {
 		return x.Auctions
 	}
 	return nil
+}
+
+func (x *ListAuctionsResponse) GetNextPageToken() string {
+	if x != nil {
+		return x.NextPageToken
+	}
+	return ""
+}
+
+func (x *ListAuctionsResponse) GetTotalSize() int32 {
+	if x != nil {
+		return x.TotalSize
+	}
+	return 0
 }
 
 // Request message for ExportReport method.
@@ -1446,9 +1462,12 @@ const file_bookstore_v1_bookstore_proto_rawDesc = "" +
 	"\x03lot\x18\x01 \x01(\v2\x11.bookstore.v1.LotR\x03lot\x127\n" +
 	"\tstarts_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\bstartsAt\"G\n" +
 	"\x13ListAuctionsRequest\x120\n" +
-	"\x05state\x18\x01 \x01(\x0e2\x1a.bookstore.v1.AuctionStateR\x05state\"I\n" +
+	"\x05state\x18\x01 \x01(\x0e2\x1a.bookstore.v1.AuctionStateR\x05state\"\x90\x01\n" +
 	"\x14ListAuctionsResponse\x121\n" +
-	"\bauctions\x18\x01 \x03(\v2\x15.bookstore.v1.AuctionR\bauctions\"G\n" +
+	"\bauctions\x18\x01 \x03(\v2\x15.bookstore.v1.AuctionR\bauctions\x12&\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12\x1d\n" +
+	"\n" +
+	"total_size\x18\x03 \x01(\x05R\ttotalSize\"G\n" +
 	"\x13ExportReportRequest\x12\x14\n" +
 	"\x05shelf\x18\x01 \x01(\x03R\x05shelf\x12\x1a\n" +
 	"\bfilename\x18\x02 \x01(\tR\bfilename\":\n" +

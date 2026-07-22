@@ -236,6 +236,13 @@ func messageRecords(m proto.Message) Records {
 
 // A View projects a message for display.
 type View struct {
+	Lists  []ViewList
+	Fields []ViewField
+}
+
+type ViewList struct {
+	Label  string
+	Path   string
 	Fields []ViewField
 }
 
@@ -305,10 +312,16 @@ func (YAMLFormat) Format(w io.Writer, r Records) error {
 	}
 }
 
-// TableFormat renders each record as a table of its view's fields.
+// TableFormat renders each record as a table.
 type TableFormat struct{}
 
 func (TableFormat) Format(w io.Writer, r Records) error {
+	width := 0
+	if f, ok := w.(*os.File); ok {
+		if cols, _, err := term.GetSize(int(f.Fd())); err == nil {
+			width = cols
+		}
+	}
 	for i := 0; ; i++ {
 		rec, err := r.Next()
 		if errors.Is(err, io.EOF) {
@@ -317,28 +330,83 @@ func (TableFormat) Format(w io.Writer, r Records) error {
 		if err != nil {
 			return err
 		}
-		if i > 0 {
-			if _, err := io.WriteString(w, "\n"); err != nil {
+
+		titled := len(r.View.Fields) > 0 || len(r.View.Lists) > 1
+		first := i == 0
+		section := func(title string, fields []ViewField, rows []gjson.Result) error {
+			t := table.NewWriter()
+			if width > 0 {
+				t.Style().Size.WidthMax = width
+			}
+			header := make(table.Row, len(fields))
+			for j, f := range fields {
+				header[j] = f.Label
+			}
+			t.AppendHeader(header)
+			for _, src := range rows {
+				row := make(table.Row, len(fields))
+				for j, f := range fields {
+					c := cell(src.Get(f.Path), "\n")
+					if strings.Contains(c, "\n") {
+						t.Style().Options.SeparateRows = true
+					}
+					row[j] = c
+				}
+				t.AppendRow(row)
+			}
+			out := ""
+			if !first {
+				out += "\n"
+			}
+			first = false
+			if title != "" {
+				out += title + "\n"
+			}
+			out += strings.TrimRight(t.Render(), "\n") + "\n"
+			_, err := io.WriteString(w, out)
+			return err
+		}
+
+		if len(r.View.Fields) > 0 {
+			if err := section("", r.View.Fields, []gjson.Result{gjson.ParseBytes(rec)}); err != nil {
 				return err
 			}
 		}
-		t := table.NewWriter()
-		if f, ok := w.(*os.File); ok {
-			if width, _, err := term.GetSize(int(f.Fd())); err == nil {
-				t.Style().Size.WidthMax = width
+		for _, list := range r.View.Lists {
+			rows := gjson.GetBytes(rec, list.Path).Array()
+			if len(rows) == 0 {
+				continue
+			}
+			title := ""
+			if titled {
+				title = list.Label
+			}
+			if err := section(title, list.Fields, rows); err != nil {
+				return err
 			}
 		}
-		header := make(table.Row, len(r.View.Fields))
-		row := make(table.Row, len(r.View.Fields))
-		for j, vf := range r.View.Fields {
-			header[j] = vf.Label
-			row[j] = gjson.GetBytes(rec, vf.Path).String()
+	}
+}
+
+// cell renders a JSON value as one table cell: top-level entries stack, deeper nesting inlines.
+func cell(v gjson.Result, sep string) string {
+	switch {
+	case v.IsArray():
+		items := v.Array()
+		parts := make([]string, len(items))
+		for i, item := range items {
+			parts[i] = cell(item, ",")
 		}
-		t.AppendHeader(header)
-		t.AppendRow(row)
-		if _, err := io.WriteString(w, strings.TrimRight(t.Render(), "\n")+"\n"); err != nil {
-			return err
-		}
+		return strings.Join(parts, sep)
+	case v.IsObject():
+		var parts []string
+		v.ForEach(func(k, val gjson.Result) bool {
+			parts = append(parts, k.String()+"="+cell(val, ","))
+			return true
+		})
+		return strings.Join(parts, sep)
+	default:
+		return v.String()
 	}
 }
 

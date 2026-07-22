@@ -31,10 +31,20 @@
           "output": "bookstore.v1.ListShelvesResponse",
           "view": {
             "full_name": "bookstore.v1.ListShelvesResponse",
-            "fields": [
+            "lists": [
               {
                 "label": "SHELVES",
-                "path": "shelves"
+                "path": "shelves",
+                "fields": [
+                  {
+                    "label": "ID",
+                    "path": "id"
+                  },
+                  {
+                    "label": "THEME",
+                    "path": "theme"
+                  }
+                ]
               }
             ]
           }
@@ -171,10 +181,24 @@
           ],
           "view": {
             "full_name": "bookstore.v1.ListBooksResponse",
-            "fields": [
+            "lists": [
               {
                 "label": "BOOKS",
-                "path": "books"
+                "path": "books",
+                "fields": [
+                  {
+                    "label": "ID",
+                    "path": "id"
+                  },
+                  {
+                    "label": "AUTHOR",
+                    "path": "author"
+                  },
+                  {
+                    "label": "TITLE",
+                    "path": "title"
+                  }
+                ]
               }
             ]
           }
@@ -473,8 +497,16 @@
                 "path": "lot.consignor.name"
               },
               {
-                "label": "LOT.CONSIGNOR.ADDRESS",
-                "path": "lot.consignor.address"
+                "label": "LOT.CONSIGNOR.ADDRESS.STREET",
+                "path": "lot.consignor.address.street"
+              },
+              {
+                "label": "LOT.CONSIGNOR.ADDRESS.CITY",
+                "path": "lot.consignor.address.city"
+              },
+              {
+                "label": "LOT.CONSIGNOR.ADDRESS.COUNTRY",
+                "path": "lot.consignor.address.country"
               },
               {
                 "label": "STATE",
@@ -527,8 +559,92 @@
             "full_name": "bookstore.v1.ListAuctionsResponse",
             "fields": [
               {
+                "label": "NEXT_PAGE_TOKEN",
+                "path": "nextPageToken"
+              },
+              {
+                "label": "TOTAL_SIZE",
+                "path": "totalSize"
+              }
+            ],
+            "lists": [
+              {
                 "label": "AUCTIONS",
-                "path": "auctions"
+                "path": "auctions",
+                "fields": [
+                  {
+                    "label": "ID",
+                    "path": "id"
+                  },
+                  {
+                    "label": "LOT.ID",
+                    "path": "lot.id"
+                  },
+                  {
+                    "label": "LOT.BOOK.ID",
+                    "path": "lot.book.id"
+                  },
+                  {
+                    "label": "LOT.BOOK.AUTHOR",
+                    "path": "lot.book.author"
+                  },
+                  {
+                    "label": "LOT.BOOK.TITLE",
+                    "path": "lot.book.title"
+                  },
+                  {
+                    "label": "LOT.CONDITION",
+                    "path": "lot.condition"
+                  },
+                  {
+                    "label": "LOT.RESERVE_PRICE",
+                    "path": "lot.reservePrice"
+                  },
+                  {
+                    "label": "LOT.PROVENANCE",
+                    "path": "lot.provenance"
+                  },
+                  {
+                    "label": "LOT.FLAWS",
+                    "path": "lot.flaws"
+                  },
+                  {
+                    "label": "LOT.ATTRIBUTES",
+                    "path": "lot.attributes"
+                  },
+                  {
+                    "label": "LOT.CONSIGNOR.NAME",
+                    "path": "lot.consignor.name"
+                  },
+                  {
+                    "label": "LOT.CONSIGNOR.ADDRESS.STREET",
+                    "path": "lot.consignor.address.street"
+                  },
+                  {
+                    "label": "LOT.CONSIGNOR.ADDRESS.CITY",
+                    "path": "lot.consignor.address.city"
+                  },
+                  {
+                    "label": "LOT.CONSIGNOR.ADDRESS.COUNTRY",
+                    "path": "lot.consignor.address.country"
+                  },
+                  {
+                    "label": "STATE",
+                    "path": "state"
+                  },
+                  {
+                    "label": "HIGH_BID",
+                    "path": "highBid"
+                  },
+                  {
+                    "label": "HIGH_BIDDER",
+                    "path": "highBidder"
+                  },
+                  {
+                    "label": "ENDS_AT",
+                    "path": "endsAt"
+                  }
+                ]
               }
             ]
           }
