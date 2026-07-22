@@ -1,7 +1,11 @@
-// Command kitchen-sink mounts the fixture CLI exactly as generated.
+// Command kitchen-sink is the example CLI for the kitchen-sink fixture: a
+// hand-written root that mounts the generated command tree.
 package main
 
 import (
+	"errors"
+	"fmt"
+	"io"
 	"log"
 	"os"
 
@@ -11,6 +15,24 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
+
+// lineFormat writes each record on one line, with a prefix.
+type lineFormat struct{}
+
+func (lineFormat) Format(w io.Writer, r secondv1.Records) error {
+	for {
+		rec, err := r.Next()
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if _, err := fmt.Fprintf(w, "line: %s\n", rec); err != nil {
+			return err
+		}
+	}
+}
 
 func main() {
 	conn, err := grpc.NewClient("localhost:50055",
@@ -28,6 +50,10 @@ func main() {
 		kitchensinkv1.NewNamesServiceCommand(conn),
 		secondv1.NewSecondServiceCommand(conn),
 	)
+
+	secondv1.RegisterFormat("line", lineFormat{})
+	secondv1.UnregisterFormat("json-pretty")
+	secondv1.SetDefaultFormat("yaml")
 
 	if err := root.Execute(); err != nil {
 		os.Exit(1)

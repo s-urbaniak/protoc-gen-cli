@@ -10,7 +10,7 @@ import (
 )
 
 // Flag names the generated code already reserve.
-var reservedFlagNames = []string{"filename", "input", "help"}
+var reservedFlagNames = []string{"filename", "input", "help", "output"}
 
 // messageBinds is protojson's message types rendered as a single JSON value.
 var messageBinds = map[protoreflect.FullName]ir.Bind{

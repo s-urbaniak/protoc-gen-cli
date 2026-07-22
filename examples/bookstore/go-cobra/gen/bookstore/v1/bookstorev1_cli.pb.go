@@ -10,11 +10,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/tidwall/sjson"
+	"golang.org/x/term"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -28,7 +30,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "bookstore",
 	}
-	addRequestFlags(cmd.PersistentFlags())
+	addCommonFlags(cmd.PersistentFlags())
 	cmd.AddCommand(newBookstoreServiceListShelvesCommand(client))
 	cmd.AddCommand(newBookstoreServiceCreateShelfCommand(client))
 	cmd.AddCommand(newBookstoreServiceGetShelfCommand(client))
@@ -66,12 +68,7 @@ func newBookstoreServiceListShelvesCommand(client BookstoreServiceClient) *cobra
 			if err != nil {
 				return err
 			}
-			out, err := marshalJSON(resp)
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
-			return err
+			return render(cmd, messageRecords(resp))
 		},
 	}
 	return cmd
@@ -130,12 +127,7 @@ func newBookstoreServiceCreateShelfCommand(client BookstoreServiceClient) *cobra
 			if err != nil {
 				return err
 			}
-			out, err := marshalJSON(resp)
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
-			return err
+			return render(cmd, messageRecords(resp))
 		},
 	}
 	cmd.Flags().StringVar(&flagShelf, "shelf", flagShelf, "")
@@ -178,12 +170,7 @@ func newBookstoreServiceGetShelfCommand(client BookstoreServiceClient) *cobra.Co
 			if err != nil {
 				return err
 			}
-			out, err := marshalJSON(resp)
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
-			return err
+			return render(cmd, messageRecords(resp))
 		},
 	}
 	cmd.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
@@ -224,12 +211,7 @@ func newBookstoreServiceDeleteShelfCommand(client BookstoreServiceClient) *cobra
 			if err != nil {
 				return err
 			}
-			out, err := marshalJSON(resp)
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
-			return err
+			return render(cmd, messageRecords(resp))
 		},
 	}
 	cmd.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
@@ -270,12 +252,7 @@ func newBookstoreServiceListBooksCommand(client BookstoreServiceClient) *cobra.C
 			if err != nil {
 				return err
 			}
-			out, err := marshalJSON(resp)
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
-			return err
+			return render(cmd, messageRecords(resp))
 		},
 	}
 	cmd.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
@@ -351,12 +328,7 @@ func newBookstoreServiceCreateBookCommand(client BookstoreServiceClient) *cobra.
 			if err != nil {
 				return err
 			}
-			out, err := marshalJSON(resp)
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
-			return err
+			return render(cmd, messageRecords(resp))
 		},
 	}
 	cmd.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
@@ -409,12 +381,7 @@ func newBookstoreServiceGetBookCommand(client BookstoreServiceClient) *cobra.Com
 			if err != nil {
 				return err
 			}
-			out, err := marshalJSON(resp)
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
-			return err
+			return render(cmd, messageRecords(resp))
 		},
 	}
 	cmd.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
@@ -464,12 +431,7 @@ func newBookstoreServiceDeleteBookCommand(client BookstoreServiceClient) *cobra.
 			if err != nil {
 				return err
 			}
-			out, err := marshalJSON(resp)
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
-			return err
+			return render(cmd, messageRecords(resp))
 		},
 	}
 	cmd.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
@@ -483,7 +445,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "auctions",
 	}
-	addRequestFlags(cmd.PersistentFlags())
+	addCommonFlags(cmd.PersistentFlags())
 	cmd.AddCommand(newAuctionsServiceCreateAuctionCommand(client))
 	cmd.AddCommand(newAuctionsServiceListAuctionsCommand(client))
 	return cmd
@@ -660,12 +622,7 @@ func newAuctionsServiceCreateAuctionCommand(client AuctionsServiceClient) *cobra
 			if err != nil {
 				return err
 			}
-			out, err := marshalJSON(resp)
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
-			return err
+			return render(cmd, messageRecords(resp))
 		},
 	}
 	cmd.Flags().StringVar(&flagLot, "lot", flagLot, "")
@@ -720,12 +677,7 @@ func newAuctionsServiceListAuctionsCommand(client AuctionsServiceClient) *cobra.
 			if err != nil {
 				return err
 			}
-			out, err := marshalJSON(resp)
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
-			return err
+			return render(cmd, messageRecords(resp))
 		},
 	}
 	cmd.Flags().StringVar(&flagState, "state", flagState, "")
@@ -738,7 +690,7 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface) *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "inventory",
 	}
-	addRequestFlags(cmd.PersistentFlags())
+	addCommonFlags(cmd.PersistentFlags())
 	cmd.AddCommand(newInventoryServiceExportReportCommand(client))
 	return cmd
 }
@@ -785,12 +737,7 @@ func newInventoryServiceExportReportCommand(client InventoryServiceClient) *cobr
 			if err != nil {
 				return err
 			}
-			out, err := marshalJSON(resp)
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
-			return err
+			return render(cmd, messageRecords(resp))
 		},
 	}
 	cmd.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
@@ -798,9 +745,9 @@ func newInventoryServiceExportReportCommand(client InventoryServiceClient) *cobr
 	return cmd
 }
 
-// ---- Request flags ----
+// ---- Common flags ----
 
-func addRequestFlags(fs *pflag.FlagSet) {
+func addCommonFlags(fs *pflag.FlagSet) {
 	fs.StringArrayP("filename", "f", nil,
 		"Request body from a file (JSON, YAML, or any registered format),\n"+
 			"or '-' for stdin. Repeatable; -f files, -i values, and flags\n"+
@@ -808,6 +755,9 @@ func addRequestFlags(fs *pflag.FlagSet) {
 	fs.StringArrayP("input", "i", nil,
 		"Request body inline (JSON, YAML, or any registered format).\n"+
 			"Repeatable; merges after -f files and before flags.")
+	fs.StringP("output", "o", "",
+		"Output format: json, json-pretty, yaml (or a format registered from main).\n"+
+			"Default: pretty on a terminal, compact when piped.")
 }
 
 // ---- Request assembly ----
@@ -921,6 +871,152 @@ func BuildRequest(req proto.Message, frags []Fragment) error {
 		return fmt.Errorf("request: %w", err)
 	}
 	return nil
+}
+
+// ---- Output ----
+
+// A Formatter writes JSON records to w.
+type Formatter interface {
+	Format(w io.Writer, r Records) error
+}
+
+// Records yields JSON records one at a time. Next returns io.EOF at the end.
+type Records struct {
+	Next func() ([]byte, error)
+}
+
+// messageRecords wraps m as a one-record stream.
+func messageRecords(m proto.Message) Records {
+	done := false
+	return Records{Next: func() ([]byte, error) {
+		if done {
+			return nil, io.EOF
+		}
+		done = true
+		return marshalJSON(m)
+	}}
+}
+
+// JSONFormat writes each record as a line of JSON. Indent pretty-prints.
+type JSONFormat struct{ Indent bool }
+
+func (j JSONFormat) Format(w io.Writer, r Records) error {
+	for {
+		rec, err := r.Next()
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if j.Indent {
+			var buf bytes.Buffer
+			if err := json.Indent(&buf, rec, "", "  "); err != nil {
+				return err
+			}
+			rec = buf.Bytes()
+		}
+		if _, err := fmt.Fprintln(w, string(rec)); err != nil {
+			return err
+		}
+	}
+}
+
+// YAMLFormat writes each record as a YAML document, separated by "---".
+type YAMLFormat struct{}
+
+func (YAMLFormat) Format(w io.Writer, r Records) error {
+	first := true
+	for {
+		rec, err := r.Next()
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if !first {
+			if _, err := io.WriteString(w, "---\n"); err != nil {
+				return err
+			}
+		}
+		first = false
+		doc, err := yaml.JSONToYAML(rec)
+		if err != nil {
+			return err
+		}
+		if _, err := w.Write(doc); err != nil {
+			return err
+		}
+	}
+}
+
+// formatters holds the built-in formats by name.
+var formatters = map[string]Formatter{
+	"json":        JSONFormat{},
+	"json-pretty": JSONFormat{Indent: true},
+	"yaml":        YAMLFormat{},
+}
+
+// defaultFormat is the format used when -o is empty.
+var defaultFormat string
+
+// RegisterFormat adds or replaces the format named name. Call before Execute.
+func RegisterFormat(name string, f Formatter) {
+	if name == "" || f == nil {
+		panic("RegisterFormat: need a format name and a non-nil Formatter")
+	}
+	formatters[name] = f
+}
+
+// UnregisterFormat removes the format named name. Call before Execute.
+func UnregisterFormat(name string) {
+	delete(formatters, name)
+}
+
+// SetDefaultFormat sets the format used when -o is empty. Call before Execute.
+func SetDefaultFormat(name string) {
+	defaultFormat = name
+}
+
+// render writes r to the command's output using the -o format.
+func render(cmd *cobra.Command, r Records) error {
+	format, err := cmd.Flags().GetString("output")
+	if err != nil {
+		return err
+	}
+	out := cmd.OutOrStdout()
+	f, err := lookupFormat(format, out)
+	if err != nil {
+		return err
+	}
+	return f.Format(out, r)
+}
+
+// lookupFormat returns the Formatter for an -o value. Empty uses the default
+// format; with no default, JSON is used: pretty on a terminal, compact otherwise.
+func lookupFormat(format string, w io.Writer) (Formatter, error) {
+	if format == "" {
+		if defaultFormat == "" {
+			pretty := false
+			if f, ok := w.(*os.File); ok {
+				pretty = term.IsTerminal(int(f.Fd()))
+			}
+			return JSONFormat{Indent: pretty}, nil
+		}
+		format = defaultFormat
+	}
+	f, ok := formatters[format]
+	if !ok {
+		names := make([]string, 0, len(formatters))
+		for name := range formatters {
+			names = append(names, name)
+		}
+		slices.Sort(names)
+		return nil, fmt.Errorf("unknown output format %q; use one of: %s",
+			format, strings.Join(names, ", "))
+	}
+	return f, nil
 }
 
 // marshalJSON returns m as compact JSON. json.Compact makes protojson's

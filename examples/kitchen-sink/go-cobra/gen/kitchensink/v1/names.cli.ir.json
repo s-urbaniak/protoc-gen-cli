@@ -149,6 +149,11 @@
               "proto_path": "help",
               "name": "arg-help",
               "bind": "string"
+            },
+            {
+              "proto_path": "output",
+              "name": "arg-output",
+              "bind": "string"
             }
           ]
         },

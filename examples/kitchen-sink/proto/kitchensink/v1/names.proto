@@ -34,4 +34,5 @@ message ReservedRequest {
   string filename = 1;
   string input = 2;
   string help = 3;
+  string output = 4;
 }

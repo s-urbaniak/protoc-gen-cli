@@ -145,6 +145,7 @@ type ReservedRequest struct {
 	Filename      string                 `protobuf:"bytes,1,opt,name=filename,proto3" json:"filename,omitempty"`
 	Input         string                 `protobuf:"bytes,2,opt,name=input,proto3" json:"input,omitempty"`
 	Help          string                 `protobuf:"bytes,3,opt,name=help,proto3" json:"help,omitempty"`
+	Output        string                 `protobuf:"bytes,4,opt,name=output,proto3" json:"output,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -200,6 +201,13 @@ func (x *ReservedRequest) GetHelp() string {
 	return ""
 }
 
+func (x *ReservedRequest) GetOutput() string {
+	if x != nil {
+		return x.Output
+	}
+	return ""
+}
+
 var File_kitchensink_v1_names_proto protoreflect.FileDescriptor
 
 const file_kitchensink_v1_names_proto_rawDesc = "" +
@@ -216,11 +224,12 @@ const file_kitchensink_v1_names_proto_rawDesc = "" +
 	"\x04func\x18\b \x01(\tR\x04func\x12\x16\n" +
 	"\x06return\x18\t \x01(\tR\x06return\x12\x16\n" +
 	"\x06import\x18\n" +
-	" \x01(\tR\x06import\"W\n" +
+	" \x01(\tR\x06import\"o\n" +
 	"\x0fReservedRequest\x12\x1a\n" +
 	"\bfilename\x18\x01 \x01(\tR\bfilename\x12\x14\n" +
 	"\x05input\x18\x02 \x01(\tR\x05input\x12\x12\n" +
-	"\x04help\x18\x03 \x01(\tR\x04help2\xf5\x02\n" +
+	"\x04help\x18\x03 \x01(\tR\x04help\x12\x16\n" +
+	"\x06output\x18\x04 \x01(\tR\x06output2\xf5\x02\n" +
 	"\fNamesService\x12T\n" +
 	"\n" +
 	"Collisions\x12!.kitchensink.v1.CollisionsRequest\x1a!.kitchensink.v1.CollisionsRequest\"\x00\x12H\n" +
