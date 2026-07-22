@@ -88,6 +88,14 @@ const (
 type View struct {
 	FullName string       `json:"full_name,omitempty"`
 	Fields   []*ViewField `json:"fields,omitempty"`
+	Lists    []*ViewList  `json:"lists,omitempty"`
+}
+
+// A ViewList projects one repeated message field.
+type ViewList struct {
+	Label  string       `json:"label,omitempty"`
+	Path   string       `json:"path,omitempty"`
+	Fields []*ViewField `json:"fields,omitempty"`
 }
 
 type ViewField struct {

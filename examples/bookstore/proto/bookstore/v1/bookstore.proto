@@ -211,6 +211,8 @@ message ListAuctionsRequest {
 
 message ListAuctionsResponse {
   repeated Auction auctions = 1;
+  string next_page_token = 2;
+  int32 total_size = 3;
 }
 
 // InventoryService is the back office's stock system.

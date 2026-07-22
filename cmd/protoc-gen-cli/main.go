@@ -27,12 +27,10 @@ var version = "dev"
 // plus what main wires in.
 type Config struct {
 	// Parsed from opt=.
-	Target string // key into Targets
-	DumpIR bool   // also emit each file's IR beside it as <file>.cli.ir.json
-	// RequestExpandDepth is how many message levels down fields still
-	// get flags: a field of a message field derives a dotted flag like
-	// --book.title. 0 stops at the request's own fields.
-	RequestExpandDepth int
+	Target              string // key into Targets
+	DumpIR              bool   // also emit each file's IR beside it as <file>.cli.ir.json
+	RequestExpandDepth  int    // 0 = only the request's own fields get flags
+	ResponseExpandDepth int    // 0 = only the response's own fields become view fields
 
 	// Wired in main.
 	Version string                   // stamped into generated-file headers
@@ -59,6 +57,8 @@ func main() {
 	flags.StringVar(&cfg.Target, "target", "", "target to generate with")
 	flags.IntVar(&cfg.RequestExpandDepth, "request-expand-depth", 1,
 		"how many message levels down fields still get dotted flags")
+	flags.IntVar(&cfg.ResponseExpandDepth, "response-expand-depth", 1,
+		"how many message levels down response fields still become view fields")
 
 	opts := &protogen.Options{
 		ParamFunc: flags.Set,
@@ -84,6 +84,12 @@ func run(plug *protogen.Plugin, cfg *Config) error {
 		return fmt.Errorf(
 			"opt=request-expand-depth=%d is negative; use 0 or more (0 expands no message fields)",
 			cfg.RequestExpandDepth,
+		)
+	}
+	if cfg.ResponseExpandDepth < 0 {
+		return fmt.Errorf(
+			"opt=response-expand-depth=%d is negative; use 0 or more (0 expands no message fields)",
+			cfg.ResponseExpandDepth,
 		)
 	}
 
@@ -113,7 +119,8 @@ func run(plug *protogen.Plugin, cfg *Config) error {
 			Warn: func(msg string) {
 				fmt.Fprintf(os.Stderr, "protoc-gen-cli: %s: %s\n", protoPath, msg)
 			},
-			RequestExpandDepth: cfg.RequestExpandDepth,
+			RequestExpandDepth:  cfg.RequestExpandDepth,
+			ResponseExpandDepth: cfg.ResponseExpandDepth,
 		})
 		if err != nil {
 			return fmt.Errorf("%s: %w", protoPath, err)

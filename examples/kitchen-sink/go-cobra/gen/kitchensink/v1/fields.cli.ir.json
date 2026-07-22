@@ -385,8 +385,20 @@
                 "path": "outer.middle.leaf"
               },
               {
-                "label": "OUTER.MIDDLE.INNER",
-                "path": "outer.middle.inner"
+                "label": "OUTER.MIDDLE.INNER.LEAF",
+                "path": "outer.middle.inner.leaf"
+              },
+              {
+                "label": "OUTER.MIDDLE.INNER.DEEP.LEAF",
+                "path": "outer.middle.inner.deep.leaf"
+              },
+              {
+                "label": "OUTER.MIDDLE.INNER.DEEP.DEEPER.LEAF",
+                "path": "outer.middle.inner.deep.deeper.leaf"
+              },
+              {
+                "label": "OUTER.MIDDLE.INNER.DEEP.DEEPER.DEEPEST",
+                "path": "outer.middle.inner.deep.deeper.deepest"
               },
               {
                 "label": "KEBAB_OUTER.STRING_LEAF",
@@ -401,16 +413,24 @@
                 "path": "kebabOuter.middle.leaf"
               },
               {
-                "label": "KEBAB_OUTER.MIDDLE.INNER",
-                "path": "kebabOuter.middle.inner"
+                "label": "KEBAB_OUTER.MIDDLE.INNER.LEAF",
+                "path": "kebabOuter.middle.inner.leaf"
+              },
+              {
+                "label": "KEBAB_OUTER.MIDDLE.INNER.DEEP.LEAF",
+                "path": "kebabOuter.middle.inner.deep.leaf"
+              },
+              {
+                "label": "KEBAB_OUTER.MIDDLE.INNER.DEEP.DEEPER.LEAF",
+                "path": "kebabOuter.middle.inner.deep.deeper.leaf"
+              },
+              {
+                "label": "KEBAB_OUTER.MIDDLE.INNER.DEEP.DEEPER.DEEPEST",
+                "path": "kebabOuter.middle.inner.deep.deeper.deepest"
               },
               {
                 "label": "TIMESTAMP",
                 "path": "timestamp"
-              },
-              {
-                "label": "OUTERS",
-                "path": "outers"
               },
               {
                 "label": "LABELS",
@@ -439,6 +459,42 @@
               {
                 "label": "ODD.EVEN.ODD",
                 "path": "odd.even.odd"
+              }
+            ],
+            "lists": [
+              {
+                "label": "OUTERS",
+                "path": "outers",
+                "fields": [
+                  {
+                    "label": "STRING_LEAF",
+                    "path": "stringLeaf"
+                  },
+                  {
+                    "label": "INT64_LEAF",
+                    "path": "int64Leaf"
+                  },
+                  {
+                    "label": "MIDDLE.LEAF",
+                    "path": "middle.leaf"
+                  },
+                  {
+                    "label": "MIDDLE.INNER.LEAF",
+                    "path": "middle.inner.leaf"
+                  },
+                  {
+                    "label": "MIDDLE.INNER.DEEP.LEAF",
+                    "path": "middle.inner.deep.leaf"
+                  },
+                  {
+                    "label": "MIDDLE.INNER.DEEP.DEEPER.LEAF",
+                    "path": "middle.inner.deep.deeper.leaf"
+                  },
+                  {
+                    "label": "MIDDLE.INNER.DEEP.DEEPER.DEEPEST.LEAF",
+                    "path": "middle.inner.deep.deeper.deepest.leaf"
+                  }
+                ]
               }
             ]
           }
@@ -527,10 +583,42 @@
               {
                 "label": "TIMESTAMPS",
                 "path": "timestamps"
-              },
+              }
+            ],
+            "lists": [
               {
                 "label": "OUTERS",
-                "path": "outers"
+                "path": "outers",
+                "fields": [
+                  {
+                    "label": "STRING_LEAF",
+                    "path": "stringLeaf"
+                  },
+                  {
+                    "label": "INT64_LEAF",
+                    "path": "int64Leaf"
+                  },
+                  {
+                    "label": "MIDDLE.LEAF",
+                    "path": "middle.leaf"
+                  },
+                  {
+                    "label": "MIDDLE.INNER.LEAF",
+                    "path": "middle.inner.leaf"
+                  },
+                  {
+                    "label": "MIDDLE.INNER.DEEP.LEAF",
+                    "path": "middle.inner.deep.leaf"
+                  },
+                  {
+                    "label": "MIDDLE.INNER.DEEP.DEEPER.LEAF",
+                    "path": "middle.inner.deep.deeper.leaf"
+                  },
+                  {
+                    "label": "MIDDLE.INNER.DEEP.DEEPER.DEEPEST.LEAF",
+                    "path": "middle.inner.deep.deeper.deepest.leaf"
+                  }
+                ]
               }
             ]
           }
@@ -1092,8 +1180,20 @@
                 "path": "outer.middle.leaf"
               },
               {
-                "label": "OUTER.MIDDLE.INNER",
-                "path": "outer.middle.inner"
+                "label": "OUTER.MIDDLE.INNER.LEAF",
+                "path": "outer.middle.inner.leaf"
+              },
+              {
+                "label": "OUTER.MIDDLE.INNER.DEEP.LEAF",
+                "path": "outer.middle.inner.deep.leaf"
+              },
+              {
+                "label": "OUTER.MIDDLE.INNER.DEEP.DEEPER.LEAF",
+                "path": "outer.middle.inner.deep.deeper.leaf"
+              },
+              {
+                "label": "OUTER.MIDDLE.INNER.DEEP.DEEPER.DEEPEST",
+                "path": "outer.middle.inner.deep.deeper.deepest"
               },
               {
                 "label": "ENABLED",
