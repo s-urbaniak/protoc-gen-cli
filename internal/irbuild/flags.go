@@ -63,7 +63,7 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 			fd := fields.Get(i)
 			path := protoPrefix + string(fd.Name())
 			name := cliPrefix + strcase.KebabCase(string(fd.Name()))
-			bind, ok, expand, enumValues := fieldBind(fd)
+			bind, ok, enumValues := fieldBind(fd)
 
 			var oneof string
 			if oo := fd.ContainingOneof(); oo != nil && !oo.IsSynthetic() {
@@ -96,8 +96,8 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 					Oneof:      oneof,
 				})
 
-			canRecurse := expand && !fd.IsList() && !fd.IsMap() && budget > 0
-			if canRecurse && !slices.Contains(ancestors, fd.Message().FullName()) {
+			if isExpandable(fd) && budget > 0 &&
+				!slices.Contains(ancestors, fd.Message().FullName()) {
 				walk(fd.Message(), path+".", name+".", budget-1,
 					append(ancestors, fd.Message().FullName()))
 			}
@@ -109,8 +109,8 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 	return flags
 }
 
-// ok is false for fields with no flag; expand is true when sub-fields recurse into dotted flags.
-func fieldBind(fd protoreflect.FieldDescriptor) (bind ir.Bind, ok, expand bool, enum []string) {
+// ok is false for fields with no flag.
+func fieldBind(fd protoreflect.FieldDescriptor) (bind ir.Bind, ok bool, enum []string) {
 	// A map field's own kind is its synthetic entry message.
 	elem := fd
 	if fd.IsMap() {
@@ -119,7 +119,7 @@ func fieldBind(fd protoreflect.FieldDescriptor) (bind ir.Bind, ok, expand bool, 
 	switch elem.Kind() {
 	case protoreflect.MessageKind:
 		if bind, ok = messageBinds[elem.Message().FullName()]; !ok {
-			bind, ok, expand = ir.BindJSON, true, true
+			bind, ok = ir.BindJSON, true
 		}
 	case protoreflect.EnumKind:
 		bind, ok = ir.BindString, true
@@ -130,5 +130,5 @@ func fieldBind(fd protoreflect.FieldDescriptor) (bind ir.Bind, ok, expand bool, 
 	default:
 		bind, ok = scalarBinds[elem.Kind()]
 	}
-	return bind, ok, expand, enum
+	return bind, ok, enum
 }

@@ -15,8 +15,10 @@ import (
 
 	v1 "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/imported/v1"
 	v12 "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/second/v1"
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"golang.org/x/term"
 	"google.golang.org/grpc"
@@ -1866,7 +1868,7 @@ func addCommonFlags(fs *pflag.FlagSet) {
 		"Request body inline (JSON, YAML, or any registered format).\n"+
 			"Repeatable; merges after -f files and before flags.")
 	fs.StringP("output", "o", "",
-		"Output format: json, json-pretty, yaml (or a format registered from main).\n"+
+		"Output format: json, json-pretty, table, yaml (or a format registered from main).\n"+
 			"Default: pretty on a terminal, compact when piped.")
 }
 
@@ -1991,20 +1993,165 @@ type Formatter interface {
 }
 
 // Records yields JSON records one at a time. Next returns io.EOF at the end.
+// View is the record's projection, used by -o table.
 type Records struct {
 	Next func() ([]byte, error)
+	View View
 }
 
 // messageRecords wraps m as a one-record stream.
 func messageRecords(m proto.Message) Records {
 	done := false
-	return Records{Next: func() ([]byte, error) {
-		if done {
-			return nil, io.EOF
-		}
-		done = true
-		return marshalJSON(m)
-	}}
+	return Records{
+		View: messageViews[string(m.ProtoReflect().Descriptor().FullName())],
+		Next: func() ([]byte, error) {
+			if done {
+				return nil, io.EOF
+			}
+			done = true
+			return marshalJSON(m)
+		},
+	}
+}
+
+// A View projects a message for display.
+type View struct {
+	Fields []ViewField
+}
+
+type ViewField struct {
+	Label string
+	Path  string
+}
+
+// messageViews maps each message's full proto name to its view.
+var messageViews = map[string]View{
+	"google.protobuf.Empty": {Fields: []ViewField{}},
+	"imported.v1.ImportedRequest": {Fields: []ViewField{
+		{Label: "ID", Path: "id"},
+	}},
+	"kitchensink.v1.CollisionsRequest": {Fields: []ViewField{
+		{Label: "REQ", Path: "req"},
+		{Label: "ERR", Path: "err"},
+		{Label: "CMD", Path: "cmd"},
+		{Label: "RESP", Path: "resp"},
+		{Label: "OUT", Path: "out"},
+		{Label: "FRAGS", Path: "frags"},
+		{Label: "TYPE", Path: "type"},
+		{Label: "FUNC", Path: "func"},
+		{Label: "RETURN", Path: "return"},
+		{Label: "IMPORT", Path: "import"},
+	}},
+	"kitchensink.v1.EnumsRequest": {Fields: []ViewField{
+		{Label: "CHOICE", Path: "choice"},
+		{Label: "CHOICES", Path: "choices"},
+		{Label: "OPTIONAL_CHOICE", Path: "optionalChoice"},
+		{Label: "CHOICE_MAP", Path: "choiceMap"},
+		{Label: "ALIASED", Path: "aliased"},
+		{Label: "NESTED", Path: "nested"},
+	}},
+	"kitchensink.v1.MapsRequest": {Fields: []ViewField{
+		{Label: "STRING_VALUES", Path: "stringValues"},
+		{Label: "BOOL_VALUES", Path: "boolValues"},
+		{Label: "INT64_VALUES", Path: "int64Values"},
+		{Label: "UINT64_VALUES", Path: "uint64Values"},
+		{Label: "DOUBLE_VALUES", Path: "doubleValues"},
+		{Label: "TIMESTAMP_VALUES", Path: "timestampValues"},
+		{Label: "OUTER_VALUES", Path: "outerValues"},
+		{Label: "INT64_KEYS", Path: "int64Keys"},
+		{Label: "BOOL_KEYS", Path: "boolKeys"},
+	}},
+	"kitchensink.v1.MessagesRequest": {Fields: []ViewField{
+		{Label: "OUTER.STRING_LEAF", Path: "outer.stringLeaf"},
+		{Label: "OUTER.INT64_LEAF", Path: "outer.int64Leaf"},
+		{Label: "OUTER.MIDDLE.LEAF", Path: "outer.middle.leaf"},
+		{Label: "OUTER.MIDDLE.INNER", Path: "outer.middle.inner"},
+		{Label: "KEBAB_OUTER.STRING_LEAF", Path: "kebabOuter.stringLeaf"},
+		{Label: "KEBAB_OUTER.INT64_LEAF", Path: "kebabOuter.int64Leaf"},
+		{Label: "KEBAB_OUTER.MIDDLE.LEAF", Path: "kebabOuter.middle.leaf"},
+		{Label: "KEBAB_OUTER.MIDDLE.INNER", Path: "kebabOuter.middle.inner"},
+		{Label: "TIMESTAMP", Path: "timestamp"},
+		{Label: "OUTERS", Path: "outers"},
+		{Label: "LABELS", Path: "labels"},
+		{Label: "DURATION", Path: "duration"},
+		{Label: "FIELD_MASK", Path: "fieldMask"},
+		{Label: "STRUCT", Path: "struct"},
+		{Label: "RECURSIVE.NAME", Path: "recursive.name"},
+		{Label: "RECURSIVE.NEXT", Path: "recursive.next"},
+		{Label: "ODD.EVEN.ODD", Path: "odd.even.odd"},
+	}},
+	"kitchensink.v1.OneofsRequest": {Fields: []ViewField{
+		{Label: "TEXT", Path: "text"},
+		{Label: "COUNT", Path: "count"},
+		{Label: "PICK", Path: "pick"},
+		{Label: "OUTER.STRING_LEAF", Path: "outer.stringLeaf"},
+		{Label: "OUTER.INT64_LEAF", Path: "outer.int64Leaf"},
+		{Label: "OUTER.MIDDLE.LEAF", Path: "outer.middle.leaf"},
+		{Label: "OUTER.MIDDLE.INNER", Path: "outer.middle.inner"},
+		{Label: "ENABLED", Path: "enabled"},
+		{Label: "WHEN", Path: "when"},
+		{Label: "ONLY", Path: "only"},
+	}},
+	"kitchensink.v1.OptionalsRequest": {Fields: []ViewField{
+		{Label: "NAME", Path: "name"},
+		{Label: "AGE", Path: "age"},
+		{Label: "PICK", Path: "pick"},
+	}},
+	"kitchensink.v1.RepeatedRequest": {Fields: []ViewField{
+		{Label: "STRINGS", Path: "strings"},
+		{Label: "BOOLS", Path: "bools"},
+		{Label: "INTS", Path: "ints"},
+		{Label: "UINTS", Path: "uints"},
+		{Label: "DOUBLES", Path: "doubles"},
+		{Label: "TIMESTAMPS", Path: "timestamps"},
+		{Label: "OUTERS", Path: "outers"},
+	}},
+	"kitchensink.v1.ReservedRequest": {Fields: []ViewField{
+		{Label: "FILENAME", Path: "filename"},
+		{Label: "INPUT", Path: "input"},
+		{Label: "HELP", Path: "help"},
+		{Label: "OUTPUT", Path: "output"},
+	}},
+	"kitchensink.v1.ScalarsRequest": {Fields: []ViewField{
+		{Label: "DOUBLE_FIELD", Path: "doubleField"},
+		{Label: "FLOAT_FIELD", Path: "floatField"},
+		{Label: "INT32_FIELD", Path: "int32Field"},
+		{Label: "INT64_FIELD", Path: "int64Field"},
+		{Label: "UINT32_FIELD", Path: "uint32Field"},
+		{Label: "UINT64_FIELD", Path: "uint64Field"},
+		{Label: "SINT32_FIELD", Path: "sint32Field"},
+		{Label: "SINT64_FIELD", Path: "sint64Field"},
+		{Label: "FIXED32_FIELD", Path: "fixed32Field"},
+		{Label: "FIXED64_FIELD", Path: "fixed64Field"},
+		{Label: "SFIXED32_FIELD", Path: "sfixed32Field"},
+		{Label: "SFIXED64_FIELD", Path: "sfixed64Field"},
+		{Label: "BOOL_FIELD", Path: "boolField"},
+		{Label: "STRING_FIELD", Path: "stringField"},
+		{Label: "BYTES_FIELD", Path: "bytesField"},
+	}},
+	"kitchensink.v1.WellKnownRequest": {Fields: []ViewField{
+		{Label: "STRUCT", Path: "struct"},
+		{Label: "VALUE", Path: "value"},
+		{Label: "LIST_VALUE", Path: "listValue"},
+		{Label: "ANY", Path: "any"},
+		{Label: "EMPTY", Path: "empty"},
+	}},
+	"kitchensink.v1.WrappersRequest": {Fields: []ViewField{
+		{Label: "DOUBLE_VALUE", Path: "doubleValue"},
+		{Label: "FLOAT_VALUE", Path: "floatValue"},
+		{Label: "INT64_VALUE", Path: "int64Value"},
+		{Label: "UINT64_VALUE", Path: "uint64Value"},
+		{Label: "INT32_VALUE", Path: "int32Value"},
+		{Label: "UINT32_VALUE", Path: "uint32Value"},
+		{Label: "BOOL_VALUE", Path: "boolValue"},
+		{Label: "STRING_VALUE", Path: "stringValue"},
+		{Label: "BYTES_VALUE", Path: "bytesValue"},
+		{Label: "REPEATED_STRINGS", Path: "repeatedStrings"},
+		{Label: "BOOL_MAP", Path: "boolMap"},
+	}},
+	"second.v1.PingRequest": {Fields: []ViewField{
+		{Label: "TEXT", Path: "text"},
+	}},
 }
 
 // JSONFormat writes each record as a line of JSON. Indent pretty-prints.
@@ -2061,10 +2208,48 @@ func (YAMLFormat) Format(w io.Writer, r Records) error {
 	}
 }
 
+// TableFormat renders each record as a table of its view's fields.
+type TableFormat struct{}
+
+func (TableFormat) Format(w io.Writer, r Records) error {
+	for i := 0; ; i++ {
+		rec, err := r.Next()
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if i > 0 {
+			if _, err := io.WriteString(w, "\n"); err != nil {
+				return err
+			}
+		}
+		t := table.NewWriter()
+		if f, ok := w.(*os.File); ok {
+			if width, _, err := term.GetSize(int(f.Fd())); err == nil {
+				t.Style().Size.WidthMax = width
+			}
+		}
+		header := make(table.Row, len(r.View.Fields))
+		row := make(table.Row, len(r.View.Fields))
+		for j, vf := range r.View.Fields {
+			header[j] = vf.Label
+			row[j] = gjson.GetBytes(rec, vf.Path).String()
+		}
+		t.AppendHeader(header)
+		t.AppendRow(row)
+		if _, err := io.WriteString(w, strings.TrimRight(t.Render(), "\n")+"\n"); err != nil {
+			return err
+		}
+	}
+}
+
 // formatters holds the built-in formats by name.
 var formatters = map[string]Formatter{
 	"json":        JSONFormat{},
 	"json-pretty": JSONFormat{Indent: true},
+	"table":       TableFormat{},
 	"yaml":        YAMLFormat{},
 }
 

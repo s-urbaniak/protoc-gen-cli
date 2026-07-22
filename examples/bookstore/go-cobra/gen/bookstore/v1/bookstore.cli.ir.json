@@ -28,7 +28,16 @@
             "go_import_path": "google.golang.org/protobuf/types/known/emptypb",
             "go_package_name": "emptypb"
           },
-          "output": "bookstore.v1.ListShelvesResponse"
+          "output": "bookstore.v1.ListShelvesResponse",
+          "view": {
+            "full_name": "bookstore.v1.ListShelvesResponse",
+            "fields": [
+              {
+                "label": "SHELVES",
+                "path": "shelves"
+              }
+            ]
+          }
         },
         {
           "proto_name": "CreateShelf",
@@ -61,7 +70,20 @@
               "name": "shelf.theme",
               "bind": "string"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "bookstore.v1.Shelf",
+            "fields": [
+              {
+                "label": "ID",
+                "path": "id"
+              },
+              {
+                "label": "THEME",
+                "path": "theme"
+              }
+            ]
+          }
         },
         {
           "proto_name": "GetShelf",
@@ -84,7 +106,20 @@
               "name": "shelf",
               "bind": "int"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "bookstore.v1.Shelf",
+            "fields": [
+              {
+                "label": "ID",
+                "path": "id"
+              },
+              {
+                "label": "THEME",
+                "path": "theme"
+              }
+            ]
+          }
         },
         {
           "proto_name": "DeleteShelf",
@@ -107,7 +142,10 @@
               "name": "shelf",
               "bind": "int"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "google.protobuf.Empty"
+          }
         },
         {
           "proto_name": "ListBooks",
@@ -130,7 +168,16 @@
               "name": "shelf",
               "bind": "int"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "bookstore.v1.ListBooksResponse",
+            "fields": [
+              {
+                "label": "BOOKS",
+                "path": "books"
+              }
+            ]
+          }
         },
         {
           "proto_name": "CreateBook",
@@ -173,7 +220,24 @@
               "name": "book.title",
               "bind": "string"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "bookstore.v1.Book",
+            "fields": [
+              {
+                "label": "ID",
+                "path": "id"
+              },
+              {
+                "label": "AUTHOR",
+                "path": "author"
+              },
+              {
+                "label": "TITLE",
+                "path": "title"
+              }
+            ]
+          }
         },
         {
           "proto_name": "GetBook",
@@ -201,7 +265,24 @@
               "name": "book",
               "bind": "int"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "bookstore.v1.Book",
+            "fields": [
+              {
+                "label": "ID",
+                "path": "id"
+              },
+              {
+                "label": "AUTHOR",
+                "path": "author"
+              },
+              {
+                "label": "TITLE",
+                "path": "title"
+              }
+            ]
+          }
         },
         {
           "proto_name": "DeleteBook",
@@ -229,7 +310,10 @@
               "name": "book",
               "bind": "int"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "google.protobuf.Empty"
+          }
         }
       ]
     },
@@ -340,7 +424,76 @@
               "name": "starts-at",
               "bind": "string"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "bookstore.v1.Auction",
+            "fields": [
+              {
+                "label": "ID",
+                "path": "id"
+              },
+              {
+                "label": "LOT.ID",
+                "path": "lot.id"
+              },
+              {
+                "label": "LOT.BOOK.ID",
+                "path": "lot.book.id"
+              },
+              {
+                "label": "LOT.BOOK.AUTHOR",
+                "path": "lot.book.author"
+              },
+              {
+                "label": "LOT.BOOK.TITLE",
+                "path": "lot.book.title"
+              },
+              {
+                "label": "LOT.CONDITION",
+                "path": "lot.condition"
+              },
+              {
+                "label": "LOT.RESERVE_PRICE",
+                "path": "lot.reservePrice"
+              },
+              {
+                "label": "LOT.PROVENANCE",
+                "path": "lot.provenance"
+              },
+              {
+                "label": "LOT.FLAWS",
+                "path": "lot.flaws"
+              },
+              {
+                "label": "LOT.ATTRIBUTES",
+                "path": "lot.attributes"
+              },
+              {
+                "label": "LOT.CONSIGNOR.NAME",
+                "path": "lot.consignor.name"
+              },
+              {
+                "label": "LOT.CONSIGNOR.ADDRESS",
+                "path": "lot.consignor.address"
+              },
+              {
+                "label": "STATE",
+                "path": "state"
+              },
+              {
+                "label": "HIGH_BID",
+                "path": "highBid"
+              },
+              {
+                "label": "HIGH_BIDDER",
+                "path": "highBidder"
+              },
+              {
+                "label": "ENDS_AT",
+                "path": "endsAt"
+              }
+            ]
+          }
         },
         {
           "proto_name": "ListAuctions",
@@ -369,7 +522,16 @@
                 "AUCTION_STATE_SETTLED"
               ]
             }
-          ]
+          ],
+          "view": {
+            "full_name": "bookstore.v1.ListAuctionsResponse",
+            "fields": [
+              {
+                "label": "AUCTIONS",
+                "path": "auctions"
+              }
+            ]
+          }
         }
       ]
     },
@@ -405,7 +567,20 @@
               "name": "arg-filename",
               "bind": "string"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "bookstore.v1.Report",
+            "fields": [
+              {
+                "label": "FILENAME",
+                "path": "filename"
+              },
+              {
+                "label": "BOOKS",
+                "path": "books"
+              }
+            ]
+          }
         }
       ]
     }

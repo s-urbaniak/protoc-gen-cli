@@ -43,6 +43,8 @@ type Command struct {
 	// Flags is ordered: a message field's own flag immediately precedes
 	// the flags derived from its fields.
 	Flags []*Flag `json:"flags,omitempty"`
+	// View is the response message's display projection.
+	View *View `json:"view,omitempty"`
 }
 
 // A Request represents an RPC's request message and the bindings needed to construct it.
@@ -81,3 +83,14 @@ const (
 	BindFloat  Bind = "float"
 	BindJSON   Bind = "json" // a message as one JSON document
 )
+
+// A View projects a response message for display.
+type View struct {
+	FullName string       `json:"full_name,omitempty"`
+	Fields   []*ViewField `json:"fields,omitempty"`
+}
+
+type ViewField struct {
+	Label string `json:"label,omitempty"`
+	Path  string `json:"path,omitempty"`
+}

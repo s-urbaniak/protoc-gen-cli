@@ -9,6 +9,7 @@ import (
 	"github.com/braveokafor/proto-to-cli/internal/ir"
 	"github.com/stoewer/go-strcase"
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // Options configures the IR builder.
@@ -84,6 +85,7 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 			}
 
 			cmd.Flags = buildFlags(m.Input.Desc, opts)
+			cmd.View = buildView(m.Output.Desc, 2)
 
 			service.Commands = append(service.Commands, cmd)
 		}
@@ -117,4 +119,13 @@ func cleanComment(s string) string {
 		lines[i] = strings.TrimRight(strings.TrimPrefix(l, " "), " \t")
 	}
 	return strings.TrimSpace(strings.Join(lines, "\n"))
+}
+
+// isExpandable reports whether fd's sub-fields each get their own flag and column.
+func isExpandable(fd protoreflect.FieldDescriptor) bool {
+	if fd.Kind() != protoreflect.MessageKind || fd.IsList() || fd.IsMap() {
+		return false
+	}
+	_, wellKnown := messageBinds[fd.Message().FullName()]
+	return !wellKnown
 }

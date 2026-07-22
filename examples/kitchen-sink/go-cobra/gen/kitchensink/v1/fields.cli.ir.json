@@ -104,7 +104,72 @@
               "name": "bytes-field",
               "bind": "string"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.ScalarsRequest",
+            "fields": [
+              {
+                "label": "DOUBLE_FIELD",
+                "path": "doubleField"
+              },
+              {
+                "label": "FLOAT_FIELD",
+                "path": "floatField"
+              },
+              {
+                "label": "INT32_FIELD",
+                "path": "int32Field"
+              },
+              {
+                "label": "INT64_FIELD",
+                "path": "int64Field"
+              },
+              {
+                "label": "UINT32_FIELD",
+                "path": "uint32Field"
+              },
+              {
+                "label": "UINT64_FIELD",
+                "path": "uint64Field"
+              },
+              {
+                "label": "SINT32_FIELD",
+                "path": "sint32Field"
+              },
+              {
+                "label": "SINT64_FIELD",
+                "path": "sint64Field"
+              },
+              {
+                "label": "FIXED32_FIELD",
+                "path": "fixed32Field"
+              },
+              {
+                "label": "FIXED64_FIELD",
+                "path": "fixed64Field"
+              },
+              {
+                "label": "SFIXED32_FIELD",
+                "path": "sfixed32Field"
+              },
+              {
+                "label": "SFIXED64_FIELD",
+                "path": "sfixed64Field"
+              },
+              {
+                "label": "BOOL_FIELD",
+                "path": "boolField"
+              },
+              {
+                "label": "STRING_FIELD",
+                "path": "stringField"
+              },
+              {
+                "label": "BYTES_FIELD",
+                "path": "bytesField"
+              }
+            ]
+          }
         },
         {
           "proto_name": "Messages",
@@ -303,7 +368,80 @@
               "name": "odd.even.odd",
               "bind": "json"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.MessagesRequest",
+            "fields": [
+              {
+                "label": "OUTER.STRING_LEAF",
+                "path": "outer.stringLeaf"
+              },
+              {
+                "label": "OUTER.INT64_LEAF",
+                "path": "outer.int64Leaf"
+              },
+              {
+                "label": "OUTER.MIDDLE.LEAF",
+                "path": "outer.middle.leaf"
+              },
+              {
+                "label": "OUTER.MIDDLE.INNER",
+                "path": "outer.middle.inner"
+              },
+              {
+                "label": "KEBAB_OUTER.STRING_LEAF",
+                "path": "kebabOuter.stringLeaf"
+              },
+              {
+                "label": "KEBAB_OUTER.INT64_LEAF",
+                "path": "kebabOuter.int64Leaf"
+              },
+              {
+                "label": "KEBAB_OUTER.MIDDLE.LEAF",
+                "path": "kebabOuter.middle.leaf"
+              },
+              {
+                "label": "KEBAB_OUTER.MIDDLE.INNER",
+                "path": "kebabOuter.middle.inner"
+              },
+              {
+                "label": "TIMESTAMP",
+                "path": "timestamp"
+              },
+              {
+                "label": "OUTERS",
+                "path": "outers"
+              },
+              {
+                "label": "LABELS",
+                "path": "labels"
+              },
+              {
+                "label": "DURATION",
+                "path": "duration"
+              },
+              {
+                "label": "FIELD_MASK",
+                "path": "fieldMask"
+              },
+              {
+                "label": "STRUCT",
+                "path": "struct"
+              },
+              {
+                "label": "RECURSIVE.NAME",
+                "path": "recursive.name"
+              },
+              {
+                "label": "RECURSIVE.NEXT",
+                "path": "recursive.next"
+              },
+              {
+                "label": "ODD.EVEN.ODD",
+                "path": "odd.even.odd"
+              }
+            ]
+          }
         },
         {
           "proto_name": "Repeated",
@@ -362,7 +500,40 @@
               "bind": "json",
               "repeated": true
             }
-          ]
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.RepeatedRequest",
+            "fields": [
+              {
+                "label": "STRINGS",
+                "path": "strings"
+              },
+              {
+                "label": "BOOLS",
+                "path": "bools"
+              },
+              {
+                "label": "INTS",
+                "path": "ints"
+              },
+              {
+                "label": "UINTS",
+                "path": "uints"
+              },
+              {
+                "label": "DOUBLES",
+                "path": "doubles"
+              },
+              {
+                "label": "TIMESTAMPS",
+                "path": "timestamps"
+              },
+              {
+                "label": "OUTERS",
+                "path": "outers"
+              }
+            ]
+          }
         },
         {
           "proto_name": "Maps",
@@ -433,7 +604,48 @@
               "bind": "string",
               "map": true
             }
-          ]
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.MapsRequest",
+            "fields": [
+              {
+                "label": "STRING_VALUES",
+                "path": "stringValues"
+              },
+              {
+                "label": "BOOL_VALUES",
+                "path": "boolValues"
+              },
+              {
+                "label": "INT64_VALUES",
+                "path": "int64Values"
+              },
+              {
+                "label": "UINT64_VALUES",
+                "path": "uint64Values"
+              },
+              {
+                "label": "DOUBLE_VALUES",
+                "path": "doubleValues"
+              },
+              {
+                "label": "TIMESTAMP_VALUES",
+                "path": "timestampValues"
+              },
+              {
+                "label": "OUTER_VALUES",
+                "path": "outerValues"
+              },
+              {
+                "label": "INT64_KEYS",
+                "path": "int64Keys"
+              },
+              {
+                "label": "BOOL_KEYS",
+                "path": "boolKeys"
+              }
+            ]
+          }
         },
         {
           "proto_name": "Wrappers",
@@ -507,7 +719,56 @@
               "bind": "bool",
               "map": true
             }
-          ]
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.WrappersRequest",
+            "fields": [
+              {
+                "label": "DOUBLE_VALUE",
+                "path": "doubleValue"
+              },
+              {
+                "label": "FLOAT_VALUE",
+                "path": "floatValue"
+              },
+              {
+                "label": "INT64_VALUE",
+                "path": "int64Value"
+              },
+              {
+                "label": "UINT64_VALUE",
+                "path": "uint64Value"
+              },
+              {
+                "label": "INT32_VALUE",
+                "path": "int32Value"
+              },
+              {
+                "label": "UINT32_VALUE",
+                "path": "uint32Value"
+              },
+              {
+                "label": "BOOL_VALUE",
+                "path": "boolValue"
+              },
+              {
+                "label": "STRING_VALUE",
+                "path": "stringValue"
+              },
+              {
+                "label": "BYTES_VALUE",
+                "path": "bytesValue"
+              },
+              {
+                "label": "REPEATED_STRINGS",
+                "path": "repeatedStrings"
+              },
+              {
+                "label": "BOOL_MAP",
+                "path": "boolMap"
+              }
+            ]
+          }
         },
         {
           "proto_name": "WellKnown",
@@ -549,7 +810,32 @@
               "name": "empty",
               "bind": "json"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.WellKnownRequest",
+            "fields": [
+              {
+                "label": "STRUCT",
+                "path": "struct"
+              },
+              {
+                "label": "VALUE",
+                "path": "value"
+              },
+              {
+                "label": "LIST_VALUE",
+                "path": "listValue"
+              },
+              {
+                "label": "ANY",
+                "path": "any"
+              },
+              {
+                "label": "EMPTY",
+                "path": "empty"
+              }
+            ]
+          }
         },
         {
           "proto_name": "Enums",
@@ -628,7 +914,36 @@
                 "NESTED_ONE"
               ]
             }
-          ]
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.EnumsRequest",
+            "fields": [
+              {
+                "label": "CHOICE",
+                "path": "choice"
+              },
+              {
+                "label": "CHOICES",
+                "path": "choices"
+              },
+              {
+                "label": "OPTIONAL_CHOICE",
+                "path": "optionalChoice"
+              },
+              {
+                "label": "CHOICE_MAP",
+                "path": "choiceMap"
+              },
+              {
+                "label": "ALIASED",
+                "path": "aliased"
+              },
+              {
+                "label": "NESTED",
+                "path": "nested"
+              }
+            ]
+          }
         },
         {
           "proto_name": "Oneofs",
@@ -748,7 +1063,52 @@
               "bind": "string",
               "oneof": "solo"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.OneofsRequest",
+            "fields": [
+              {
+                "label": "TEXT",
+                "path": "text"
+              },
+              {
+                "label": "COUNT",
+                "path": "count"
+              },
+              {
+                "label": "PICK",
+                "path": "pick"
+              },
+              {
+                "label": "OUTER.STRING_LEAF",
+                "path": "outer.stringLeaf"
+              },
+              {
+                "label": "OUTER.INT64_LEAF",
+                "path": "outer.int64Leaf"
+              },
+              {
+                "label": "OUTER.MIDDLE.LEAF",
+                "path": "outer.middle.leaf"
+              },
+              {
+                "label": "OUTER.MIDDLE.INNER",
+                "path": "outer.middle.inner"
+              },
+              {
+                "label": "ENABLED",
+                "path": "enabled"
+              },
+              {
+                "label": "WHEN",
+                "path": "when"
+              },
+              {
+                "label": "ONLY",
+                "path": "only"
+              }
+            ]
+          }
         },
         {
           "proto_name": "Optionals",
@@ -785,7 +1145,24 @@
                 "CHOICE_SECOND"
               ]
             }
-          ]
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.OptionalsRequest",
+            "fields": [
+              {
+                "label": "NAME",
+                "path": "name"
+              },
+              {
+                "label": "AGE",
+                "path": "age"
+              },
+              {
+                "label": "PICK",
+                "path": "pick"
+              }
+            ]
+          }
         }
       ]
     }

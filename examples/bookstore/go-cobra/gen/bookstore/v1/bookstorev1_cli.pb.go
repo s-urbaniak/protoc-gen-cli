@@ -13,8 +13,10 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 	"golang.org/x/term"
 	"google.golang.org/grpc"
@@ -756,7 +758,7 @@ func addCommonFlags(fs *pflag.FlagSet) {
 		"Request body inline (JSON, YAML, or any registered format).\n"+
 			"Repeatable; merges after -f files and before flags.")
 	fs.StringP("output", "o", "",
-		"Output format: json, json-pretty, yaml (or a format registered from main).\n"+
+		"Output format: json, json-pretty, table, yaml (or a format registered from main).\n"+
 			"Default: pretty on a terminal, compact when piped.")
 }
 
@@ -881,20 +883,80 @@ type Formatter interface {
 }
 
 // Records yields JSON records one at a time. Next returns io.EOF at the end.
+// View is the record's projection, used by -o table.
 type Records struct {
 	Next func() ([]byte, error)
+	View View
 }
 
 // messageRecords wraps m as a one-record stream.
 func messageRecords(m proto.Message) Records {
 	done := false
-	return Records{Next: func() ([]byte, error) {
-		if done {
-			return nil, io.EOF
-		}
-		done = true
-		return marshalJSON(m)
-	}}
+	return Records{
+		View: messageViews[string(m.ProtoReflect().Descriptor().FullName())],
+		Next: func() ([]byte, error) {
+			if done {
+				return nil, io.EOF
+			}
+			done = true
+			return marshalJSON(m)
+		},
+	}
+}
+
+// A View projects a message for display.
+type View struct {
+	Fields []ViewField
+}
+
+type ViewField struct {
+	Label string
+	Path  string
+}
+
+// messageViews maps each message's full proto name to its view.
+var messageViews = map[string]View{
+	"bookstore.v1.Auction": {Fields: []ViewField{
+		{Label: "ID", Path: "id"},
+		{Label: "LOT.ID", Path: "lot.id"},
+		{Label: "LOT.BOOK.ID", Path: "lot.book.id"},
+		{Label: "LOT.BOOK.AUTHOR", Path: "lot.book.author"},
+		{Label: "LOT.BOOK.TITLE", Path: "lot.book.title"},
+		{Label: "LOT.CONDITION", Path: "lot.condition"},
+		{Label: "LOT.RESERVE_PRICE", Path: "lot.reservePrice"},
+		{Label: "LOT.PROVENANCE", Path: "lot.provenance"},
+		{Label: "LOT.FLAWS", Path: "lot.flaws"},
+		{Label: "LOT.ATTRIBUTES", Path: "lot.attributes"},
+		{Label: "LOT.CONSIGNOR.NAME", Path: "lot.consignor.name"},
+		{Label: "LOT.CONSIGNOR.ADDRESS", Path: "lot.consignor.address"},
+		{Label: "STATE", Path: "state"},
+		{Label: "HIGH_BID", Path: "highBid"},
+		{Label: "HIGH_BIDDER", Path: "highBidder"},
+		{Label: "ENDS_AT", Path: "endsAt"},
+	}},
+	"bookstore.v1.Book": {Fields: []ViewField{
+		{Label: "ID", Path: "id"},
+		{Label: "AUTHOR", Path: "author"},
+		{Label: "TITLE", Path: "title"},
+	}},
+	"bookstore.v1.ListAuctionsResponse": {Fields: []ViewField{
+		{Label: "AUCTIONS", Path: "auctions"},
+	}},
+	"bookstore.v1.ListBooksResponse": {Fields: []ViewField{
+		{Label: "BOOKS", Path: "books"},
+	}},
+	"bookstore.v1.ListShelvesResponse": {Fields: []ViewField{
+		{Label: "SHELVES", Path: "shelves"},
+	}},
+	"bookstore.v1.Report": {Fields: []ViewField{
+		{Label: "FILENAME", Path: "filename"},
+		{Label: "BOOKS", Path: "books"},
+	}},
+	"bookstore.v1.Shelf": {Fields: []ViewField{
+		{Label: "ID", Path: "id"},
+		{Label: "THEME", Path: "theme"},
+	}},
+	"google.protobuf.Empty": {Fields: []ViewField{}},
 }
 
 // JSONFormat writes each record as a line of JSON. Indent pretty-prints.
@@ -951,10 +1013,48 @@ func (YAMLFormat) Format(w io.Writer, r Records) error {
 	}
 }
 
+// TableFormat renders each record as a table of its view's fields.
+type TableFormat struct{}
+
+func (TableFormat) Format(w io.Writer, r Records) error {
+	for i := 0; ; i++ {
+		rec, err := r.Next()
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if i > 0 {
+			if _, err := io.WriteString(w, "\n"); err != nil {
+				return err
+			}
+		}
+		t := table.NewWriter()
+		if f, ok := w.(*os.File); ok {
+			if width, _, err := term.GetSize(int(f.Fd())); err == nil {
+				t.Style().Size.WidthMax = width
+			}
+		}
+		header := make(table.Row, len(r.View.Fields))
+		row := make(table.Row, len(r.View.Fields))
+		for j, vf := range r.View.Fields {
+			header[j] = vf.Label
+			row[j] = gjson.GetBytes(rec, vf.Path).String()
+		}
+		t.AppendHeader(header)
+		t.AppendRow(row)
+		if _, err := io.WriteString(w, strings.TrimRight(t.Render(), "\n")+"\n"); err != nil {
+			return err
+		}
+	}
+}
+
 // formatters holds the built-in formats by name.
 var formatters = map[string]Formatter{
 	"json":        JSONFormat{},
 	"json-pretty": JSONFormat{Indent: true},
+	"table":       TableFormat{},
 	"yaml":        YAMLFormat{},
 }
 

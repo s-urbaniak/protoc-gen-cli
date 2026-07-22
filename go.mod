@@ -4,10 +4,12 @@ go 1.26.3
 
 require (
 	github.com/brianvoe/gofakeit/v7 v7.15.0
+	github.com/jedib0t/go-pretty/v6 v6.8.3
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/stoewer/go-strcase v1.3.1
 	github.com/sudorandom/fauxrpc v0.23.0
+	github.com/tidwall/gjson v1.19.0
 	github.com/tidwall/sjson v1.2.5
 	golang.org/x/term v0.45.0
 	golang.org/x/tools v0.48.0
@@ -30,7 +32,8 @@ require (
 	github.com/bufbuild/protocompile v0.14.1 // indirect
 	github.com/google/cel-go v0.29.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/tidwall/gjson v1.19.0 // indirect
+	github.com/mattn/go-runewidth v0.0.16 // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/tidwall/match v1.2.0 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect

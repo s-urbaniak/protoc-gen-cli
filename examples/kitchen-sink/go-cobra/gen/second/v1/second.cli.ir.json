@@ -32,7 +32,16 @@
               "name": "text",
               "bind": "string"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "second.v1.PingRequest",
+            "fields": [
+              {
+                "label": "TEXT",
+                "path": "text"
+              }
+            ]
+          }
         }
       ]
     }

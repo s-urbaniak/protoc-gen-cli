@@ -36,9 +36,22 @@ func funcMap(model *ir.Model, sources []string) template.FuncMap {
 			}
 		},
 		"requestImports": func() map[string]string { return imports },
-		"sourceHeader":   func() string { return strings.Join(sources, ", ") },
-		"isJSONBind":     func(f *ir.Flag) bool { return f.Bind == ir.BindJSON },
-		"isStringBind":   func(f *ir.Flag) bool { return f.Bind == ir.BindString },
+		"responseViews": func() []*ir.View {
+			byName := map[string]*ir.View{}
+			for _, svc := range model.Services {
+				for _, cmd := range svc.Commands {
+					byName[cmd.View.FullName] = cmd.View
+				}
+			}
+			views := make([]*ir.View, 0, len(byName))
+			for _, name := range slices.Sorted(maps.Keys(byName)) {
+				views = append(views, byName[name])
+			}
+			return views
+		},
+		"sourceHeader": func() string { return strings.Join(sources, ", ") },
+		"isJSONBind":   func(f *ir.Flag) bool { return f.Bind == ir.BindJSON },
+		"isStringBind": func(f *ir.Flag) bool { return f.Bind == ir.BindString },
 		"oneofGroups": func(cmd *ir.Command) [][]string {
 			var order []string
 			members := map[string][]string{}

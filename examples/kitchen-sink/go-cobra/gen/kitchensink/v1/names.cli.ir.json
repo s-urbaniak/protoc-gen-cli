@@ -77,7 +77,52 @@
               "name": "import",
               "bind": "string"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.CollisionsRequest",
+            "fields": [
+              {
+                "label": "REQ",
+                "path": "req"
+              },
+              {
+                "label": "ERR",
+                "path": "err"
+              },
+              {
+                "label": "CMD",
+                "path": "cmd"
+              },
+              {
+                "label": "RESP",
+                "path": "resp"
+              },
+              {
+                "label": "OUT",
+                "path": "out"
+              },
+              {
+                "label": "FRAGS",
+                "path": "frags"
+              },
+              {
+                "label": "TYPE",
+                "path": "type"
+              },
+              {
+                "label": "FUNC",
+                "path": "func"
+              },
+              {
+                "label": "RETURN",
+                "path": "return"
+              },
+              {
+                "label": "IMPORT",
+                "path": "import"
+              }
+            ]
+          }
         },
         {
           "proto_name": "Imported",
@@ -98,7 +143,16 @@
               "name": "id",
               "bind": "string"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "imported.v1.ImportedRequest",
+            "fields": [
+              {
+                "label": "ID",
+                "path": "id"
+              }
+            ]
+          }
         },
         {
           "proto_name": "Second",
@@ -119,7 +173,16 @@
               "name": "text",
               "bind": "string"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "second.v1.PingRequest",
+            "fields": [
+              {
+                "label": "TEXT",
+                "path": "text"
+              }
+            ]
+          }
         },
         {
           "proto_name": "Reserved",
@@ -155,7 +218,28 @@
               "name": "arg-output",
               "bind": "string"
             }
-          ]
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.ReservedRequest",
+            "fields": [
+              {
+                "label": "FILENAME",
+                "path": "filename"
+              },
+              {
+                "label": "INPUT",
+                "path": "input"
+              },
+              {
+                "label": "HELP",
+                "path": "help"
+              },
+              {
+                "label": "OUTPUT",
+                "path": "output"
+              }
+            ]
+          }
         },
         {
           "proto_name": "Empty",
@@ -170,7 +254,10 @@
             "go_import_path": "google.golang.org/protobuf/types/known/emptypb",
             "go_package_name": "emptypb"
           },
-          "output": "google.protobuf.Empty"
+          "output": "google.protobuf.Empty",
+          "view": {
+            "full_name": "google.protobuf.Empty"
+          }
         }
       ]
     }
