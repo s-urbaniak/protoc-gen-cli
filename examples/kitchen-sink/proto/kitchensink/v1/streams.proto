@@ -1,0 +1,33 @@
+// All four streaming shapes in one service, plus a flagless streaming command.
+
+syntax = "proto3";
+
+package kitchensink.v1;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
+
+// StreamsService echoes text back.
+service StreamsService {
+  // Echoes the text once.
+  rpc Unary(StreamsRequest) returns (StreamsResponse);
+  // Echoes the text the requested number of times.
+  rpc ServerStream(StreamsRequest) returns (stream StreamsResponse);
+  // Counts the streamed requests.
+  rpc ClientStream(stream StreamsRequest) returns (StreamsResponse);
+  // Echoes each request as it arrives.
+  rpc BidiStream(stream StreamsRequest) returns (stream StreamsResponse);
+  // Streams a fixed batch of responses.
+  rpc EmptyStream(google.protobuf.Empty) returns (stream StreamsResponse);
+}
+
+message StreamsRequest {
+  string text = 1;
+  int32 count = 2;
+}
+
+message StreamsResponse {
+  string text = 1;
+  int32 index = 2;
+}

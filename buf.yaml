@@ -10,6 +10,11 @@ lint:
     - RPC_REQUEST_STANDARD_NAME
     - RPC_RESPONSE_STANDARD_NAME
     - RPC_REQUEST_RESPONSE_UNIQUE
+  ignore_only:
+    RPC_PASCAL_CASE:
+      - examples/kitchen-sink/proto/kitchensink/v1/names.proto
+    FIELD_LOWER_SNAKE_CASE:
+      - examples/kitchen-sink/proto/kitchensink/v1/names.proto
 breaking:
   use:
     - FILE

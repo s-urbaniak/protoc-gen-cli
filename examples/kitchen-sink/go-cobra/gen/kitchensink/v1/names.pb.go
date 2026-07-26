@@ -208,11 +208,159 @@ func (x *ReservedRequest) GetOutput() string {
 	return ""
 }
 
+type CasingRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	HTTPHeader    string                 `protobuf:"bytes,1,opt,name=HTTPHeader,proto3" json:"HTTPHeader,omitempty"`
+	CamelField    string                 `protobuf:"bytes,2,opt,name=camelField,proto3" json:"camelField,omitempty"`
+	WithJsonName  string                 `protobuf:"bytes,3,opt,name=with_json_name,json=customName,proto3" json:"with_json_name,omitempty"`
+	Dotted        string                 `protobuf:"bytes,4,opt,name=dotted,json=weird.name,proto3" json:"dotted,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CasingRequest) Reset() {
+	*x = CasingRequest{}
+	mi := &file_kitchensink_v1_names_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CasingRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CasingRequest) ProtoMessage() {}
+
+func (x *CasingRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_kitchensink_v1_names_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CasingRequest.ProtoReflect.Descriptor instead.
+func (*CasingRequest) Descriptor() ([]byte, []int) {
+	return file_kitchensink_v1_names_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *CasingRequest) GetHTTPHeader() string {
+	if x != nil {
+		return x.HTTPHeader
+	}
+	return ""
+}
+
+func (x *CasingRequest) GetCamelField() string {
+	if x != nil {
+		return x.CamelField
+	}
+	return ""
+}
+
+func (x *CasingRequest) GetWithJsonName() string {
+	if x != nil {
+		return x.WithJsonName
+	}
+	return ""
+}
+
+func (x *CasingRequest) GetDotted() string {
+	if x != nil {
+		return x.Dotted
+	}
+	return ""
+}
+
+type Envelope struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Envelope) Reset() {
+	*x = Envelope{}
+	mi := &file_kitchensink_v1_names_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Envelope) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Envelope) ProtoMessage() {}
+
+func (x *Envelope) ProtoReflect() protoreflect.Message {
+	mi := &file_kitchensink_v1_names_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Envelope.ProtoReflect.Descriptor instead.
+func (*Envelope) Descriptor() ([]byte, []int) {
+	return file_kitchensink_v1_names_proto_rawDescGZIP(), []int{3}
+}
+
+type Envelope_Letter struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Body          string                 `protobuf:"bytes,1,opt,name=body,proto3" json:"body,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Envelope_Letter) Reset() {
+	*x = Envelope_Letter{}
+	mi := &file_kitchensink_v1_names_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Envelope_Letter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Envelope_Letter) ProtoMessage() {}
+
+func (x *Envelope_Letter) ProtoReflect() protoreflect.Message {
+	mi := &file_kitchensink_v1_names_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Envelope_Letter.ProtoReflect.Descriptor instead.
+func (*Envelope_Letter) Descriptor() ([]byte, []int) {
+	return file_kitchensink_v1_names_proto_rawDescGZIP(), []int{3, 0}
+}
+
+func (x *Envelope_Letter) GetBody() string {
+	if x != nil {
+		return x.Body
+	}
+	return ""
+}
+
 var File_kitchensink_v1_names_proto protoreflect.FileDescriptor
 
 const file_kitchensink_v1_names_proto_rawDesc = "" +
 	"\n" +
-	"\x1akitchensink/v1/names.proto\x12\x0ekitchensink.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1aimported/v1/imported.proto\x1a\x16second/v1/second.proto\"\xdd\x01\n" +
+	"\x1akitchensink/v1/names.proto\x12\x0ekitchensink.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1aimported/v1/imported.proto\x1a\x1bkitchensink/v1/fields.proto\x1a\x16second/v1/second.proto\"\xdd\x01\n" +
 	"\x11CollisionsRequest\x12\x10\n" +
 	"\x03req\x18\x01 \x01(\tR\x03req\x12\x10\n" +
 	"\x03err\x18\x02 \x01(\tR\x03err\x12\x10\n" +
@@ -229,14 +377,32 @@ const file_kitchensink_v1_names_proto_rawDesc = "" +
 	"\bfilename\x18\x01 \x01(\tR\bfilename\x12\x14\n" +
 	"\x05input\x18\x02 \x01(\tR\x05input\x12\x12\n" +
 	"\x04help\x18\x03 \x01(\tR\x04help\x12\x16\n" +
-	"\x06output\x18\x04 \x01(\tR\x06output2\xf5\x02\n" +
+	"\x06output\x18\x04 \x01(\tR\x06output\"\x8f\x01\n" +
+	"\rCasingRequest\x12\x1e\n" +
+	"\n" +
+	"HTTPHeader\x18\x01 \x01(\tR\n" +
+	"HTTPHeader\x12\x1e\n" +
+	"\n" +
+	"camelField\x18\x02 \x01(\tR\n" +
+	"camelField\x12\"\n" +
+	"\x0ewith_json_name\x18\x03 \x01(\tR\n" +
+	"customName\x12\x1a\n" +
+	"\x06dotted\x18\x04 \x01(\tR\n" +
+	"weird.name\"(\n" +
+	"\bEnvelope\x1a\x1c\n" +
+	"\x06Letter\x12\x12\n" +
+	"\x04body\x18\x01 \x01(\tR\x04body2\x98\x05\n" +
 	"\fNamesService\x12T\n" +
 	"\n" +
 	"Collisions\x12!.kitchensink.v1.CollisionsRequest\x1a!.kitchensink.v1.CollisionsRequest\"\x00\x12H\n" +
 	"\bImported\x12\x1c.imported.v1.ImportedRequest\x1a\x1c.imported.v1.ImportedRequest\"\x00\x12:\n" +
 	"\x06Second\x12\x16.second.v1.PingRequest\x1a\x16.second.v1.PingRequest\"\x00\x12N\n" +
 	"\bReserved\x12\x1f.kitchensink.v1.ReservedRequest\x1a\x1f.kitchensink.v1.ReservedRequest\"\x00\x129\n" +
-	"\x05Empty\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\"\x00BeZcgithub.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1b\x06proto3"
+	"\x05Empty\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\"\x00\x12J\n" +
+	"\bHTTPCall\x12\x1d.kitchensink.v1.CasingRequest\x1a\x1d.kitchensink.v1.CasingRequest\"\x00\x12M\n" +
+	"\vlower_snake\x12\x1d.kitchensink.v1.CasingRequest\x1a\x1d.kitchensink.v1.CasingRequest\"\x00\x128\n" +
+	"\x06Borrow\x12\x15.kitchensink.v1.Outer\x1a\x15.kitchensink.v1.Outer\"\x00\x12L\n" +
+	"\x06Nested\x12\x1f.kitchensink.v1.Envelope.Letter\x1a\x1f.kitchensink.v1.Envelope.Letter\"\x00BeZcgithub.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1b\x06proto3"
 
 var (
 	file_kitchensink_v1_names_proto_rawDescOnce sync.Once
@@ -250,27 +416,39 @@ func file_kitchensink_v1_names_proto_rawDescGZIP() []byte {
 	return file_kitchensink_v1_names_proto_rawDescData
 }
 
-var file_kitchensink_v1_names_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_kitchensink_v1_names_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_kitchensink_v1_names_proto_goTypes = []any{
 	(*CollisionsRequest)(nil),  // 0: kitchensink.v1.CollisionsRequest
 	(*ReservedRequest)(nil),    // 1: kitchensink.v1.ReservedRequest
-	(*v1.ImportedRequest)(nil), // 2: imported.v1.ImportedRequest
-	(*v11.PingRequest)(nil),    // 3: second.v1.PingRequest
-	(*emptypb.Empty)(nil),      // 4: google.protobuf.Empty
+	(*CasingRequest)(nil),      // 2: kitchensink.v1.CasingRequest
+	(*Envelope)(nil),           // 3: kitchensink.v1.Envelope
+	(*Envelope_Letter)(nil),    // 4: kitchensink.v1.Envelope.Letter
+	(*v1.ImportedRequest)(nil), // 5: imported.v1.ImportedRequest
+	(*v11.PingRequest)(nil),    // 6: second.v1.PingRequest
+	(*emptypb.Empty)(nil),      // 7: google.protobuf.Empty
+	(*Outer)(nil),              // 8: kitchensink.v1.Outer
 }
 var file_kitchensink_v1_names_proto_depIdxs = []int32{
 	0, // 0: kitchensink.v1.NamesService.Collisions:input_type -> kitchensink.v1.CollisionsRequest
-	2, // 1: kitchensink.v1.NamesService.Imported:input_type -> imported.v1.ImportedRequest
-	3, // 2: kitchensink.v1.NamesService.Second:input_type -> second.v1.PingRequest
+	5, // 1: kitchensink.v1.NamesService.Imported:input_type -> imported.v1.ImportedRequest
+	6, // 2: kitchensink.v1.NamesService.Second:input_type -> second.v1.PingRequest
 	1, // 3: kitchensink.v1.NamesService.Reserved:input_type -> kitchensink.v1.ReservedRequest
-	4, // 4: kitchensink.v1.NamesService.Empty:input_type -> google.protobuf.Empty
-	0, // 5: kitchensink.v1.NamesService.Collisions:output_type -> kitchensink.v1.CollisionsRequest
-	2, // 6: kitchensink.v1.NamesService.Imported:output_type -> imported.v1.ImportedRequest
-	3, // 7: kitchensink.v1.NamesService.Second:output_type -> second.v1.PingRequest
-	1, // 8: kitchensink.v1.NamesService.Reserved:output_type -> kitchensink.v1.ReservedRequest
-	4, // 9: kitchensink.v1.NamesService.Empty:output_type -> google.protobuf.Empty
-	5, // [5:10] is the sub-list for method output_type
-	0, // [0:5] is the sub-list for method input_type
+	7, // 4: kitchensink.v1.NamesService.Empty:input_type -> google.protobuf.Empty
+	2, // 5: kitchensink.v1.NamesService.HTTPCall:input_type -> kitchensink.v1.CasingRequest
+	2, // 6: kitchensink.v1.NamesService.lower_snake:input_type -> kitchensink.v1.CasingRequest
+	8, // 7: kitchensink.v1.NamesService.Borrow:input_type -> kitchensink.v1.Outer
+	4, // 8: kitchensink.v1.NamesService.Nested:input_type -> kitchensink.v1.Envelope.Letter
+	0, // 9: kitchensink.v1.NamesService.Collisions:output_type -> kitchensink.v1.CollisionsRequest
+	5, // 10: kitchensink.v1.NamesService.Imported:output_type -> imported.v1.ImportedRequest
+	6, // 11: kitchensink.v1.NamesService.Second:output_type -> second.v1.PingRequest
+	1, // 12: kitchensink.v1.NamesService.Reserved:output_type -> kitchensink.v1.ReservedRequest
+	7, // 13: kitchensink.v1.NamesService.Empty:output_type -> google.protobuf.Empty
+	2, // 14: kitchensink.v1.NamesService.HTTPCall:output_type -> kitchensink.v1.CasingRequest
+	2, // 15: kitchensink.v1.NamesService.lower_snake:output_type -> kitchensink.v1.CasingRequest
+	8, // 16: kitchensink.v1.NamesService.Borrow:output_type -> kitchensink.v1.Outer
+	4, // 17: kitchensink.v1.NamesService.Nested:output_type -> kitchensink.v1.Envelope.Letter
+	9, // [9:18] is the sub-list for method output_type
+	0, // [0:9] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -281,13 +459,14 @@ func file_kitchensink_v1_names_proto_init() {
 	if File_kitchensink_v1_names_proto != nil {
 		return
 	}
+	file_kitchensink_v1_fields_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_kitchensink_v1_names_proto_rawDesc), len(file_kitchensink_v1_names_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

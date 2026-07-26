@@ -1,10 +1,12 @@
 {
   "plugin_version": "dev",
   "proto_file": "kitchensink/v1/names.proto",
+  "generated_filename_prefix": "kitchensink/v1/names",
   "proto_package": "kitchensink.v1",
   "file_options": {
     "go_package_name": "kitchensinkv1",
-    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1"
+    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+    "go_descriptor_name": "File_kitchensink_v1_names_proto"
   },
   "services": [
     {
@@ -26,7 +28,7 @@
             "go_package_name": "kitchensinkv1"
           },
           "output": "kitchensink.v1.CollisionsRequest",
-          "flags": [
+          "params": [
             {
               "proto_path": "req",
               "name": "req",
@@ -82,43 +84,43 @@
             "full_name": "kitchensink.v1.CollisionsRequest",
             "fields": [
               {
-                "label": "REQ",
+                "label": "req",
                 "path": "req"
               },
               {
-                "label": "ERR",
+                "label": "err",
                 "path": "err"
               },
               {
-                "label": "CMD",
+                "label": "cmd",
                 "path": "cmd"
               },
               {
-                "label": "RESP",
+                "label": "resp",
                 "path": "resp"
               },
               {
-                "label": "OUT",
+                "label": "out",
                 "path": "out"
               },
               {
-                "label": "FRAGS",
+                "label": "frags",
                 "path": "frags"
               },
               {
-                "label": "TYPE",
+                "label": "type",
                 "path": "type"
               },
               {
-                "label": "FUNC",
+                "label": "func",
                 "path": "func"
               },
               {
-                "label": "RETURN",
+                "label": "return",
                 "path": "return"
               },
               {
-                "label": "IMPORT",
+                "label": "import",
                 "path": "import"
               }
             ]
@@ -137,7 +139,7 @@
             "go_package_name": "v1"
           },
           "output": "imported.v1.ImportedRequest",
-          "flags": [
+          "params": [
             {
               "proto_path": "id",
               "name": "id",
@@ -148,7 +150,7 @@
             "full_name": "imported.v1.ImportedRequest",
             "fields": [
               {
-                "label": "ID",
+                "label": "id",
                 "path": "id"
               }
             ]
@@ -167,7 +169,7 @@
             "go_package_name": "v1"
           },
           "output": "second.v1.PingRequest",
-          "flags": [
+          "params": [
             {
               "proto_path": "text",
               "name": "text",
@@ -178,7 +180,7 @@
             "full_name": "second.v1.PingRequest",
             "fields": [
               {
-                "label": "TEXT",
+                "label": "text",
                 "path": "text"
               }
             ]
@@ -197,7 +199,7 @@
             "go_package_name": "kitchensinkv1"
           },
           "output": "kitchensink.v1.ReservedRequest",
-          "flags": [
+          "params": [
             {
               "proto_path": "filename",
               "name": "arg-filename",
@@ -223,19 +225,19 @@
             "full_name": "kitchensink.v1.ReservedRequest",
             "fields": [
               {
-                "label": "FILENAME",
+                "label": "filename",
                 "path": "filename"
               },
               {
-                "label": "INPUT",
+                "label": "input",
                 "path": "input"
               },
               {
-                "label": "HELP",
+                "label": "help",
                 "path": "help"
               },
               {
-                "label": "OUTPUT",
+                "label": "output",
                 "path": "output"
               }
             ]
@@ -257,6 +259,259 @@
           "output": "google.protobuf.Empty",
           "view": {
             "full_name": "google.protobuf.Empty"
+          }
+        },
+        {
+          "proto_name": "HTTPCall",
+          "go_name": "HTTPCall",
+          "name": "http-call",
+          "input": {
+            "full_name": "kitchensink.v1.CasingRequest",
+            "proto_file": "kitchensink/v1/names.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "CasingRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.CasingRequest",
+          "params": [
+            {
+              "proto_path": "HTTPHeader",
+              "name": "http-header",
+              "bind": "string"
+            },
+            {
+              "proto_path": "camelField",
+              "name": "camel-field",
+              "bind": "string"
+            },
+            {
+              "proto_path": "with_json_name",
+              "name": "with-json-name",
+              "bind": "string"
+            },
+            {
+              "proto_path": "dotted",
+              "name": "dotted",
+              "bind": "string"
+            }
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.CasingRequest",
+            "fields": [
+              {
+                "label": "HTTPHeader",
+                "path": "HTTPHeader"
+              },
+              {
+                "label": "camelField",
+                "path": "camelField"
+              },
+              {
+                "label": "with_json_name",
+                "path": "customName"
+              },
+              {
+                "label": "dotted",
+                "path": "weird\\.name"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "lower_snake",
+          "go_name": "LowerSnake",
+          "name": "lower-snake",
+          "input": {
+            "full_name": "kitchensink.v1.CasingRequest",
+            "proto_file": "kitchensink/v1/names.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "CasingRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.CasingRequest",
+          "params": [
+            {
+              "proto_path": "HTTPHeader",
+              "name": "http-header",
+              "bind": "string"
+            },
+            {
+              "proto_path": "camelField",
+              "name": "camel-field",
+              "bind": "string"
+            },
+            {
+              "proto_path": "with_json_name",
+              "name": "with-json-name",
+              "bind": "string"
+            },
+            {
+              "proto_path": "dotted",
+              "name": "dotted",
+              "bind": "string"
+            }
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.CasingRequest",
+            "fields": [
+              {
+                "label": "HTTPHeader",
+                "path": "HTTPHeader"
+              },
+              {
+                "label": "camelField",
+                "path": "camelField"
+              },
+              {
+                "label": "with_json_name",
+                "path": "customName"
+              },
+              {
+                "label": "dotted",
+                "path": "weird\\.name"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "Borrow",
+          "go_name": "Borrow",
+          "name": "borrow",
+          "input": {
+            "full_name": "kitchensink.v1.Outer",
+            "proto_file": "kitchensink/v1/fields.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "Outer",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.Outer",
+          "params": [
+            {
+              "proto_path": "string_leaf",
+              "name": "string-leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "int64_leaf",
+              "name": "int64-leaf",
+              "bind": "int"
+            },
+            {
+              "proto_path": "middle",
+              "name": "middle",
+              "bind": "json"
+            },
+            {
+              "proto_path": "middle.leaf",
+              "name": "middle.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "middle.inner",
+              "name": "middle.inner",
+              "bind": "json"
+            },
+            {
+              "proto_path": "middle.inner.leaf",
+              "name": "middle.inner.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "middle.inner.deep",
+              "name": "middle.inner.deep",
+              "bind": "json"
+            },
+            {
+              "proto_path": "middle.inner.deep.leaf",
+              "name": "middle.inner.deep.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "middle.inner.deep.deeper",
+              "name": "middle.inner.deep.deeper",
+              "bind": "json"
+            },
+            {
+              "proto_path": "middle.inner.deep.deeper.leaf",
+              "name": "middle.inner.deep.deeper.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "middle.inner.deep.deeper.deepest",
+              "name": "middle.inner.deep.deeper.deepest",
+              "bind": "json"
+            },
+            {
+              "proto_path": "middle.inner.deep.deeper.deepest.leaf",
+              "name": "middle.inner.deep.deeper.deepest.leaf",
+              "bind": "string"
+            }
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.Outer",
+            "fields": [
+              {
+                "label": "string_leaf",
+                "path": "stringLeaf"
+              },
+              {
+                "label": "int64_leaf",
+                "path": "int64Leaf"
+              },
+              {
+                "label": "middle.leaf",
+                "path": "middle.leaf"
+              },
+              {
+                "label": "middle.inner.leaf",
+                "path": "middle.inner.leaf"
+              },
+              {
+                "label": "middle.inner.deep.leaf",
+                "path": "middle.inner.deep.leaf"
+              },
+              {
+                "label": "middle.inner.deep.deeper.leaf",
+                "path": "middle.inner.deep.deeper.leaf"
+              },
+              {
+                "label": "middle.inner.deep.deeper.deepest.leaf",
+                "path": "middle.inner.deep.deeper.deepest.leaf"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "Nested",
+          "go_name": "Nested",
+          "name": "nested",
+          "input": {
+            "full_name": "kitchensink.v1.Envelope.Letter",
+            "proto_file": "kitchensink/v1/names.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "Envelope_Letter",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.Envelope.Letter",
+          "params": [
+            {
+              "proto_path": "body",
+              "name": "body",
+              "bind": "string"
+            }
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.Envelope.Letter",
+            "fields": [
+              {
+                "label": "body",
+                "path": "body"
+              }
+            ]
           }
         }
       ]

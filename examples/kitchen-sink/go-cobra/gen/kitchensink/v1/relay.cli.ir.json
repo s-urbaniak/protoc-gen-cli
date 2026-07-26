@@ -1,0 +1,48 @@
+{
+  "plugin_version": "dev",
+  "proto_file": "kitchensink/v1/relay.proto",
+  "generated_filename_prefix": "kitchensink/v1/relay",
+  "proto_package": "kitchensink.v1",
+  "file_options": {
+    "go_package_name": "kitchensinkv1",
+    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+    "go_descriptor_name": "File_kitchensink_v1_relay_proto"
+  },
+  "services": [
+    {
+      "proto_name": "RelayService",
+      "go_name": "RelayService",
+      "name": "relay",
+      "short_help": "RelayService echoes each note back as it arrives.",
+      "commands": [
+        {
+          "proto_name": "Chat",
+          "go_name": "Chat",
+          "name": "chat",
+          "short_help": "Echoes each note as it arrives.",
+          "long_help": "Echoes each note as it arrives.\n\nReads JSON requests from stdin, one after another.\n\nThe server may send multiple responses; each prints as it arrives.",
+          "input": {
+            "full_name": "kitchensink.v1.ChatNote",
+            "proto_file": "kitchensink/v1/relay.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "ChatNote",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.ChatNote",
+          "client_streaming": true,
+          "server_streaming": true,
+          "view": {
+            "full_name": "kitchensink.v1.ChatNote",
+            "fields": [
+              {
+                "label": "text",
+                "path": "text"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

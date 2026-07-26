@@ -9,8 +9,8 @@ import (
 	"github.com/braveokafor/proto-to-cli/internal/ir"
 )
 
-// RenderTemplate renders the template file name from templateFS against
-// model; funcs may be nil.
+// RenderTemplate executes the named template from templateFS with model as
+// its data.
 func RenderTemplate(
 	templateFS fs.FS,
 	name string,

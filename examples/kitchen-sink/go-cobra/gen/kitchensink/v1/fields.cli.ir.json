@@ -1,24 +1,26 @@
 {
   "plugin_version": "dev",
   "proto_file": "kitchensink/v1/fields.proto",
+  "generated_filename_prefix": "kitchensink/v1/fields",
   "proto_package": "kitchensink.v1",
   "file_options": {
     "go_package_name": "kitchensinkv1",
-    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1"
+    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+    "go_descriptor_name": "File_kitchensink_v1_fields_proto"
   },
   "services": [
     {
       "proto_name": "FieldsService",
       "go_name": "FieldsService",
       "name": "fields",
-      "short_help": "FieldsService exercises the flag surface, one RPC per field-shape family.",
-      "long_help": "FieldsService exercises the flag surface, one RPC per field-shape family.\nEvery RPC echoes its request, so the response shows exactly what arrived.",
+      "short_help": "FieldsService echoes each request, so the response shows exactly what arrived.",
+      "long_help": "FieldsService echoes each request, so the response shows exactly what\narrived.",
       "commands": [
         {
           "proto_name": "Scalars",
           "go_name": "Scalars",
           "name": "scalars",
-          "short_help": "Scalars carries every scalar width the plugin derives a flag for.",
+          "short_help": "Scalars carries every proto scalar type.",
           "input": {
             "full_name": "kitchensink.v1.ScalarsRequest",
             "proto_file": "kitchensink/v1/fields.proto",
@@ -28,7 +30,7 @@
             "go_package_name": "kitchensinkv1"
           },
           "output": "kitchensink.v1.ScalarsRequest",
-          "flags": [
+          "params": [
             {
               "proto_path": "double_field",
               "name": "double-field",
@@ -109,63 +111,63 @@
             "full_name": "kitchensink.v1.ScalarsRequest",
             "fields": [
               {
-                "label": "DOUBLE_FIELD",
+                "label": "double_field",
                 "path": "doubleField"
               },
               {
-                "label": "FLOAT_FIELD",
+                "label": "float_field",
                 "path": "floatField"
               },
               {
-                "label": "INT32_FIELD",
+                "label": "int32_field",
                 "path": "int32Field"
               },
               {
-                "label": "INT64_FIELD",
+                "label": "int64_field",
                 "path": "int64Field"
               },
               {
-                "label": "UINT32_FIELD",
+                "label": "uint32_field",
                 "path": "uint32Field"
               },
               {
-                "label": "UINT64_FIELD",
+                "label": "uint64_field",
                 "path": "uint64Field"
               },
               {
-                "label": "SINT32_FIELD",
+                "label": "sint32_field",
                 "path": "sint32Field"
               },
               {
-                "label": "SINT64_FIELD",
+                "label": "sint64_field",
                 "path": "sint64Field"
               },
               {
-                "label": "FIXED32_FIELD",
+                "label": "fixed32_field",
                 "path": "fixed32Field"
               },
               {
-                "label": "FIXED64_FIELD",
+                "label": "fixed64_field",
                 "path": "fixed64Field"
               },
               {
-                "label": "SFIXED32_FIELD",
+                "label": "sfixed32_field",
                 "path": "sfixed32Field"
               },
               {
-                "label": "SFIXED64_FIELD",
+                "label": "sfixed64_field",
                 "path": "sfixed64Field"
               },
               {
-                "label": "BOOL_FIELD",
+                "label": "bool_field",
                 "path": "boolField"
               },
               {
-                "label": "STRING_FIELD",
+                "label": "string_field",
                 "path": "stringField"
               },
               {
-                "label": "BYTES_FIELD",
+                "label": "bytes_field",
                 "path": "bytesField"
               }
             ]
@@ -185,7 +187,7 @@
             "go_package_name": "kitchensinkv1"
           },
           "output": "kitchensink.v1.MessagesRequest",
-          "flags": [
+          "params": [
             {
               "proto_path": "outer",
               "name": "outer",
@@ -373,125 +375,126 @@
             "full_name": "kitchensink.v1.MessagesRequest",
             "fields": [
               {
-                "label": "OUTER.STRING_LEAF",
+                "label": "outer.string_leaf",
                 "path": "outer.stringLeaf"
               },
               {
-                "label": "OUTER.INT64_LEAF",
+                "label": "outer.int64_leaf",
                 "path": "outer.int64Leaf"
               },
               {
-                "label": "OUTER.MIDDLE.LEAF",
+                "label": "outer.middle.leaf",
                 "path": "outer.middle.leaf"
               },
               {
-                "label": "OUTER.MIDDLE.INNER.LEAF",
+                "label": "outer.middle.inner.leaf",
                 "path": "outer.middle.inner.leaf"
               },
               {
-                "label": "OUTER.MIDDLE.INNER.DEEP.LEAF",
+                "label": "outer.middle.inner.deep.leaf",
                 "path": "outer.middle.inner.deep.leaf"
               },
               {
-                "label": "OUTER.MIDDLE.INNER.DEEP.DEEPER.LEAF",
+                "label": "outer.middle.inner.deep.deeper.leaf",
                 "path": "outer.middle.inner.deep.deeper.leaf"
               },
               {
-                "label": "OUTER.MIDDLE.INNER.DEEP.DEEPER.DEEPEST",
+                "label": "outer.middle.inner.deep.deeper.deepest",
                 "path": "outer.middle.inner.deep.deeper.deepest"
               },
               {
-                "label": "KEBAB_OUTER.STRING_LEAF",
+                "label": "kebab_outer.string_leaf",
                 "path": "kebabOuter.stringLeaf"
               },
               {
-                "label": "KEBAB_OUTER.INT64_LEAF",
+                "label": "kebab_outer.int64_leaf",
                 "path": "kebabOuter.int64Leaf"
               },
               {
-                "label": "KEBAB_OUTER.MIDDLE.LEAF",
+                "label": "kebab_outer.middle.leaf",
                 "path": "kebabOuter.middle.leaf"
               },
               {
-                "label": "KEBAB_OUTER.MIDDLE.INNER.LEAF",
+                "label": "kebab_outer.middle.inner.leaf",
                 "path": "kebabOuter.middle.inner.leaf"
               },
               {
-                "label": "KEBAB_OUTER.MIDDLE.INNER.DEEP.LEAF",
+                "label": "kebab_outer.middle.inner.deep.leaf",
                 "path": "kebabOuter.middle.inner.deep.leaf"
               },
               {
-                "label": "KEBAB_OUTER.MIDDLE.INNER.DEEP.DEEPER.LEAF",
+                "label": "kebab_outer.middle.inner.deep.deeper.leaf",
                 "path": "kebabOuter.middle.inner.deep.deeper.leaf"
               },
               {
-                "label": "KEBAB_OUTER.MIDDLE.INNER.DEEP.DEEPER.DEEPEST",
+                "label": "kebab_outer.middle.inner.deep.deeper.deepest",
                 "path": "kebabOuter.middle.inner.deep.deeper.deepest"
               },
               {
-                "label": "TIMESTAMP",
+                "label": "timestamp",
                 "path": "timestamp"
               },
               {
-                "label": "LABELS",
+                "label": "labels",
                 "path": "labels"
               },
               {
-                "label": "DURATION",
+                "label": "duration",
                 "path": "duration"
               },
               {
-                "label": "FIELD_MASK",
+                "label": "field_mask",
                 "path": "fieldMask"
               },
               {
-                "label": "STRUCT",
+                "label": "struct",
                 "path": "struct"
               },
               {
-                "label": "RECURSIVE.NAME",
+                "label": "recursive.name",
                 "path": "recursive.name"
               },
               {
-                "label": "RECURSIVE.NEXT",
+                "label": "recursive.next",
                 "path": "recursive.next"
               },
               {
-                "label": "ODD.EVEN.ODD",
+                "label": "odd.even.odd",
                 "path": "odd.even.odd"
               }
             ],
             "lists": [
               {
-                "label": "OUTERS",
+                "full_name": "kitchensink.v1.Outer",
+                "label": "outers",
                 "path": "outers",
                 "fields": [
                   {
-                    "label": "STRING_LEAF",
+                    "label": "string_leaf",
                     "path": "stringLeaf"
                   },
                   {
-                    "label": "INT64_LEAF",
+                    "label": "int64_leaf",
                     "path": "int64Leaf"
                   },
                   {
-                    "label": "MIDDLE.LEAF",
+                    "label": "middle.leaf",
                     "path": "middle.leaf"
                   },
                   {
-                    "label": "MIDDLE.INNER.LEAF",
+                    "label": "middle.inner.leaf",
                     "path": "middle.inner.leaf"
                   },
                   {
-                    "label": "MIDDLE.INNER.DEEP.LEAF",
+                    "label": "middle.inner.deep.leaf",
                     "path": "middle.inner.deep.leaf"
                   },
                   {
-                    "label": "MIDDLE.INNER.DEEP.DEEPER.LEAF",
+                    "label": "middle.inner.deep.deeper.leaf",
                     "path": "middle.inner.deep.deeper.leaf"
                   },
                   {
-                    "label": "MIDDLE.INNER.DEEP.DEEPER.DEEPEST.LEAF",
+                    "label": "middle.inner.deep.deeper.deepest.leaf",
                     "path": "middle.inner.deep.deeper.deepest.leaf"
                   }
                 ]
@@ -503,7 +506,7 @@
           "proto_name": "Repeated",
           "go_name": "Repeated",
           "name": "repeated",
-          "short_help": "Repeated carries one repeated field per bind family.",
+          "short_help": "Repeated carries one repeated field per element type.",
           "input": {
             "full_name": "kitchensink.v1.RepeatedRequest",
             "proto_file": "kitchensink/v1/fields.proto",
@@ -513,7 +516,7 @@
             "go_package_name": "kitchensinkv1"
           },
           "output": "kitchensink.v1.RepeatedRequest",
-          "flags": [
+          "params": [
             {
               "proto_path": "strings",
               "name": "strings",
@@ -561,61 +564,62 @@
             "full_name": "kitchensink.v1.RepeatedRequest",
             "fields": [
               {
-                "label": "STRINGS",
+                "label": "strings",
                 "path": "strings"
               },
               {
-                "label": "BOOLS",
+                "label": "bools",
                 "path": "bools"
               },
               {
-                "label": "INTS",
+                "label": "ints",
                 "path": "ints"
               },
               {
-                "label": "UINTS",
+                "label": "uints",
                 "path": "uints"
               },
               {
-                "label": "DOUBLES",
+                "label": "doubles",
                 "path": "doubles"
               },
               {
-                "label": "TIMESTAMPS",
+                "label": "timestamps",
                 "path": "timestamps"
               }
             ],
             "lists": [
               {
-                "label": "OUTERS",
+                "full_name": "kitchensink.v1.Outer",
+                "label": "outers",
                 "path": "outers",
                 "fields": [
                   {
-                    "label": "STRING_LEAF",
+                    "label": "string_leaf",
                     "path": "stringLeaf"
                   },
                   {
-                    "label": "INT64_LEAF",
+                    "label": "int64_leaf",
                     "path": "int64Leaf"
                   },
                   {
-                    "label": "MIDDLE.LEAF",
+                    "label": "middle.leaf",
                     "path": "middle.leaf"
                   },
                   {
-                    "label": "MIDDLE.INNER.LEAF",
+                    "label": "middle.inner.leaf",
                     "path": "middle.inner.leaf"
                   },
                   {
-                    "label": "MIDDLE.INNER.DEEP.LEAF",
+                    "label": "middle.inner.deep.leaf",
                     "path": "middle.inner.deep.leaf"
                   },
                   {
-                    "label": "MIDDLE.INNER.DEEP.DEEPER.LEAF",
+                    "label": "middle.inner.deep.deeper.leaf",
                     "path": "middle.inner.deep.deeper.leaf"
                   },
                   {
-                    "label": "MIDDLE.INNER.DEEP.DEEPER.DEEPEST.LEAF",
+                    "label": "middle.inner.deep.deeper.deepest.leaf",
                     "path": "middle.inner.deep.deeper.deepest.leaf"
                   }
                 ]
@@ -627,7 +631,7 @@
           "proto_name": "Maps",
           "go_name": "Maps",
           "name": "maps",
-          "short_help": "Maps carries one map field per bind family, plus integer and bool keys.",
+          "short_help": "Maps carries one map field per value type, plus integer and bool keys.",
           "input": {
             "full_name": "kitchensink.v1.MapsRequest",
             "proto_file": "kitchensink/v1/fields.proto",
@@ -637,7 +641,7 @@
             "go_package_name": "kitchensinkv1"
           },
           "output": "kitchensink.v1.MapsRequest",
-          "flags": [
+          "params": [
             {
               "proto_path": "string_values",
               "name": "string-values",
@@ -697,39 +701,39 @@
             "full_name": "kitchensink.v1.MapsRequest",
             "fields": [
               {
-                "label": "STRING_VALUES",
+                "label": "string_values",
                 "path": "stringValues"
               },
               {
-                "label": "BOOL_VALUES",
+                "label": "bool_values",
                 "path": "boolValues"
               },
               {
-                "label": "INT64_VALUES",
+                "label": "int64_values",
                 "path": "int64Values"
               },
               {
-                "label": "UINT64_VALUES",
+                "label": "uint64_values",
                 "path": "uint64Values"
               },
               {
-                "label": "DOUBLE_VALUES",
+                "label": "double_values",
                 "path": "doubleValues"
               },
               {
-                "label": "TIMESTAMP_VALUES",
+                "label": "timestamp_values",
                 "path": "timestampValues"
               },
               {
-                "label": "OUTER_VALUES",
+                "label": "outer_values",
                 "path": "outerValues"
               },
               {
-                "label": "INT64_KEYS",
+                "label": "int64_keys",
                 "path": "int64Keys"
               },
               {
-                "label": "BOOL_KEYS",
+                "label": "bool_keys",
                 "path": "boolKeys"
               }
             ]
@@ -749,7 +753,7 @@
             "go_package_name": "kitchensinkv1"
           },
           "output": "kitchensink.v1.WrappersRequest",
-          "flags": [
+          "params": [
             {
               "proto_path": "double_value",
               "name": "double-value",
@@ -812,47 +816,47 @@
             "full_name": "kitchensink.v1.WrappersRequest",
             "fields": [
               {
-                "label": "DOUBLE_VALUE",
+                "label": "double_value",
                 "path": "doubleValue"
               },
               {
-                "label": "FLOAT_VALUE",
+                "label": "float_value",
                 "path": "floatValue"
               },
               {
-                "label": "INT64_VALUE",
+                "label": "int64_value",
                 "path": "int64Value"
               },
               {
-                "label": "UINT64_VALUE",
+                "label": "uint64_value",
                 "path": "uint64Value"
               },
               {
-                "label": "INT32_VALUE",
+                "label": "int32_value",
                 "path": "int32Value"
               },
               {
-                "label": "UINT32_VALUE",
+                "label": "uint32_value",
                 "path": "uint32Value"
               },
               {
-                "label": "BOOL_VALUE",
+                "label": "bool_value",
                 "path": "boolValue"
               },
               {
-                "label": "STRING_VALUE",
+                "label": "string_value",
                 "path": "stringValue"
               },
               {
-                "label": "BYTES_VALUE",
+                "label": "bytes_value",
                 "path": "bytesValue"
               },
               {
-                "label": "REPEATED_STRINGS",
+                "label": "repeated_strings",
                 "path": "repeatedStrings"
               },
               {
-                "label": "BOOL_MAP",
+                "label": "bool_map",
                 "path": "boolMap"
               }
             ]
@@ -872,7 +876,7 @@
             "go_package_name": "kitchensinkv1"
           },
           "output": "kitchensink.v1.WellKnownRequest",
-          "flags": [
+          "params": [
             {
               "proto_path": "struct",
               "name": "struct",
@@ -903,23 +907,23 @@
             "full_name": "kitchensink.v1.WellKnownRequest",
             "fields": [
               {
-                "label": "STRUCT",
+                "label": "struct",
                 "path": "struct"
               },
               {
-                "label": "VALUE",
+                "label": "value",
                 "path": "value"
               },
               {
-                "label": "LIST_VALUE",
+                "label": "list_value",
                 "path": "listValue"
               },
               {
-                "label": "ANY",
+                "label": "any",
                 "path": "any"
               },
               {
-                "label": "EMPTY",
+                "label": "empty",
                 "path": "empty"
               }
             ]
@@ -939,7 +943,7 @@
             "go_package_name": "kitchensinkv1"
           },
           "output": "kitchensink.v1.EnumsRequest",
-          "flags": [
+          "params": [
             {
               "proto_path": "choice",
               "name": "choice",
@@ -1007,27 +1011,27 @@
             "full_name": "kitchensink.v1.EnumsRequest",
             "fields": [
               {
-                "label": "CHOICE",
+                "label": "choice",
                 "path": "choice"
               },
               {
-                "label": "CHOICES",
+                "label": "choices",
                 "path": "choices"
               },
               {
-                "label": "OPTIONAL_CHOICE",
+                "label": "optional_choice",
                 "path": "optionalChoice"
               },
               {
-                "label": "CHOICE_MAP",
+                "label": "choice_map",
                 "path": "choiceMap"
               },
               {
-                "label": "ALIASED",
+                "label": "aliased",
                 "path": "aliased"
               },
               {
-                "label": "NESTED",
+                "label": "nested",
                 "path": "nested"
               }
             ]
@@ -1048,7 +1052,7 @@
             "go_package_name": "kitchensinkv1"
           },
           "output": "kitchensink.v1.OneofsRequest",
-          "flags": [
+          "params": [
             {
               "proto_path": "text",
               "name": "text",
@@ -1156,55 +1160,55 @@
             "full_name": "kitchensink.v1.OneofsRequest",
             "fields": [
               {
-                "label": "TEXT",
+                "label": "text",
                 "path": "text"
               },
               {
-                "label": "COUNT",
+                "label": "count",
                 "path": "count"
               },
               {
-                "label": "PICK",
+                "label": "pick",
                 "path": "pick"
               },
               {
-                "label": "OUTER.STRING_LEAF",
+                "label": "outer.string_leaf",
                 "path": "outer.stringLeaf"
               },
               {
-                "label": "OUTER.INT64_LEAF",
+                "label": "outer.int64_leaf",
                 "path": "outer.int64Leaf"
               },
               {
-                "label": "OUTER.MIDDLE.LEAF",
+                "label": "outer.middle.leaf",
                 "path": "outer.middle.leaf"
               },
               {
-                "label": "OUTER.MIDDLE.INNER.LEAF",
+                "label": "outer.middle.inner.leaf",
                 "path": "outer.middle.inner.leaf"
               },
               {
-                "label": "OUTER.MIDDLE.INNER.DEEP.LEAF",
+                "label": "outer.middle.inner.deep.leaf",
                 "path": "outer.middle.inner.deep.leaf"
               },
               {
-                "label": "OUTER.MIDDLE.INNER.DEEP.DEEPER.LEAF",
+                "label": "outer.middle.inner.deep.deeper.leaf",
                 "path": "outer.middle.inner.deep.deeper.leaf"
               },
               {
-                "label": "OUTER.MIDDLE.INNER.DEEP.DEEPER.DEEPEST",
+                "label": "outer.middle.inner.deep.deeper.deepest",
                 "path": "outer.middle.inner.deep.deeper.deepest"
               },
               {
-                "label": "ENABLED",
+                "label": "enabled",
                 "path": "enabled"
               },
               {
-                "label": "WHEN",
+                "label": "when",
                 "path": "when"
               },
               {
-                "label": "ONLY",
+                "label": "only",
                 "path": "only"
               }
             ]
@@ -1224,7 +1228,7 @@
             "go_package_name": "kitchensinkv1"
           },
           "output": "kitchensink.v1.OptionalsRequest",
-          "flags": [
+          "params": [
             {
               "proto_path": "name",
               "name": "name",
@@ -1250,16 +1254,112 @@
             "full_name": "kitchensink.v1.OptionalsRequest",
             "fields": [
               {
-                "label": "NAME",
+                "label": "name",
                 "path": "name"
               },
               {
-                "label": "AGE",
+                "label": "age",
                 "path": "age"
               },
               {
-                "label": "PICK",
+                "label": "pick",
                 "path": "pick"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "Collections",
+          "go_name": "Collections",
+          "name": "collections",
+          "short_help": "Collections carries two message lists.",
+          "input": {
+            "full_name": "kitchensink.v1.CollectionsRequest",
+            "proto_file": "kitchensink/v1/fields.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "CollectionsRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.CollectionsRequest",
+          "params": [
+            {
+              "proto_path": "outers",
+              "name": "outers",
+              "bind": "json",
+              "repeated": true
+            },
+            {
+              "proto_path": "middles",
+              "name": "middles",
+              "bind": "json",
+              "repeated": true
+            }
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.CollectionsRequest",
+            "lists": [
+              {
+                "full_name": "kitchensink.v1.Outer",
+                "label": "outers",
+                "path": "outers",
+                "fields": [
+                  {
+                    "label": "string_leaf",
+                    "path": "stringLeaf"
+                  },
+                  {
+                    "label": "int64_leaf",
+                    "path": "int64Leaf"
+                  },
+                  {
+                    "label": "middle.leaf",
+                    "path": "middle.leaf"
+                  },
+                  {
+                    "label": "middle.inner.leaf",
+                    "path": "middle.inner.leaf"
+                  },
+                  {
+                    "label": "middle.inner.deep.leaf",
+                    "path": "middle.inner.deep.leaf"
+                  },
+                  {
+                    "label": "middle.inner.deep.deeper.leaf",
+                    "path": "middle.inner.deep.deeper.leaf"
+                  },
+                  {
+                    "label": "middle.inner.deep.deeper.deepest.leaf",
+                    "path": "middle.inner.deep.deeper.deepest.leaf"
+                  }
+                ]
+              },
+              {
+                "full_name": "kitchensink.v1.Middle",
+                "label": "middles",
+                "path": "middles",
+                "fields": [
+                  {
+                    "label": "leaf",
+                    "path": "leaf"
+                  },
+                  {
+                    "label": "inner.leaf",
+                    "path": "inner.leaf"
+                  },
+                  {
+                    "label": "inner.deep.leaf",
+                    "path": "inner.deep.leaf"
+                  },
+                  {
+                    "label": "inner.deep.deeper.leaf",
+                    "path": "inner.deep.deeper.leaf"
+                  },
+                  {
+                    "label": "inner.deep.deeper.deepest.leaf",
+                    "path": "inner.deep.deeper.deepest.leaf"
+                  }
+                ]
               }
             ]
           }

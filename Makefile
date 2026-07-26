@@ -21,18 +21,19 @@ build: ## Build the plugin
 	go build -ldflags '-X main.version=$(VERSION)' -o $(BIN)/protoc-gen-cli ./cmd/protoc-gen-cli
 
 .PHONY: test
-test: build ## Run tests
+test: ## Run tests
 	go test -vet=off -race -cover ./...
 
 .PHONY: lint
-lint: lint-go lint-proto ## Lint Go and Proto
+lint: lint-go lint-proto ## Lint Go and proto
 
 .PHONY: lint-go
-lint-go: ## Lint go files
+lint-go: ## Lint Go files
 	go vet ./...
 	golangci-lint run --modules-download-mode=readonly --timeout=3m0s
 
-lint-proto:  ## Lint proto files
+.PHONY: lint-proto
+lint-proto: ## Lint proto files
 	buf lint
 
 .PHONY: lintfix
@@ -40,7 +41,8 @@ lintfix: ## Fix lint errors
 	golangci-lint run --fix --modules-download-mode=readonly --timeout=3m0s
 
 .PHONY: gen
-gen: clean gen-examples ## Regenerate proto code
+gen: clean ## Regenerate proto code
+	$(MAKE) gen-examples
 
 .PHONY: gen-examples
 gen-examples: fmt ## Regenerate examples
@@ -49,7 +51,8 @@ gen-examples: fmt ## Regenerate examples
 
 .PHONY: verify-examples-regen
 verify-examples-regen: gen ## Fail if regenerating examples changes anything
-	git diff --exit-code -- examples/
+	@status=$$(git status --porcelain -- examples/); \
+	if [ -n "$$status" ]; then echo "$$status"; exit 1; fi
 
 .PHONY: fmt
 fmt: fmt-proto ## Format code

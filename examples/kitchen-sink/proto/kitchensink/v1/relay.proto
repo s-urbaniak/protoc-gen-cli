@@ -1,0 +1,18 @@
+// A service with only bidi RPCs: its generated file omits the document-input
+// and single-response machinery.
+
+syntax = "proto3";
+
+package kitchensink.v1;
+
+option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
+
+// RelayService echoes each note back as it arrives.
+service RelayService {
+  // Echoes each note as it arrives.
+  rpc Chat(stream ChatNote) returns (stream ChatNote);
+}
+
+message ChatNote {
+  string text = 1;
+}

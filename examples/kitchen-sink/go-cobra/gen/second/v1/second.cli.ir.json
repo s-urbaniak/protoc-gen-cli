@@ -1,16 +1,19 @@
 {
   "plugin_version": "dev",
   "proto_file": "second/v1/second.proto",
+  "generated_filename_prefix": "second/v1/second",
   "proto_package": "second.v1",
   "file_options": {
     "go_package_name": "v1",
-    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/second/v1"
+    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/second/v1",
+    "go_descriptor_name": "File_second_v1_second_proto"
   },
   "services": [
     {
       "proto_name": "SecondService",
       "go_name": "SecondService",
       "name": "second",
+      "short_help": "SecondService echoes text back.",
       "commands": [
         {
           "proto_name": "Ping",
@@ -26,7 +29,7 @@
             "go_package_name": "v1"
           },
           "output": "second.v1.PingRequest",
-          "flags": [
+          "params": [
             {
               "proto_path": "text",
               "name": "text",
@@ -37,7 +40,7 @@
             "full_name": "second.v1.PingRequest",
             "fields": [
               {
-                "label": "TEXT",
+                "label": "text",
                 "path": "text"
               }
             ]

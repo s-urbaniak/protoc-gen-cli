@@ -27,6 +27,10 @@ const (
 	NamesService_Second_FullMethodName     = "/kitchensink.v1.NamesService/Second"
 	NamesService_Reserved_FullMethodName   = "/kitchensink.v1.NamesService/Reserved"
 	NamesService_Empty_FullMethodName      = "/kitchensink.v1.NamesService/Empty"
+	NamesService_HTTPCall_FullMethodName   = "/kitchensink.v1.NamesService/HTTPCall"
+	NamesService_LowerSnake_FullMethodName = "/kitchensink.v1.NamesService/lower_snake"
+	NamesService_Borrow_FullMethodName     = "/kitchensink.v1.NamesService/Borrow"
+	NamesService_Nested_FullMethodName     = "/kitchensink.v1.NamesService/Nested"
 )
 
 // NamesServiceClient is the client API for NamesService service.
@@ -40,6 +44,10 @@ type NamesServiceClient interface {
 	Second(ctx context.Context, in *v11.PingRequest, opts ...grpc.CallOption) (*v11.PingRequest, error)
 	Reserved(ctx context.Context, in *ReservedRequest, opts ...grpc.CallOption) (*ReservedRequest, error)
 	Empty(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	HTTPCall(ctx context.Context, in *CasingRequest, opts ...grpc.CallOption) (*CasingRequest, error)
+	LowerSnake(ctx context.Context, in *CasingRequest, opts ...grpc.CallOption) (*CasingRequest, error)
+	Borrow(ctx context.Context, in *Outer, opts ...grpc.CallOption) (*Outer, error)
+	Nested(ctx context.Context, in *Envelope_Letter, opts ...grpc.CallOption) (*Envelope_Letter, error)
 }
 
 type namesServiceClient struct {
@@ -100,6 +108,46 @@ func (c *namesServiceClient) Empty(ctx context.Context, in *emptypb.Empty, opts 
 	return out, nil
 }
 
+func (c *namesServiceClient) HTTPCall(ctx context.Context, in *CasingRequest, opts ...grpc.CallOption) (*CasingRequest, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CasingRequest)
+	err := c.cc.Invoke(ctx, NamesService_HTTPCall_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namesServiceClient) LowerSnake(ctx context.Context, in *CasingRequest, opts ...grpc.CallOption) (*CasingRequest, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CasingRequest)
+	err := c.cc.Invoke(ctx, NamesService_LowerSnake_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namesServiceClient) Borrow(ctx context.Context, in *Outer, opts ...grpc.CallOption) (*Outer, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Outer)
+	err := c.cc.Invoke(ctx, NamesService_Borrow_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *namesServiceClient) Nested(ctx context.Context, in *Envelope_Letter, opts ...grpc.CallOption) (*Envelope_Letter, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Envelope_Letter)
+	err := c.cc.Invoke(ctx, NamesService_Nested_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NamesServiceServer is the server API for NamesService service.
 // All implementations must embed UnimplementedNamesServiceServer
 // for forward compatibility.
@@ -111,6 +159,10 @@ type NamesServiceServer interface {
 	Second(context.Context, *v11.PingRequest) (*v11.PingRequest, error)
 	Reserved(context.Context, *ReservedRequest) (*ReservedRequest, error)
 	Empty(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	HTTPCall(context.Context, *CasingRequest) (*CasingRequest, error)
+	LowerSnake(context.Context, *CasingRequest) (*CasingRequest, error)
+	Borrow(context.Context, *Outer) (*Outer, error)
+	Nested(context.Context, *Envelope_Letter) (*Envelope_Letter, error)
 	mustEmbedUnimplementedNamesServiceServer()
 }
 
@@ -135,6 +187,18 @@ func (UnimplementedNamesServiceServer) Reserved(context.Context, *ReservedReques
 }
 func (UnimplementedNamesServiceServer) Empty(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method Empty not implemented")
+}
+func (UnimplementedNamesServiceServer) HTTPCall(context.Context, *CasingRequest) (*CasingRequest, error) {
+	return nil, status.Error(codes.Unimplemented, "method HTTPCall not implemented")
+}
+func (UnimplementedNamesServiceServer) LowerSnake(context.Context, *CasingRequest) (*CasingRequest, error) {
+	return nil, status.Error(codes.Unimplemented, "method LowerSnake not implemented")
+}
+func (UnimplementedNamesServiceServer) Borrow(context.Context, *Outer) (*Outer, error) {
+	return nil, status.Error(codes.Unimplemented, "method Borrow not implemented")
+}
+func (UnimplementedNamesServiceServer) Nested(context.Context, *Envelope_Letter) (*Envelope_Letter, error) {
+	return nil, status.Error(codes.Unimplemented, "method Nested not implemented")
 }
 func (UnimplementedNamesServiceServer) mustEmbedUnimplementedNamesServiceServer() {}
 func (UnimplementedNamesServiceServer) testEmbeddedByValue()                      {}
@@ -247,6 +311,78 @@ func _NamesService_Empty_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NamesService_HTTPCall_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CasingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NamesServiceServer).HTTPCall(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NamesService_HTTPCall_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NamesServiceServer).HTTPCall(ctx, req.(*CasingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NamesService_LowerSnake_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CasingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NamesServiceServer).LowerSnake(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NamesService_LowerSnake_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NamesServiceServer).LowerSnake(ctx, req.(*CasingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NamesService_Borrow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Outer)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NamesServiceServer).Borrow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NamesService_Borrow_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NamesServiceServer).Borrow(ctx, req.(*Outer))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NamesService_Nested_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Envelope_Letter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NamesServiceServer).Nested(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NamesService_Nested_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NamesServiceServer).Nested(ctx, req.(*Envelope_Letter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NamesService_ServiceDesc is the grpc.ServiceDesc for NamesService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -273,6 +409,22 @@ var NamesService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Empty",
 			Handler:    _NamesService_Empty_Handler,
+		},
+		{
+			MethodName: "HTTPCall",
+			Handler:    _NamesService_HTTPCall_Handler,
+		},
+		{
+			MethodName: "lower_snake",
+			Handler:    _NamesService_LowerSnake_Handler,
+		},
+		{
+			MethodName: "Borrow",
+			Handler:    _NamesService_Borrow_Handler,
+		},
+		{
+			MethodName: "Nested",
+			Handler:    _NamesService_Nested_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

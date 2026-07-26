@@ -2,15 +2,16 @@ package irbuild
 
 import (
 	"slices"
-	"strings"
 
 	"github.com/braveokafor/proto-to-cli/internal/ir"
+	"github.com/tidwall/gjson"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // buildView derives a message's view from its fields.
 func buildView(md protoreflect.MessageDescriptor, opts Options) *ir.View {
 	view := &ir.View{FullName: string(md.FullName())}
+
 	var walk func(md protoreflect.MessageDescriptor, protoPrefix, jsonPrefix string, budget int, ancestors []protoreflect.FullName, top bool) []*ir.ViewField
 	walk = func(md protoreflect.MessageDescriptor, protoPrefix, jsonPrefix string, budget int, ancestors []protoreflect.FullName, top bool) []*ir.ViewField {
 		var cols []*ir.ViewField
@@ -18,13 +19,16 @@ func buildView(md protoreflect.MessageDescriptor, opts Options) *ir.View {
 		for i := range fields.Len() {
 			fd := fields.Get(i)
 			protoPath := protoPrefix + string(fd.Name())
-			jsonPath := jsonPrefix + fd.JSONName()
+			// A json_name may contain gjson syntax characters; escape them so
+			// the path addresses the emitted key literally.
+			jsonPath := jsonPrefix + gjson.Escape(fd.JSONName())
 
 			if top && fd.IsList() && fd.Kind() == protoreflect.MessageKind {
 				if _, wellKnown := messageBinds[fd.Message().FullName()]; !wellKnown {
 					view.Lists = append(view.Lists, &ir.ViewList{
-						Label: strings.ToUpper(string(fd.Name())),
-						Path:  fd.JSONName(),
+						FullName: string(fd.Message().FullName()),
+						Label:    string(fd.Name()),
+						Path:     gjson.Escape(fd.JSONName()),
 						Fields: walk(fd.Message(), "", "", opts.ResponseExpandDepth,
 							[]protoreflect.FullName{fd.Message().FullName()}, false),
 					})
@@ -37,7 +41,7 @@ func buildView(md protoreflect.MessageDescriptor, opts Options) *ir.View {
 					append(ancestors, fd.Message().FullName()), false)...)
 				continue
 			}
-			cols = append(cols, &ir.ViewField{Label: strings.ToUpper(protoPath), Path: jsonPath})
+			cols = append(cols, &ir.ViewField{Label: protoPath, Path: jsonPath})
 		}
 		return cols
 	}

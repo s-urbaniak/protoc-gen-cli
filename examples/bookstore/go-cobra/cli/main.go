@@ -24,11 +24,26 @@ func main() {
 		Short: "Bookstore CLI",
 	}
 
+	auctionOpts := bookstorev1.AuctionsServiceOptions{
+		Views: map[string][]string{
+			"bookstore.v1.Auction": {
+				"ID:id",
+				"TITLE:lot.book.title",
+				"AUTHOR:lot.book.author",
+				"CONDITION:lot.condition",
+				"FLAWS:lot.flaws.#",
+				"HIGH BID:highBid",
+				"BIDDER:highBidder",
+				"ENDS:endsAt",
+			},
+		},
+	}
+
 	catalog := bookstorev1.NewBookstoreServiceCommand(conn)
 	// Renamed in code: the generated name "bookstore" would stutter under the root.
 	catalog.Use = "catalog"
 	root.AddCommand(catalog)
-	root.AddCommand(bookstorev1.NewAuctionsServiceCommand(conn))
+	root.AddCommand(bookstorev1.NewAuctionsServiceCommand(conn, auctionOpts))
 	root.AddCommand(bookstorev1.NewInventoryServiceCommand(conn))
 
 	if err := root.Execute(); err != nil {

@@ -130,6 +130,13 @@ service AuctionsService {
 
   // ListAuctions lists auctions, optionally filtered by state.
   rpc ListAuctions(ListAuctionsRequest) returns (ListAuctionsResponse);
+
+  // WatchAuction streams bidding updates for the selected auctions as a live
+  // feed until the client cancels.
+  rpc WatchAuction(WatchAuctionRequest) returns (stream AuctionUpdate);
+
+  // Bid places bids and streams back every update on the bid's auction.
+  rpc Bid(stream PlaceBidRequest) returns (stream AuctionUpdate);
 }
 
 // Condition grades a lot on the book trade's scale.
@@ -215,9 +222,37 @@ message ListAuctionsResponse {
   int32 total_size = 3;
 }
 
+// WatchAuctionRequest selects auctions by exactly one of auction or author.
+message WatchAuctionRequest {
+  oneof subject {
+    int64 auction = 1;
+    string author = 2;
+  }
+  // Cap on the number of updates streamed back.
+  int32 limit = 3;
+}
+
+message PlaceBidRequest {
+  int64 auction = 1;
+  double amount = 2;
+}
+
+// AuctionUpdate is one change to an auction's bidding state.
+message AuctionUpdate {
+  int64 auction = 1;
+  double high_bid = 2;
+  string bidder = 3;
+  AuctionState state = 4;
+  google.protobuf.Timestamp at = 5;
+}
+
 // InventoryService is the back office's stock system.
 service InventoryService {
-  // Renders a shelf's stock report and writes it to a file on the server.
+  // ImportBooks ingests a book catalogue as a stream of records.
+  rpc ImportBooks(stream ImportBooksRequest) returns (ImportSummary);
+
+  // ExportReport renders a shelf's stock report and writes it to a file on
+  // the server.
   rpc ExportReport(ExportReportRequest) returns (Report) {}
 }
 
@@ -235,4 +270,14 @@ message Report {
   string filename = 1;
   // Number of books in the report.
   int64 books = 2;
+}
+
+// ImportBooksRequest is one record of a catalogue import.
+message ImportBooksRequest {
+  int64 shelf = 1;
+  Book book = 2;
+}
+
+message ImportSummary {
+  int32 created = 1;
 }

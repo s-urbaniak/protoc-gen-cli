@@ -6,8 +6,11 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
+	"io"
 	"log"
 	"net"
+	"sync"
 	"time"
 
 	bookstorev1 "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1"
@@ -184,6 +187,107 @@ func (auctionsServer) ListAuctions(
 		}
 	}
 	return resp, nil
+}
+
+func (auctionsServer) WatchAuction(
+	req *bookstorev1.WatchAuctionRequest,
+	stream bookstorev1.AuctionsService_WatchAuctionServer,
+) error {
+	g := gofakeit.New(0)
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	high := float64(g.Number(50, 200))
+	var sent int32
+	for {
+		if limit := req.GetLimit(); limit > 0 && sent >= limit {
+			return nil
+		}
+		select {
+		case <-stream.Context().Done():
+			return nil
+		case <-ticker.C:
+		}
+		high += float64(g.Number(5, 50))
+		auction := req.GetAuction()
+		if auction == 0 {
+			auction = int64(g.Number(1, 5))
+		}
+		update := &bookstorev1.AuctionUpdate{
+			Auction: auction,
+			HighBid: high,
+			Bidder:  fmt.Sprintf("paddle %d", g.Number(2, 19)),
+			State:   bookstorev1.AuctionState_AUCTION_STATE_OPEN,
+			At:      timestamppb.Now(),
+		}
+		if err := stream.Send(update); err != nil {
+			return err
+		}
+		sent++
+	}
+}
+
+// Bid records the client's bids while rival paddles keep raising the price.
+func (auctionsServer) Bid(stream bookstorev1.AuctionsService_BidServer) error {
+	g := gofakeit.New(0)
+
+	var mu sync.Mutex
+	auction, high, bidder := int64(1), float64(g.Number(20, 80)), "paddle 7"
+	go func() {
+		for {
+			req, err := stream.Recv()
+			if err != nil {
+				return
+			}
+			mu.Lock()
+			if req.GetAuction() != 0 {
+				auction = req.GetAuction()
+			}
+			if req.GetAmount() > high {
+				high, bidder = req.GetAmount(), "you"
+			}
+			mu.Unlock()
+		}
+	}()
+
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-stream.Context().Done():
+			return nil
+		case <-ticker.C:
+		}
+		mu.Lock()
+		if bidder != "you" || g.Bool() {
+			high += float64(g.Number(5, 50))
+			bidder = fmt.Sprintf("paddle %d", g.Number(2, 19))
+		}
+		update := &bookstorev1.AuctionUpdate{
+			Auction: auction,
+			HighBid: high,
+			Bidder:  bidder,
+			State:   bookstorev1.AuctionState_AUCTION_STATE_OPEN,
+			At:      timestamppb.Now(),
+		}
+		mu.Unlock()
+		if err := stream.Send(update); err != nil {
+			return err
+		}
+	}
+}
+
+func (inventoryServer) ImportBooks(stream bookstorev1.InventoryService_ImportBooksServer) error {
+	var created int32
+	for {
+		_, err := stream.Recv()
+		if err == io.EOF {
+			return stream.SendAndClose(&bookstorev1.ImportSummary{Created: created})
+		}
+		if err != nil {
+			return err
+		}
+		created++
+	}
 }
 
 func (inventoryServer) ExportReport(

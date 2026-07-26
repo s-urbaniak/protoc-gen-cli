@@ -1,0 +1,194 @@
+{
+  "plugin_version": "dev",
+  "proto_file": "kitchensink/v1/streams.proto",
+  "generated_filename_prefix": "kitchensink/v1/streams",
+  "proto_package": "kitchensink.v1",
+  "file_options": {
+    "go_package_name": "kitchensinkv1",
+    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+    "go_descriptor_name": "File_kitchensink_v1_streams_proto"
+  },
+  "services": [
+    {
+      "proto_name": "StreamsService",
+      "go_name": "StreamsService",
+      "name": "streams",
+      "short_help": "StreamsService echoes text back.",
+      "commands": [
+        {
+          "proto_name": "Unary",
+          "go_name": "Unary",
+          "name": "unary",
+          "short_help": "Echoes the text once.",
+          "input": {
+            "full_name": "kitchensink.v1.StreamsRequest",
+            "proto_file": "kitchensink/v1/streams.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "StreamsRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.StreamsResponse",
+          "params": [
+            {
+              "proto_path": "text",
+              "name": "text",
+              "bind": "string"
+            },
+            {
+              "proto_path": "count",
+              "name": "count",
+              "bind": "int"
+            }
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.StreamsResponse",
+            "fields": [
+              {
+                "label": "text",
+                "path": "text"
+              },
+              {
+                "label": "index",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "ServerStream",
+          "go_name": "ServerStream",
+          "name": "server-stream",
+          "short_help": "Echoes the text the requested number of times.",
+          "long_help": "Echoes the text the requested number of times.\n\nThe server may send multiple responses; each prints as it arrives.",
+          "input": {
+            "full_name": "kitchensink.v1.StreamsRequest",
+            "proto_file": "kitchensink/v1/streams.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "StreamsRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.StreamsResponse",
+          "server_streaming": true,
+          "params": [
+            {
+              "proto_path": "text",
+              "name": "text",
+              "bind": "string"
+            },
+            {
+              "proto_path": "count",
+              "name": "count",
+              "bind": "int"
+            }
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.StreamsResponse",
+            "fields": [
+              {
+                "label": "text",
+                "path": "text"
+              },
+              {
+                "label": "index",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "ClientStream",
+          "go_name": "ClientStream",
+          "name": "client-stream",
+          "short_help": "Counts the streamed requests.",
+          "long_help": "Counts the streamed requests.\n\nReads JSON requests from stdin, one after another.",
+          "input": {
+            "full_name": "kitchensink.v1.StreamsRequest",
+            "proto_file": "kitchensink/v1/streams.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "StreamsRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.StreamsResponse",
+          "client_streaming": true,
+          "view": {
+            "full_name": "kitchensink.v1.StreamsResponse",
+            "fields": [
+              {
+                "label": "text",
+                "path": "text"
+              },
+              {
+                "label": "index",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "BidiStream",
+          "go_name": "BidiStream",
+          "name": "bidi-stream",
+          "short_help": "Echoes each request as it arrives.",
+          "long_help": "Echoes each request as it arrives.\n\nReads JSON requests from stdin, one after another.\n\nThe server may send multiple responses; each prints as it arrives.",
+          "input": {
+            "full_name": "kitchensink.v1.StreamsRequest",
+            "proto_file": "kitchensink/v1/streams.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "StreamsRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.StreamsResponse",
+          "client_streaming": true,
+          "server_streaming": true,
+          "view": {
+            "full_name": "kitchensink.v1.StreamsResponse",
+            "fields": [
+              {
+                "label": "text",
+                "path": "text"
+              },
+              {
+                "label": "index",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "EmptyStream",
+          "go_name": "EmptyStream",
+          "name": "empty-stream",
+          "short_help": "Streams a fixed batch of responses.",
+          "long_help": "Streams a fixed batch of responses.\n\nA generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:\n\n    service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe server may send multiple responses; each prints as it arrives.",
+          "input": {
+            "full_name": "google.protobuf.Empty",
+            "proto_file": "google/protobuf/empty.proto",
+            "proto_package": "google.protobuf",
+            "go_name": "Empty",
+            "go_import_path": "google.golang.org/protobuf/types/known/emptypb",
+            "go_package_name": "emptypb"
+          },
+          "output": "kitchensink.v1.StreamsResponse",
+          "server_streaming": true,
+          "view": {
+            "full_name": "kitchensink.v1.StreamsResponse",
+            "fields": [
+              {
+                "label": "text",
+                "path": "text"
+              },
+              {
+                "label": "index",
+                "path": "index"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
