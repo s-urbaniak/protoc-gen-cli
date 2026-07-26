@@ -25,6 +25,8 @@ const (
 // SecondServiceClient is the client API for SecondService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// SecondService echoes text back.
 type SecondServiceClient interface {
 	// Ping echoes its text.
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingRequest, error)
@@ -51,6 +53,8 @@ func (c *secondServiceClient) Ping(ctx context.Context, in *PingRequest, opts ..
 // SecondServiceServer is the server API for SecondService service.
 // All implementations must embed UnimplementedSecondServiceServer
 // for forward compatibility.
+//
+// SecondService echoes text back.
 type SecondServiceServer interface {
 	// Ping echoes its text.
 	Ping(context.Context, *PingRequest) (*PingRequest, error)

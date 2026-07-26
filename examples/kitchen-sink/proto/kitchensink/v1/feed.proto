@@ -1,0 +1,23 @@
+// A service with only server-streaming RPCs: its generated file omits the
+// single-response machinery.
+
+syntax = "proto3";
+
+package kitchensink.v1;
+
+option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
+
+// FeedService streams fabricated events.
+service FeedService {
+  // Streams the requested number of events, then ends the feed.
+  rpc Tail(TailRequest) returns (stream FeedEvent);
+}
+
+message TailRequest {
+  int32 count = 1;
+}
+
+message FeedEvent {
+  int32 index = 1;
+  string note = 2;
+}

@@ -6,12 +6,10 @@ import (
 	"fmt"
 	"maps"
 	"os"
-	"path"
 	"path/filepath"
 	"slices"
 	"strings"
 
-	"github.com/braveokafor/proto-to-cli/internal/ir"
 	"github.com/braveokafor/proto-to-cli/internal/irbuild"
 	"github.com/braveokafor/proto-to-cli/internal/target"
 	"github.com/braveokafor/proto-to-cli/internal/target/gocobra"
@@ -23,13 +21,12 @@ import (
 // version is set via -ldflags at build time; "dev" otherwise.
 var version = "dev"
 
-// Config holds one invocation's inputs: options parsed from opt= parameters,
-// plus what main wires in.
+// Config holds one invocation's inputs.
 type Config struct {
 	// Parsed from opt=.
 	Target              string // key into Targets
 	DumpIR              bool   // also emit each file's IR beside it as <file>.cli.ir.json
-	RequestExpandDepth  int    // 0 = only the request's own fields get flags
+	RequestExpandDepth  int    // 0 = only the request's own fields get params
 	ResponseExpandDepth int    // 0 = only the response's own fields become view fields
 
 	// Wired in main.
@@ -38,18 +35,15 @@ type Config struct {
 }
 
 func main() {
-	if len(os.Args) == 2 && os.Args[1] == "-version" {
-		name := filepath.Base(os.Args[0])
-		if _, err := fmt.Fprintf(os.Stdout, "%v %v\n", name, version); err != nil {
-			os.Exit(1)
-		}
+	if len(os.Args) == 2 && (os.Args[1] == "-version" || os.Args[1] == "--version") {
+		fmt.Printf("%v %v\n", filepath.Base(os.Args[0]), version)
 		os.Exit(0)
 	}
 
 	var cfg Config
 	cfg.Version = version
 	cfg.Targets = map[string]target.Target{
-		"gocobra": &gocobra.Target{},
+		"gocobra": gocobra.Generate,
 	}
 
 	var flags flag.FlagSet
@@ -69,15 +63,14 @@ func main() {
 	})
 }
 
-// run builds each generating file's IR and hands the models, grouped by
-// proto package, to the selected target.
+// run builds each generating file's IR and hands it to the selected target.
 func run(plug *protogen.Plugin, cfg *Config) error {
 	targetNames := slices.Sorted(maps.Keys(cfg.Targets))
 	if cfg.Target == "" {
 		return fmt.Errorf("opt=target=<name> is required (available: %v)", targetNames)
 	}
-	tgt := cfg.Targets[cfg.Target]
-	if tgt == nil {
+	tgt, ok := cfg.Targets[cfg.Target]
+	if !ok {
 		return fmt.Errorf("unknown target %q (available: %v)", cfg.Target, targetNames)
 	}
 	if cfg.RequestExpandDepth < 0 {
@@ -101,11 +94,7 @@ func run(plug *protogen.Plugin, cfg *Config) error {
 		pluginpb.CodeGeneratorResponse_FEATURE_SUPPORTS_EDITIONS,
 	)
 
-	// Models group per output directory and proto package, so a target
-	// emits package-scoped files once.
-	var keys []string
-	groups := map[string][]*ir.Model{}
-
+	written := map[string]string{}
 	for _, file := range plug.Files {
 		if !file.Generate {
 			continue
@@ -127,10 +116,7 @@ func run(plug *protogen.Plugin, cfg *Config) error {
 		}
 
 		if cfg.DumpIR {
-			dump, err := json.MarshalIndent(m, "", "  ")
-			if err != nil {
-				return fmt.Errorf("marshal IR for %s: %w", protoPath, err)
-			}
+			dump, _ := json.MarshalIndent(m, "", "  ")
 			dump = append(dump, '\n')
 
 			g := plug.NewGeneratedFile(
@@ -142,25 +128,21 @@ func run(plug *protogen.Plugin, cfg *Config) error {
 			}
 		}
 
-		key := path.Dir(protoPath) + ":" + m.ProtoPackage
-		if _, ok := groups[key]; !ok {
-			keys = append(keys, key)
-		}
-		groups[key] = append(groups[key], m)
-	}
-
-	written := map[string]bool{}
-	for _, key := range keys {
-		files, err := tgt.Generate(groups[key], target.Options{})
+		files, err := tgt(m, target.Options{})
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %w", protoPath, err)
 		}
 
 		for _, f := range files {
-			if written[f.Name] {
-				return fmt.Errorf("target %s: duplicate generated file %s", cfg.Target, f.Name)
+			if prior, taken := written[f.Name]; taken {
+				return fmt.Errorf(
+					"%s and %s both generate %s; rename one of the files or give them distinct go_package paths",
+					prior,
+					protoPath,
+					f.Name,
+				)
 			}
-			written[f.Name] = true
+			written[f.Name] = protoPath
 
 			plug.NewGeneratedFile(f.Name, "").P(strings.TrimRight(f.Content, "\n"))
 		}

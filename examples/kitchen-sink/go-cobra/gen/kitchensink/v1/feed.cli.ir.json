@@ -1,0 +1,58 @@
+{
+  "plugin_version": "dev",
+  "proto_file": "kitchensink/v1/feed.proto",
+  "generated_filename_prefix": "kitchensink/v1/feed",
+  "proto_package": "kitchensink.v1",
+  "file_options": {
+    "go_package_name": "kitchensinkv1",
+    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+    "go_descriptor_name": "File_kitchensink_v1_feed_proto"
+  },
+  "services": [
+    {
+      "proto_name": "FeedService",
+      "go_name": "FeedService",
+      "name": "feed",
+      "short_help": "FeedService streams fabricated events.",
+      "commands": [
+        {
+          "proto_name": "Tail",
+          "go_name": "Tail",
+          "name": "tail",
+          "short_help": "Streams the requested number of events, then ends the feed.",
+          "long_help": "Streams the requested number of events, then ends the feed.\n\nThe server may send multiple responses; each prints as it arrives.",
+          "input": {
+            "full_name": "kitchensink.v1.TailRequest",
+            "proto_file": "kitchensink/v1/feed.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "TailRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.FeedEvent",
+          "server_streaming": true,
+          "params": [
+            {
+              "proto_path": "count",
+              "name": "count",
+              "bind": "int"
+            }
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.FeedEvent",
+            "fields": [
+              {
+                "label": "index",
+                "path": "index"
+              },
+              {
+                "label": "note",
+                "path": "note"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

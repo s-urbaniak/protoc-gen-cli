@@ -1,0 +1,26 @@
+// A service with only client-streaming RPCs: its generated file omits the
+// document-input machinery, and Absorb's request comes from another package.
+
+syntax = "proto3";
+
+package kitchensink.v1;
+
+import "imported/v1/imported.proto";
+
+option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
+
+// IngestService counts what it receives.
+service IngestService {
+  // Counts the streamed records.
+  rpc Ingest(stream IngestRecord) returns (IngestSummary);
+  // Counts the streamed requests.
+  rpc Absorb(stream imported.v1.ImportedRequest) returns (IngestSummary);
+}
+
+message IngestRecord {
+  string text = 1;
+}
+
+message IngestSummary {
+  int32 received = 1;
+}

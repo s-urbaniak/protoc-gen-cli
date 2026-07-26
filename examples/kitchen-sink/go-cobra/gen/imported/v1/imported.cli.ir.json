@@ -1,9 +1,11 @@
 {
   "plugin_version": "dev",
   "proto_file": "imported/v1/imported.proto",
+  "generated_filename_prefix": "imported/v1/imported",
   "proto_package": "imported.v1",
   "file_options": {
     "go_package_name": "v1",
-    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/imported/v1"
+    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/imported/v1",
+    "go_descriptor_name": "File_imported_v1_imported_proto"
   }
 }

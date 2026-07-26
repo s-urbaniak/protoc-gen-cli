@@ -11,21 +11,25 @@ import (
 	"github.com/stoewer/go-strcase"
 )
 
-func funcMap(model *ir.Model, sources []string) template.FuncMap {
-	imports := requestImports(model)
+func funcMap(model *ir.Model) template.FuncMap {
+	ident := "cli" + strings.TrimPrefix(model.FileOptions.GoDescriptorName, "File")
+	aliases := requestImports(model)
+	anyCommand := func(pred func(*ir.Command) bool) bool {
+		return slices.ContainsFunc(model.Services, func(svc *ir.Service) bool {
+			return slices.ContainsFunc(svc.Commands, pred)
+		})
+	}
 	return template.FuncMap{
-		"goVarName": goVarName,
-		"goRPCName": func(svc *ir.Service, cmd *ir.Command) string {
-			return svc.GoName + cmd.GoName
-		},
+		"fileIdent":    func() string { return ident },
+		"goVarName":    goVarName,
 		"goClientType": func(svc *ir.Service) string { return svc.GoName + "Client" },
 		"goRequestType": func(cmd *ir.Command) string {
-			if alias, foreign := imports[cmd.Input.GoImportPath]; foreign {
+			if alias, foreign := aliases[cmd.Input.GoImportPath]; foreign {
 				return alias + "." + cmd.Input.GoName
 			}
 			return cmd.Input.GoName
 		},
-		"goBinding": func(f *ir.Flag) pflagBinding {
+		"goBinding": func(f *ir.Param) pflagBinding {
 			switch {
 			case f.Map:
 				return pflagBinding{"StringArray", "[]string"}
@@ -35,13 +39,17 @@ func funcMap(model *ir.Model, sources []string) template.FuncMap {
 				return singularBindings[f.Bind]
 			}
 		},
-		"requestImports": func() map[string]string { return imports },
-		"responseViews": func() []*ir.View {
+		"imports": func() map[string]string {
+			rows := maps.Clone(templateImports)
+			for path, alias := range aliases {
+				rows[alias] = path
+			}
+			return rows
+		},
+		"responseViews": func(svc *ir.Service) []*ir.View {
 			byName := map[string]*ir.View{}
-			for _, svc := range model.Services {
-				for _, cmd := range svc.Commands {
-					byName[cmd.View.FullName] = cmd.View
-				}
+			for _, cmd := range svc.Commands {
+				byName[cmd.View.FullName] = cmd.View
 			}
 			views := make([]*ir.View, 0, len(byName))
 			for _, name := range slices.Sorted(maps.Keys(byName)) {
@@ -49,13 +57,32 @@ func funcMap(model *ir.Model, sources []string) template.FuncMap {
 			}
 			return views
 		},
-		"sourceHeader": func() string { return strings.Join(sources, ", ") },
-		"isJSONBind":   func(f *ir.Flag) bool { return f.Bind == ir.BindJSON },
-		"isStringBind": func(f *ir.Flag) bool { return f.Bind == ir.BindString },
+		"hasRequestDocs": func(svc *ir.Service) bool {
+			return slices.ContainsFunc(
+				svc.Commands,
+				func(c *ir.Command) bool { return !c.ClientStreaming },
+			)
+		},
+		"anyRequestDocs": func() bool {
+			return anyCommand(func(c *ir.Command) bool { return !c.ClientStreaming })
+		},
+		"anySingleResponse": func() bool {
+			return anyCommand(func(c *ir.Command) bool { return !c.ServerStreaming })
+		},
+		"anyClientStreaming": func() bool {
+			return anyCommand(func(c *ir.Command) bool { return c.ClientStreaming })
+		},
+		"anyBidi": func() bool {
+			return anyCommand(
+				func(c *ir.Command) bool { return c.ClientStreaming && c.ServerStreaming },
+			)
+		},
+		"isJSONBind":   func(f *ir.Param) bool { return f.Bind == ir.BindJSON },
+		"isStringBind": func(f *ir.Param) bool { return f.Bind == ir.BindString },
 		"oneofGroups": func(cmd *ir.Command) [][]string {
 			var order []string
 			members := map[string][]string{}
-			for _, f := range cmd.Flags {
+			for _, f := range cmd.Params {
 				if f.Oneof == "" {
 					continue
 				}
@@ -82,12 +109,38 @@ func funcMap(model *ir.Model, sources []string) template.FuncMap {
 	}
 }
 
-func goVarName(f *ir.Flag) string {
+func goVarName(f *ir.Param) string {
 	name := "flag"
 	for seg := range strings.SplitSeq(f.ProtoPath, ".") {
 		name += strcase.UpperCamelCase(seg)
 	}
 	return name
+}
+
+// templateImports is the template's import block, name to path; goimports
+// drops the entries a file doesn't use, and request aliases must not take
+// these names.
+var templateImports = map[string]string{
+	"bytes":     "bytes",
+	"context":   "context",
+	"json":      "encoding/json",
+	"errors":    "errors",
+	"fmt":       "fmt",
+	"io":        "io",
+	"maps":      "maps",
+	"os":        "os",
+	"slices":    "slices",
+	"strings":   "strings",
+	"table":     "github.com/jedib0t/go-pretty/v6/table",
+	"cobra":     "github.com/spf13/cobra",
+	"pflag":     "github.com/spf13/pflag",
+	"gjson":     "github.com/tidwall/gjson",
+	"sjson":     "github.com/tidwall/sjson",
+	"term":      "golang.org/x/term",
+	"grpc":      "google.golang.org/grpc",
+	"protojson": "google.golang.org/protobuf/encoding/protojson",
+	"proto":     "google.golang.org/protobuf/proto",
+	"yaml":      "sigs.k8s.io/yaml",
 }
 
 func requestImports(model *ir.Model) map[string]string {
@@ -101,6 +154,9 @@ func requestImports(model *ir.Model) map[string]string {
 	}
 	aliases := map[string]string{}
 	taken := map[string]bool{}
+	for name := range templateImports {
+		taken[name] = true
+	}
 	for _, path := range slices.Sorted(maps.Keys(pkgName)) {
 		alias := pkgName[path]
 		for i := 2; taken[alias]; i++ {

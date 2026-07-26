@@ -1,0 +1,73 @@
+{
+  "plugin_version": "dev",
+  "proto_file": "kitchensink/v1/ingest.proto",
+  "generated_filename_prefix": "kitchensink/v1/ingest",
+  "proto_package": "kitchensink.v1",
+  "file_options": {
+    "go_package_name": "kitchensinkv1",
+    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+    "go_descriptor_name": "File_kitchensink_v1_ingest_proto"
+  },
+  "services": [
+    {
+      "proto_name": "IngestService",
+      "go_name": "IngestService",
+      "name": "ingest",
+      "short_help": "IngestService counts what it receives.",
+      "commands": [
+        {
+          "proto_name": "Ingest",
+          "go_name": "Ingest",
+          "name": "ingest",
+          "short_help": "Counts the streamed records.",
+          "long_help": "Counts the streamed records.\n\nReads JSON requests from stdin, one after another.",
+          "input": {
+            "full_name": "kitchensink.v1.IngestRecord",
+            "proto_file": "kitchensink/v1/ingest.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "IngestRecord",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.IngestSummary",
+          "client_streaming": true,
+          "view": {
+            "full_name": "kitchensink.v1.IngestSummary",
+            "fields": [
+              {
+                "label": "received",
+                "path": "received"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "Absorb",
+          "go_name": "Absorb",
+          "name": "absorb",
+          "short_help": "Counts the streamed requests.",
+          "long_help": "Counts the streamed requests.\n\nReads JSON requests from stdin, one after another.",
+          "input": {
+            "full_name": "imported.v1.ImportedRequest",
+            "proto_file": "imported/v1/imported.proto",
+            "proto_package": "imported.v1",
+            "go_name": "ImportedRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/imported/v1",
+            "go_package_name": "v1"
+          },
+          "output": "kitchensink.v1.IngestSummary",
+          "client_streaming": true,
+          "view": {
+            "full_name": "kitchensink.v1.IngestSummary",
+            "fields": [
+              {
+                "label": "received",
+                "path": "received"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

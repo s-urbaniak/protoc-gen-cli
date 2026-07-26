@@ -1,3 +1,5 @@
+// The flag surface: one RPC per field-shape family.
+
 syntax = "proto3";
 
 package kitchensink.v1;
@@ -12,16 +14,16 @@ import "google/protobuf/wrappers.proto";
 
 option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
 
-// FieldsService exercises the flag surface, one RPC per field-shape family.
-// Every RPC echoes its request, so the response shows exactly what arrived.
+// FieldsService echoes each request, so the response shows exactly what
+// arrived.
 service FieldsService {
-  // Scalars carries every scalar width the plugin derives a flag for.
+  // Scalars carries every proto scalar type.
   rpc Scalars(ScalarsRequest) returns (ScalarsRequest) {}
   // Messages carries every shape of message field.
   rpc Messages(MessagesRequest) returns (MessagesRequest) {}
-  // Repeated carries one repeated field per bind family.
+  // Repeated carries one repeated field per element type.
   rpc Repeated(RepeatedRequest) returns (RepeatedRequest) {}
-  // Maps carries one map field per bind family, plus integer and bool keys.
+  // Maps carries one map field per value type, plus integer and bool keys.
   rpc Maps(MapsRequest) returns (MapsRequest) {}
   // Wrappers carries the nine wrapper types plus repeated and map compositions.
   rpc Wrappers(WrappersRequest) returns (WrappersRequest) {}
@@ -34,6 +36,8 @@ service FieldsService {
   rpc Oneofs(OneofsRequest) returns (OneofsRequest) {}
   // Optionals carries proto3 optional fields.
   rpc Optionals(OptionalsRequest) returns (OptionalsRequest) {}
+  // Collections carries two message lists.
+  rpc Collections(CollectionsRequest) returns (CollectionsRequest) {}
 }
 
 message ScalarsRequest {
@@ -158,6 +162,11 @@ message OptionalsRequest {
   optional string name = 1;
   optional int32 age = 2;
   optional Choice pick = 3;
+}
+
+message CollectionsRequest {
+  repeated Outer outers = 1;
+  repeated Middle middles = 2;
 }
 
 message Outer {

@@ -1,10 +1,12 @@
 {
   "plugin_version": "dev",
   "proto_file": "bookstore/v1/bookstore.proto",
+  "generated_filename_prefix": "bookstore/v1/bookstore",
   "proto_package": "bookstore.v1",
   "file_options": {
     "go_package_name": "bookstorev1",
-    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1"
+    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+    "go_descriptor_name": "File_bookstore_v1_bookstore_proto"
   },
   "services": [
     {
@@ -33,15 +35,16 @@
             "full_name": "bookstore.v1.ListShelvesResponse",
             "lists": [
               {
-                "label": "SHELVES",
+                "full_name": "bookstore.v1.Shelf",
+                "label": "shelves",
                 "path": "shelves",
                 "fields": [
                   {
-                    "label": "ID",
+                    "label": "id",
                     "path": "id"
                   },
                   {
-                    "label": "THEME",
+                    "label": "theme",
                     "path": "theme"
                   }
                 ]
@@ -64,7 +67,7 @@
             "go_package_name": "bookstorev1"
           },
           "output": "bookstore.v1.Shelf",
-          "flags": [
+          "params": [
             {
               "proto_path": "shelf",
               "name": "shelf",
@@ -85,11 +88,11 @@
             "full_name": "bookstore.v1.Shelf",
             "fields": [
               {
-                "label": "ID",
+                "label": "id",
                 "path": "id"
               },
               {
-                "label": "THEME",
+                "label": "theme",
                 "path": "theme"
               }
             ]
@@ -110,7 +113,7 @@
             "go_package_name": "bookstorev1"
           },
           "output": "bookstore.v1.Shelf",
-          "flags": [
+          "params": [
             {
               "proto_path": "shelf",
               "name": "shelf",
@@ -121,11 +124,11 @@
             "full_name": "bookstore.v1.Shelf",
             "fields": [
               {
-                "label": "ID",
+                "label": "id",
                 "path": "id"
               },
               {
-                "label": "THEME",
+                "label": "theme",
                 "path": "theme"
               }
             ]
@@ -146,7 +149,7 @@
             "go_package_name": "bookstorev1"
           },
           "output": "google.protobuf.Empty",
-          "flags": [
+          "params": [
             {
               "proto_path": "shelf",
               "name": "shelf",
@@ -172,7 +175,7 @@
             "go_package_name": "bookstorev1"
           },
           "output": "bookstore.v1.ListBooksResponse",
-          "flags": [
+          "params": [
             {
               "proto_path": "shelf",
               "name": "shelf",
@@ -183,19 +186,20 @@
             "full_name": "bookstore.v1.ListBooksResponse",
             "lists": [
               {
-                "label": "BOOKS",
+                "full_name": "bookstore.v1.Book",
+                "label": "books",
                 "path": "books",
                 "fields": [
                   {
-                    "label": "ID",
+                    "label": "id",
                     "path": "id"
                   },
                   {
-                    "label": "AUTHOR",
+                    "label": "author",
                     "path": "author"
                   },
                   {
-                    "label": "TITLE",
+                    "label": "title",
                     "path": "title"
                   }
                 ]
@@ -218,7 +222,7 @@
             "go_package_name": "bookstorev1"
           },
           "output": "bookstore.v1.Book",
-          "flags": [
+          "params": [
             {
               "proto_path": "shelf",
               "name": "shelf",
@@ -249,15 +253,15 @@
             "full_name": "bookstore.v1.Book",
             "fields": [
               {
-                "label": "ID",
+                "label": "id",
                 "path": "id"
               },
               {
-                "label": "AUTHOR",
+                "label": "author",
                 "path": "author"
               },
               {
-                "label": "TITLE",
+                "label": "title",
                 "path": "title"
               }
             ]
@@ -278,7 +282,7 @@
             "go_package_name": "bookstorev1"
           },
           "output": "bookstore.v1.Book",
-          "flags": [
+          "params": [
             {
               "proto_path": "shelf",
               "name": "shelf",
@@ -294,15 +298,15 @@
             "full_name": "bookstore.v1.Book",
             "fields": [
               {
-                "label": "ID",
+                "label": "id",
                 "path": "id"
               },
               {
-                "label": "AUTHOR",
+                "label": "author",
                 "path": "author"
               },
               {
-                "label": "TITLE",
+                "label": "title",
                 "path": "title"
               }
             ]
@@ -323,7 +327,7 @@
             "go_package_name": "bookstorev1"
           },
           "output": "google.protobuf.Empty",
-          "flags": [
+          "params": [
             {
               "proto_path": "shelf",
               "name": "shelf",
@@ -361,7 +365,7 @@
             "go_package_name": "bookstorev1"
           },
           "output": "bookstore.v1.Auction",
-          "flags": [
+          "params": [
             {
               "proto_path": "lot",
               "name": "lot",
@@ -453,75 +457,75 @@
             "full_name": "bookstore.v1.Auction",
             "fields": [
               {
-                "label": "ID",
+                "label": "id",
                 "path": "id"
               },
               {
-                "label": "LOT.ID",
+                "label": "lot.id",
                 "path": "lot.id"
               },
               {
-                "label": "LOT.BOOK.ID",
+                "label": "lot.book.id",
                 "path": "lot.book.id"
               },
               {
-                "label": "LOT.BOOK.AUTHOR",
+                "label": "lot.book.author",
                 "path": "lot.book.author"
               },
               {
-                "label": "LOT.BOOK.TITLE",
+                "label": "lot.book.title",
                 "path": "lot.book.title"
               },
               {
-                "label": "LOT.CONDITION",
+                "label": "lot.condition",
                 "path": "lot.condition"
               },
               {
-                "label": "LOT.RESERVE_PRICE",
+                "label": "lot.reserve_price",
                 "path": "lot.reservePrice"
               },
               {
-                "label": "LOT.PROVENANCE",
+                "label": "lot.provenance",
                 "path": "lot.provenance"
               },
               {
-                "label": "LOT.FLAWS",
+                "label": "lot.flaws",
                 "path": "lot.flaws"
               },
               {
-                "label": "LOT.ATTRIBUTES",
+                "label": "lot.attributes",
                 "path": "lot.attributes"
               },
               {
-                "label": "LOT.CONSIGNOR.NAME",
+                "label": "lot.consignor.name",
                 "path": "lot.consignor.name"
               },
               {
-                "label": "LOT.CONSIGNOR.ADDRESS.STREET",
+                "label": "lot.consignor.address.street",
                 "path": "lot.consignor.address.street"
               },
               {
-                "label": "LOT.CONSIGNOR.ADDRESS.CITY",
+                "label": "lot.consignor.address.city",
                 "path": "lot.consignor.address.city"
               },
               {
-                "label": "LOT.CONSIGNOR.ADDRESS.COUNTRY",
+                "label": "lot.consignor.address.country",
                 "path": "lot.consignor.address.country"
               },
               {
-                "label": "STATE",
+                "label": "state",
                 "path": "state"
               },
               {
-                "label": "HIGH_BID",
+                "label": "high_bid",
                 "path": "highBid"
               },
               {
-                "label": "HIGH_BIDDER",
+                "label": "high_bidder",
                 "path": "highBidder"
               },
               {
-                "label": "ENDS_AT",
+                "label": "ends_at",
                 "path": "endsAt"
               }
             ]
@@ -541,7 +545,7 @@
             "go_package_name": "bookstorev1"
           },
           "output": "bookstore.v1.ListAuctionsResponse",
-          "flags": [
+          "params": [
             {
               "proto_path": "state",
               "name": "state",
@@ -559,92 +563,197 @@
             "full_name": "bookstore.v1.ListAuctionsResponse",
             "fields": [
               {
-                "label": "NEXT_PAGE_TOKEN",
+                "label": "next_page_token",
                 "path": "nextPageToken"
               },
               {
-                "label": "TOTAL_SIZE",
+                "label": "total_size",
                 "path": "totalSize"
               }
             ],
             "lists": [
               {
-                "label": "AUCTIONS",
+                "full_name": "bookstore.v1.Auction",
+                "label": "auctions",
                 "path": "auctions",
                 "fields": [
                   {
-                    "label": "ID",
+                    "label": "id",
                     "path": "id"
                   },
                   {
-                    "label": "LOT.ID",
+                    "label": "lot.id",
                     "path": "lot.id"
                   },
                   {
-                    "label": "LOT.BOOK.ID",
+                    "label": "lot.book.id",
                     "path": "lot.book.id"
                   },
                   {
-                    "label": "LOT.BOOK.AUTHOR",
+                    "label": "lot.book.author",
                     "path": "lot.book.author"
                   },
                   {
-                    "label": "LOT.BOOK.TITLE",
+                    "label": "lot.book.title",
                     "path": "lot.book.title"
                   },
                   {
-                    "label": "LOT.CONDITION",
+                    "label": "lot.condition",
                     "path": "lot.condition"
                   },
                   {
-                    "label": "LOT.RESERVE_PRICE",
+                    "label": "lot.reserve_price",
                     "path": "lot.reservePrice"
                   },
                   {
-                    "label": "LOT.PROVENANCE",
+                    "label": "lot.provenance",
                     "path": "lot.provenance"
                   },
                   {
-                    "label": "LOT.FLAWS",
+                    "label": "lot.flaws",
                     "path": "lot.flaws"
                   },
                   {
-                    "label": "LOT.ATTRIBUTES",
+                    "label": "lot.attributes",
                     "path": "lot.attributes"
                   },
                   {
-                    "label": "LOT.CONSIGNOR.NAME",
+                    "label": "lot.consignor.name",
                     "path": "lot.consignor.name"
                   },
                   {
-                    "label": "LOT.CONSIGNOR.ADDRESS.STREET",
+                    "label": "lot.consignor.address.street",
                     "path": "lot.consignor.address.street"
                   },
                   {
-                    "label": "LOT.CONSIGNOR.ADDRESS.CITY",
+                    "label": "lot.consignor.address.city",
                     "path": "lot.consignor.address.city"
                   },
                   {
-                    "label": "LOT.CONSIGNOR.ADDRESS.COUNTRY",
+                    "label": "lot.consignor.address.country",
                     "path": "lot.consignor.address.country"
                   },
                   {
-                    "label": "STATE",
+                    "label": "state",
                     "path": "state"
                   },
                   {
-                    "label": "HIGH_BID",
+                    "label": "high_bid",
                     "path": "highBid"
                   },
                   {
-                    "label": "HIGH_BIDDER",
+                    "label": "high_bidder",
                     "path": "highBidder"
                   },
                   {
-                    "label": "ENDS_AT",
+                    "label": "ends_at",
                     "path": "endsAt"
                   }
                 ]
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "WatchAuction",
+          "go_name": "WatchAuction",
+          "name": "watch-auction",
+          "short_help": "WatchAuction streams bidding updates for the selected auctions as a live feed until the client cancels.",
+          "long_help": "WatchAuction streams bidding updates for the selected auctions as a live\nfeed until the client cancels.\n\nWatchAuctionRequest selects auctions by exactly one of auction or author.\n\nThe server may send multiple responses; each prints as it arrives.",
+          "input": {
+            "full_name": "bookstore.v1.WatchAuctionRequest",
+            "proto_file": "bookstore/v1/bookstore.proto",
+            "proto_package": "bookstore.v1",
+            "go_name": "WatchAuctionRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_package_name": "bookstorev1"
+          },
+          "output": "bookstore.v1.AuctionUpdate",
+          "server_streaming": true,
+          "params": [
+            {
+              "proto_path": "auction",
+              "name": "auction",
+              "bind": "int",
+              "oneof": "subject"
+            },
+            {
+              "proto_path": "author",
+              "name": "author",
+              "bind": "string",
+              "oneof": "subject"
+            },
+            {
+              "proto_path": "limit",
+              "name": "limit",
+              "bind": "int"
+            }
+          ],
+          "view": {
+            "full_name": "bookstore.v1.AuctionUpdate",
+            "fields": [
+              {
+                "label": "auction",
+                "path": "auction"
+              },
+              {
+                "label": "high_bid",
+                "path": "highBid"
+              },
+              {
+                "label": "bidder",
+                "path": "bidder"
+              },
+              {
+                "label": "state",
+                "path": "state"
+              },
+              {
+                "label": "at",
+                "path": "at"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "Bid",
+          "go_name": "Bid",
+          "name": "bid",
+          "short_help": "Bid places bids and streams back every update on the bid's auction.",
+          "long_help": "Bid places bids and streams back every update on the bid's auction.\n\nReads JSON requests from stdin, one after another.\n\nThe server may send multiple responses; each prints as it arrives.",
+          "input": {
+            "full_name": "bookstore.v1.PlaceBidRequest",
+            "proto_file": "bookstore/v1/bookstore.proto",
+            "proto_package": "bookstore.v1",
+            "go_name": "PlaceBidRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_package_name": "bookstorev1"
+          },
+          "output": "bookstore.v1.AuctionUpdate",
+          "client_streaming": true,
+          "server_streaming": true,
+          "view": {
+            "full_name": "bookstore.v1.AuctionUpdate",
+            "fields": [
+              {
+                "label": "auction",
+                "path": "auction"
+              },
+              {
+                "label": "high_bid",
+                "path": "highBid"
+              },
+              {
+                "label": "bidder",
+                "path": "bidder"
+              },
+              {
+                "label": "state",
+                "path": "state"
+              },
+              {
+                "label": "at",
+                "path": "at"
               }
             ]
           }
@@ -658,11 +767,37 @@
       "short_help": "InventoryService is the back office's stock system.",
       "commands": [
         {
+          "proto_name": "ImportBooks",
+          "go_name": "ImportBooks",
+          "name": "import-books",
+          "short_help": "ImportBooks ingests a book catalogue as a stream of records.",
+          "long_help": "ImportBooks ingests a book catalogue as a stream of records.\n\nImportBooksRequest is one record of a catalogue import.\n\nReads JSON requests from stdin, one after another.",
+          "input": {
+            "full_name": "bookstore.v1.ImportBooksRequest",
+            "proto_file": "bookstore/v1/bookstore.proto",
+            "proto_package": "bookstore.v1",
+            "go_name": "ImportBooksRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_package_name": "bookstorev1"
+          },
+          "output": "bookstore.v1.ImportSummary",
+          "client_streaming": true,
+          "view": {
+            "full_name": "bookstore.v1.ImportSummary",
+            "fields": [
+              {
+                "label": "created",
+                "path": "created"
+              }
+            ]
+          }
+        },
+        {
           "proto_name": "ExportReport",
           "go_name": "ExportReport",
           "name": "export-report",
-          "short_help": "Renders a shelf's stock report and writes it to a file on the server.",
-          "long_help": "Renders a shelf's stock report and writes it to a file on the server.\n\nRequest message for ExportReport method.",
+          "short_help": "ExportReport renders a shelf's stock report and writes it to a file on the server.",
+          "long_help": "ExportReport renders a shelf's stock report and writes it to a file on\nthe server.\n\nRequest message for ExportReport method.",
           "input": {
             "full_name": "bookstore.v1.ExportReportRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
@@ -672,7 +807,7 @@
             "go_package_name": "bookstorev1"
           },
           "output": "bookstore.v1.Report",
-          "flags": [
+          "params": [
             {
               "proto_path": "shelf",
               "name": "shelf",
@@ -688,11 +823,11 @@
             "full_name": "bookstore.v1.Report",
             "fields": [
               {
-                "label": "FILENAME",
+                "label": "filename",
                 "path": "filename"
               },
               {
-                "label": "BOOKS",
+                "label": "books",
                 "path": "books"
               }
             ]

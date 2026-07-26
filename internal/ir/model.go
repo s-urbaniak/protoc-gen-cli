@@ -5,11 +5,13 @@ package ir
 // A Model is the IR of one input .proto file.
 type Model struct {
 	// PluginVersion is the version of protoc-gen-cli that produced the model.
-	PluginVersion string      `json:"plugin_version,omitempty"`
-	ProtoFile     string      `json:"proto_file,omitempty"`
-	ProtoPackage  string      `json:"proto_package,omitempty"`
-	FileOptions   FileOptions `json:"file_options,omitzero"`
-	Services      []*Service  `json:"services,omitempty"`
+	PluginVersion string `json:"plugin_version,omitempty"`
+	ProtoFile     string `json:"proto_file,omitempty"`
+	// GeneratedFilenamePrefix is the file's output path, minus extension.
+	GeneratedFilenamePrefix string      `json:"generated_filename_prefix,omitempty"`
+	ProtoPackage            string      `json:"proto_package,omitempty"`
+	FileOptions             FileOptions `json:"file_options,omitzero"`
+	Services                []*Service  `json:"services,omitempty"`
 }
 
 // FileOptions carries the input file's per-language options, e.g. go_package.
@@ -18,6 +20,8 @@ type FileOptions struct {
 	GoPackageName string `json:"go_package_name,omitempty"`
 	// GoImportPath is the file's go_package import path.
 	GoImportPath string `json:"go_import_path,omitempty"`
+	// GoDescriptorName is protogen's File_<path>_proto identifier for the file.
+	GoDescriptorName string `json:"go_descriptor_name,omitempty"`
 }
 
 // A Service is one service block: a command group with one command per RPC.
@@ -39,15 +43,16 @@ type Command struct {
 	LongHelp  string   `json:"long_help,omitempty"`
 	Input     *Request `json:"input,omitempty"`
 	// Output is the response message's full proto name.
-	Output string `json:"output,omitempty"`
-	// Flags is ordered: a message field's own flag immediately precedes
-	// the flags derived from its fields.
-	Flags []*Flag `json:"flags,omitempty"`
-	// View is the response message's display projection.
-	View *View `json:"view,omitempty"`
+	Output          string `json:"output,omitempty"`
+	ClientStreaming bool   `json:"client_streaming,omitempty"`
+	ServerStreaming bool   `json:"server_streaming,omitempty"`
+	// Params is ordered: a message field's own param immediately precedes
+	// the params derived from its fields..
+	Params []*Param `json:"params,omitempty"`
+	View   *View    `json:"view,omitempty"`
 }
 
-// A Request represents an RPC's request message and the bindings needed to construct it.
+// A Request identifies an RPC's request message.
 type Request struct {
 	FullName      string `json:"full_name,omitempty"`
 	ProtoFile     string `json:"proto_file,omitempty"`
@@ -57,14 +62,14 @@ type Request struct {
 	GoPackageName string `json:"go_package_name,omitempty"`
 }
 
-// A Flag is a CLI flag derived from a request field.
-type Flag struct {
+// A Param is one command input derived from a request field.
+type Param struct {
 	ProtoPath string `json:"proto_path,omitempty"`
 	Name      string `json:"name,omitempty"`
 	Bind      Bind   `json:"bind,omitempty"`
-	// Repeated marks a list field's flag: each use appends one element.
+	// Repeated marks a list field's param: each use appends one element.
 	Repeated bool `json:"repeated,omitempty"`
-	// Map marks a map field's flag: each use adds one key=value entry.
+	// Map marks a map field's param: each use adds one key=value entry.
 	Map bool `json:"map,omitempty"`
 	// EnumValues lists an enum field's value names.
 	EnumValues []string `json:"enum_values,omitempty"`
@@ -72,11 +77,11 @@ type Flag struct {
 	Oneof string `json:"oneof,omitempty"`
 }
 
-// A Bind represents the JSON type a flag's argument parses into.
+// A Bind represents the JSON type a param's argument parses into.
 type Bind string
 
 const (
-	BindString Bind = "string" // free text; also bytes, timestamps, durations, enums, field masks
+	BindString Bind = "string"
 	BindBool   Bind = "bool"
 	BindInt    Bind = "int"
 	BindUint   Bind = "uint"
@@ -93,11 +98,15 @@ type View struct {
 
 // A ViewList projects one repeated message field.
 type ViewList struct {
-	Label  string       `json:"label,omitempty"`
-	Path   string       `json:"path,omitempty"`
-	Fields []*ViewField `json:"fields,omitempty"`
+	// FullName is the element message's full proto name.
+	FullName string       `json:"full_name,omitempty"`
+	Label    string       `json:"label,omitempty"`
+	Path     string       `json:"path,omitempty"`
+	Fields   []*ViewField `json:"fields,omitempty"`
 }
 
+// A ViewField is one field of a view: Label derives from the proto field
+// path, Path addresses the message's protojson output in gjson syntax.
 type ViewField struct {
 	Label string `json:"label,omitempty"`
 	Path  string `json:"path,omitempty"`

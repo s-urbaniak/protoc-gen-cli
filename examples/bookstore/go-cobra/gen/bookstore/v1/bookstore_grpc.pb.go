@@ -430,6 +430,8 @@ var BookstoreService_ServiceDesc = grpc.ServiceDesc{
 const (
 	AuctionsService_CreateAuction_FullMethodName = "/bookstore.v1.AuctionsService/CreateAuction"
 	AuctionsService_ListAuctions_FullMethodName  = "/bookstore.v1.AuctionsService/ListAuctions"
+	AuctionsService_WatchAuction_FullMethodName  = "/bookstore.v1.AuctionsService/WatchAuction"
+	AuctionsService_Bid_FullMethodName           = "/bookstore.v1.AuctionsService/Bid"
 )
 
 // AuctionsServiceClient is the client API for AuctionsService service.
@@ -442,6 +444,11 @@ type AuctionsServiceClient interface {
 	CreateAuction(ctx context.Context, in *CreateAuctionRequest, opts ...grpc.CallOption) (*Auction, error)
 	// ListAuctions lists auctions, optionally filtered by state.
 	ListAuctions(ctx context.Context, in *ListAuctionsRequest, opts ...grpc.CallOption) (*ListAuctionsResponse, error)
+	// WatchAuction streams bidding updates for the selected auctions as a live
+	// feed until the client cancels.
+	WatchAuction(ctx context.Context, in *WatchAuctionRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AuctionUpdate], error)
+	// Bid places bids and streams back every update on the bid's auction.
+	Bid(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[PlaceBidRequest, AuctionUpdate], error)
 }
 
 type auctionsServiceClient struct {
@@ -472,6 +479,38 @@ func (c *auctionsServiceClient) ListAuctions(ctx context.Context, in *ListAuctio
 	return out, nil
 }
 
+func (c *auctionsServiceClient) WatchAuction(ctx context.Context, in *WatchAuctionRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[AuctionUpdate], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &AuctionsService_ServiceDesc.Streams[0], AuctionsService_WatchAuction_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[WatchAuctionRequest, AuctionUpdate]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AuctionsService_WatchAuctionClient = grpc.ServerStreamingClient[AuctionUpdate]
+
+func (c *auctionsServiceClient) Bid(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[PlaceBidRequest, AuctionUpdate], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &AuctionsService_ServiceDesc.Streams[1], AuctionsService_Bid_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[PlaceBidRequest, AuctionUpdate]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AuctionsService_BidClient = grpc.BidiStreamingClient[PlaceBidRequest, AuctionUpdate]
+
 // AuctionsServiceServer is the server API for AuctionsService service.
 // All implementations must embed UnimplementedAuctionsServiceServer
 // for forward compatibility.
@@ -482,6 +521,11 @@ type AuctionsServiceServer interface {
 	CreateAuction(context.Context, *CreateAuctionRequest) (*Auction, error)
 	// ListAuctions lists auctions, optionally filtered by state.
 	ListAuctions(context.Context, *ListAuctionsRequest) (*ListAuctionsResponse, error)
+	// WatchAuction streams bidding updates for the selected auctions as a live
+	// feed until the client cancels.
+	WatchAuction(*WatchAuctionRequest, grpc.ServerStreamingServer[AuctionUpdate]) error
+	// Bid places bids and streams back every update on the bid's auction.
+	Bid(grpc.BidiStreamingServer[PlaceBidRequest, AuctionUpdate]) error
 	mustEmbedUnimplementedAuctionsServiceServer()
 }
 
@@ -497,6 +541,12 @@ func (UnimplementedAuctionsServiceServer) CreateAuction(context.Context, *Create
 }
 func (UnimplementedAuctionsServiceServer) ListAuctions(context.Context, *ListAuctionsRequest) (*ListAuctionsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListAuctions not implemented")
+}
+func (UnimplementedAuctionsServiceServer) WatchAuction(*WatchAuctionRequest, grpc.ServerStreamingServer[AuctionUpdate]) error {
+	return status.Error(codes.Unimplemented, "method WatchAuction not implemented")
+}
+func (UnimplementedAuctionsServiceServer) Bid(grpc.BidiStreamingServer[PlaceBidRequest, AuctionUpdate]) error {
+	return status.Error(codes.Unimplemented, "method Bid not implemented")
 }
 func (UnimplementedAuctionsServiceServer) mustEmbedUnimplementedAuctionsServiceServer() {}
 func (UnimplementedAuctionsServiceServer) testEmbeddedByValue()                         {}
@@ -555,6 +605,24 @@ func _AuctionsService_ListAuctions_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuctionsService_WatchAuction_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(WatchAuctionRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(AuctionsServiceServer).WatchAuction(m, &grpc.GenericServerStream[WatchAuctionRequest, AuctionUpdate]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AuctionsService_WatchAuctionServer = grpc.ServerStreamingServer[AuctionUpdate]
+
+func _AuctionsService_Bid_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(AuctionsServiceServer).Bid(&grpc.GenericServerStream[PlaceBidRequest, AuctionUpdate]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type AuctionsService_BidServer = grpc.BidiStreamingServer[PlaceBidRequest, AuctionUpdate]
+
 // AuctionsService_ServiceDesc is the grpc.ServiceDesc for AuctionsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -571,11 +639,24 @@ var AuctionsService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AuctionsService_ListAuctions_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "WatchAuction",
+			Handler:       _AuctionsService_WatchAuction_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "Bid",
+			Handler:       _AuctionsService_Bid_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "bookstore/v1/bookstore.proto",
 }
 
 const (
+	InventoryService_ImportBooks_FullMethodName  = "/bookstore.v1.InventoryService/ImportBooks"
 	InventoryService_ExportReport_FullMethodName = "/bookstore.v1.InventoryService/ExportReport"
 )
 
@@ -585,7 +666,10 @@ const (
 //
 // InventoryService is the back office's stock system.
 type InventoryServiceClient interface {
-	// Renders a shelf's stock report and writes it to a file on the server.
+	// ImportBooks ingests a book catalogue as a stream of records.
+	ImportBooks(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[ImportBooksRequest, ImportSummary], error)
+	// ExportReport renders a shelf's stock report and writes it to a file on
+	// the server.
 	ExportReport(ctx context.Context, in *ExportReportRequest, opts ...grpc.CallOption) (*Report, error)
 }
 
@@ -596,6 +680,19 @@ type inventoryServiceClient struct {
 func NewInventoryServiceClient(cc grpc.ClientConnInterface) InventoryServiceClient {
 	return &inventoryServiceClient{cc}
 }
+
+func (c *inventoryServiceClient) ImportBooks(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[ImportBooksRequest, ImportSummary], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &InventoryService_ServiceDesc.Streams[0], InventoryService_ImportBooks_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[ImportBooksRequest, ImportSummary]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type InventoryService_ImportBooksClient = grpc.ClientStreamingClient[ImportBooksRequest, ImportSummary]
 
 func (c *inventoryServiceClient) ExportReport(ctx context.Context, in *ExportReportRequest, opts ...grpc.CallOption) (*Report, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -613,7 +710,10 @@ func (c *inventoryServiceClient) ExportReport(ctx context.Context, in *ExportRep
 //
 // InventoryService is the back office's stock system.
 type InventoryServiceServer interface {
-	// Renders a shelf's stock report and writes it to a file on the server.
+	// ImportBooks ingests a book catalogue as a stream of records.
+	ImportBooks(grpc.ClientStreamingServer[ImportBooksRequest, ImportSummary]) error
+	// ExportReport renders a shelf's stock report and writes it to a file on
+	// the server.
 	ExportReport(context.Context, *ExportReportRequest) (*Report, error)
 	mustEmbedUnimplementedInventoryServiceServer()
 }
@@ -625,6 +725,9 @@ type InventoryServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedInventoryServiceServer struct{}
 
+func (UnimplementedInventoryServiceServer) ImportBooks(grpc.ClientStreamingServer[ImportBooksRequest, ImportSummary]) error {
+	return status.Error(codes.Unimplemented, "method ImportBooks not implemented")
+}
 func (UnimplementedInventoryServiceServer) ExportReport(context.Context, *ExportReportRequest) (*Report, error) {
 	return nil, status.Error(codes.Unimplemented, "method ExportReport not implemented")
 }
@@ -648,6 +751,13 @@ func RegisterInventoryServiceServer(s grpc.ServiceRegistrar, srv InventoryServic
 	}
 	s.RegisterService(&InventoryService_ServiceDesc, srv)
 }
+
+func _InventoryService_ImportBooks_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(InventoryServiceServer).ImportBooks(&grpc.GenericServerStream[ImportBooksRequest, ImportSummary]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type InventoryService_ImportBooksServer = grpc.ClientStreamingServer[ImportBooksRequest, ImportSummary]
 
 func _InventoryService_ExportReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ExportReportRequest)
@@ -679,6 +789,12 @@ var InventoryService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _InventoryService_ExportReport_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ImportBooks",
+			Handler:       _InventoryService_ImportBooks_Handler,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "bookstore/v1/bookstore.proto",
 }

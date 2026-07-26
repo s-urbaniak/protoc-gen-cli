@@ -4,6 +4,7 @@ package kitchensink.v1;
 
 import "google/protobuf/empty.proto";
 import "imported/v1/imported.proto";
+import "kitchensink/v1/fields.proto";
 import "second/v1/second.proto";
 
 option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
@@ -15,6 +16,10 @@ service NamesService {
   rpc Second(second.v1.PingRequest) returns (second.v1.PingRequest) {}
   rpc Reserved(ReservedRequest) returns (ReservedRequest) {}
   rpc Empty(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc HTTPCall(CasingRequest) returns (CasingRequest) {}
+  rpc lower_snake(CasingRequest) returns (CasingRequest) {}
+  rpc Borrow(Outer) returns (Outer) {}
+  rpc Nested(Envelope.Letter) returns (Envelope.Letter) {}
 }
 
 message CollisionsRequest {
@@ -35,4 +40,17 @@ message ReservedRequest {
   string input = 2;
   string help = 3;
   string output = 4;
+}
+
+message CasingRequest {
+  string HTTPHeader = 1;
+  string camelField = 2;
+  string with_json_name = 3 [json_name = "customName"];
+  string dotted = 4 [json_name = "weird.name"];
+}
+
+message Envelope {
+  message Letter {
+    string body = 1;
+  }
 }

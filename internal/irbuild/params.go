@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// Flag names the generated code already reserve.
+// Flag names the generated code and cobra claim for themselves.
 var reservedFlagNames = []string{"filename", "input", "help", "output"}
 
 // messageBinds is protojson's message types rendered as a single JSON value.
@@ -53,9 +53,9 @@ var scalarBinds = map[protoreflect.Kind]ir.Bind{
 	protoreflect.DoubleKind:   ir.BindFloat,
 }
 
-// buildFlags derives a command's flags from its request message's fields.
-func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
-	var flags []*ir.Flag
+// buildParams derives a command's params from its request message's fields.
+func buildParams(md protoreflect.MessageDescriptor, opts Options) []*ir.Param {
+	var params []*ir.Param
 	var walk func(md protoreflect.MessageDescriptor, protoPrefix, cliPrefix string, budget int, ancestors []protoreflect.FullName)
 	walk = func(md protoreflect.MessageDescriptor, protoPrefix, cliPrefix string, budget int, ancestors []protoreflect.FullName) {
 		fields := md.Fields()
@@ -71,13 +71,18 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 			}
 
 			if !ok {
+				opts.Warn(fmt.Sprintf(
+					"field %s.%s: group-encoded fields get no flag; set it with -f or -i, or make the field a message",
+					md.FullName(),
+					fd.Name(),
+				))
 				continue
 			}
 
 			if slices.Contains(reservedFlagNames, name) {
 				opts.Warn(fmt.Sprintf(
-					"field %s.%s: --%s is reserved by a global flag; its flag is --arg-%s",
-					md.Name(),
+					"field %s.%s: --%s is reserved by a built-in flag; its flag is --arg-%s",
+					md.FullName(),
 					fd.Name(),
 					name,
 					name,
@@ -85,8 +90,8 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 				name = "arg-" + name
 			}
 
-			flags = append(flags,
-				&ir.Flag{
+			params = append(params,
+				&ir.Param{
 					ProtoPath:  path,
 					Name:       name,
 					Bind:       bind,
@@ -106,10 +111,10 @@ func buildFlags(md protoreflect.MessageDescriptor, opts Options) []*ir.Flag {
 
 	walk(md, "", "", opts.RequestExpandDepth, []protoreflect.FullName{md.FullName()})
 
-	return flags
+	return params
 }
 
-// ok is false for fields with no flag.
+// ok is false for fields with no param.
 func fieldBind(fd protoreflect.FieldDescriptor) (bind ir.Bind, ok bool, enum []string) {
 	// A map field's own kind is its synthetic entry message.
 	elem := fd

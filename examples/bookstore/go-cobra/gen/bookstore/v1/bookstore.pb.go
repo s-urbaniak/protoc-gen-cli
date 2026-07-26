@@ -1278,6 +1278,227 @@ func (x *ListAuctionsResponse) GetTotalSize() int32 {
 	return 0
 }
 
+// WatchAuctionRequest selects auctions by exactly one of auction or author.
+type WatchAuctionRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Subject:
+	//
+	//	*WatchAuctionRequest_Auction
+	//	*WatchAuctionRequest_Author
+	Subject isWatchAuctionRequest_Subject `protobuf_oneof:"subject"`
+	// Cap on the number of updates streamed back.
+	Limit         int32 `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WatchAuctionRequest) Reset() {
+	*x = WatchAuctionRequest{}
+	mi := &file_bookstore_v1_bookstore_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WatchAuctionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WatchAuctionRequest) ProtoMessage() {}
+
+func (x *WatchAuctionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bookstore_v1_bookstore_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WatchAuctionRequest.ProtoReflect.Descriptor instead.
+func (*WatchAuctionRequest) Descriptor() ([]byte, []int) {
+	return file_bookstore_v1_bookstore_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *WatchAuctionRequest) GetSubject() isWatchAuctionRequest_Subject {
+	if x != nil {
+		return x.Subject
+	}
+	return nil
+}
+
+func (x *WatchAuctionRequest) GetAuction() int64 {
+	if x != nil {
+		if x, ok := x.Subject.(*WatchAuctionRequest_Auction); ok {
+			return x.Auction
+		}
+	}
+	return 0
+}
+
+func (x *WatchAuctionRequest) GetAuthor() string {
+	if x != nil {
+		if x, ok := x.Subject.(*WatchAuctionRequest_Author); ok {
+			return x.Author
+		}
+	}
+	return ""
+}
+
+func (x *WatchAuctionRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type isWatchAuctionRequest_Subject interface {
+	isWatchAuctionRequest_Subject()
+}
+
+type WatchAuctionRequest_Auction struct {
+	Auction int64 `protobuf:"varint,1,opt,name=auction,proto3,oneof"`
+}
+
+type WatchAuctionRequest_Author struct {
+	Author string `protobuf:"bytes,2,opt,name=author,proto3,oneof"`
+}
+
+func (*WatchAuctionRequest_Auction) isWatchAuctionRequest_Subject() {}
+
+func (*WatchAuctionRequest_Author) isWatchAuctionRequest_Subject() {}
+
+type PlaceBidRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Auction       int64                  `protobuf:"varint,1,opt,name=auction,proto3" json:"auction,omitempty"`
+	Amount        float64                `protobuf:"fixed64,2,opt,name=amount,proto3" json:"amount,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PlaceBidRequest) Reset() {
+	*x = PlaceBidRequest{}
+	mi := &file_bookstore_v1_bookstore_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PlaceBidRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlaceBidRequest) ProtoMessage() {}
+
+func (x *PlaceBidRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bookstore_v1_bookstore_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlaceBidRequest.ProtoReflect.Descriptor instead.
+func (*PlaceBidRequest) Descriptor() ([]byte, []int) {
+	return file_bookstore_v1_bookstore_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *PlaceBidRequest) GetAuction() int64 {
+	if x != nil {
+		return x.Auction
+	}
+	return 0
+}
+
+func (x *PlaceBidRequest) GetAmount() float64 {
+	if x != nil {
+		return x.Amount
+	}
+	return 0
+}
+
+// AuctionUpdate is one change to an auction's bidding state.
+type AuctionUpdate struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Auction       int64                  `protobuf:"varint,1,opt,name=auction,proto3" json:"auction,omitempty"`
+	HighBid       float64                `protobuf:"fixed64,2,opt,name=high_bid,json=highBid,proto3" json:"high_bid,omitempty"`
+	Bidder        string                 `protobuf:"bytes,3,opt,name=bidder,proto3" json:"bidder,omitempty"`
+	State         AuctionState           `protobuf:"varint,4,opt,name=state,proto3,enum=bookstore.v1.AuctionState" json:"state,omitempty"`
+	At            *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=at,proto3" json:"at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AuctionUpdate) Reset() {
+	*x = AuctionUpdate{}
+	mi := &file_bookstore_v1_bookstore_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AuctionUpdate) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuctionUpdate) ProtoMessage() {}
+
+func (x *AuctionUpdate) ProtoReflect() protoreflect.Message {
+	mi := &file_bookstore_v1_bookstore_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuctionUpdate.ProtoReflect.Descriptor instead.
+func (*AuctionUpdate) Descriptor() ([]byte, []int) {
+	return file_bookstore_v1_bookstore_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *AuctionUpdate) GetAuction() int64 {
+	if x != nil {
+		return x.Auction
+	}
+	return 0
+}
+
+func (x *AuctionUpdate) GetHighBid() float64 {
+	if x != nil {
+		return x.HighBid
+	}
+	return 0
+}
+
+func (x *AuctionUpdate) GetBidder() string {
+	if x != nil {
+		return x.Bidder
+	}
+	return ""
+}
+
+func (x *AuctionUpdate) GetState() AuctionState {
+	if x != nil {
+		return x.State
+	}
+	return AuctionState_AUCTION_STATE_UNSPECIFIED
+}
+
+func (x *AuctionUpdate) GetAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.At
+	}
+	return nil
+}
+
 // Request message for ExportReport method.
 type ExportReportRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -1291,7 +1512,7 @@ type ExportReportRequest struct {
 
 func (x *ExportReportRequest) Reset() {
 	*x = ExportReportRequest{}
-	mi := &file_bookstore_v1_bookstore_proto_msgTypes[20]
+	mi := &file_bookstore_v1_bookstore_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1303,7 +1524,7 @@ func (x *ExportReportRequest) String() string {
 func (*ExportReportRequest) ProtoMessage() {}
 
 func (x *ExportReportRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bookstore_v1_bookstore_proto_msgTypes[20]
+	mi := &file_bookstore_v1_bookstore_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1316,7 +1537,7 @@ func (x *ExportReportRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExportReportRequest.ProtoReflect.Descriptor instead.
 func (*ExportReportRequest) Descriptor() ([]byte, []int) {
-	return file_bookstore_v1_bookstore_proto_rawDescGZIP(), []int{20}
+	return file_bookstore_v1_bookstore_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ExportReportRequest) GetShelf() int64 {
@@ -1346,7 +1567,7 @@ type Report struct {
 
 func (x *Report) Reset() {
 	*x = Report{}
-	mi := &file_bookstore_v1_bookstore_proto_msgTypes[21]
+	mi := &file_bookstore_v1_bookstore_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1358,7 +1579,7 @@ func (x *Report) String() string {
 func (*Report) ProtoMessage() {}
 
 func (x *Report) ProtoReflect() protoreflect.Message {
-	mi := &file_bookstore_v1_bookstore_proto_msgTypes[21]
+	mi := &file_bookstore_v1_bookstore_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1371,7 +1592,7 @@ func (x *Report) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Report.ProtoReflect.Descriptor instead.
 func (*Report) Descriptor() ([]byte, []int) {
-	return file_bookstore_v1_bookstore_proto_rawDescGZIP(), []int{21}
+	return file_bookstore_v1_bookstore_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *Report) GetFilename() string {
@@ -1384,6 +1605,103 @@ func (x *Report) GetFilename() string {
 func (x *Report) GetBooks() int64 {
 	if x != nil {
 		return x.Books
+	}
+	return 0
+}
+
+// ImportBooksRequest is one record of a catalogue import.
+type ImportBooksRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Shelf         int64                  `protobuf:"varint,1,opt,name=shelf,proto3" json:"shelf,omitempty"`
+	Book          *Book                  `protobuf:"bytes,2,opt,name=book,proto3" json:"book,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ImportBooksRequest) Reset() {
+	*x = ImportBooksRequest{}
+	mi := &file_bookstore_v1_bookstore_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ImportBooksRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ImportBooksRequest) ProtoMessage() {}
+
+func (x *ImportBooksRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_bookstore_v1_bookstore_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ImportBooksRequest.ProtoReflect.Descriptor instead.
+func (*ImportBooksRequest) Descriptor() ([]byte, []int) {
+	return file_bookstore_v1_bookstore_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *ImportBooksRequest) GetShelf() int64 {
+	if x != nil {
+		return x.Shelf
+	}
+	return 0
+}
+
+func (x *ImportBooksRequest) GetBook() *Book {
+	if x != nil {
+		return x.Book
+	}
+	return nil
+}
+
+type ImportSummary struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Created       int32                  `protobuf:"varint,1,opt,name=created,proto3" json:"created,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ImportSummary) Reset() {
+	*x = ImportSummary{}
+	mi := &file_bookstore_v1_bookstore_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ImportSummary) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ImportSummary) ProtoMessage() {}
+
+func (x *ImportSummary) ProtoReflect() protoreflect.Message {
+	mi := &file_bookstore_v1_bookstore_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ImportSummary.ProtoReflect.Descriptor instead.
+func (*ImportSummary) Descriptor() ([]byte, []int) {
+	return file_bookstore_v1_bookstore_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *ImportSummary) GetCreated() int32 {
+	if x != nil {
+		return x.Created
 	}
 	return 0
 }
@@ -1467,13 +1785,32 @@ const file_bookstore_v1_bookstore_proto_rawDesc = "" +
 	"\bauctions\x18\x01 \x03(\v2\x15.bookstore.v1.AuctionR\bauctions\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12\x1d\n" +
 	"\n" +
-	"total_size\x18\x03 \x01(\x05R\ttotalSize\"G\n" +
+	"total_size\x18\x03 \x01(\x05R\ttotalSize\"l\n" +
+	"\x13WatchAuctionRequest\x12\x1a\n" +
+	"\aauction\x18\x01 \x01(\x03H\x00R\aauction\x12\x18\n" +
+	"\x06author\x18\x02 \x01(\tH\x00R\x06author\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limitB\t\n" +
+	"\asubject\"C\n" +
+	"\x0fPlaceBidRequest\x12\x18\n" +
+	"\aauction\x18\x01 \x01(\x03R\aauction\x12\x16\n" +
+	"\x06amount\x18\x02 \x01(\x01R\x06amount\"\xba\x01\n" +
+	"\rAuctionUpdate\x12\x18\n" +
+	"\aauction\x18\x01 \x01(\x03R\aauction\x12\x19\n" +
+	"\bhigh_bid\x18\x02 \x01(\x01R\ahighBid\x12\x16\n" +
+	"\x06bidder\x18\x03 \x01(\tR\x06bidder\x120\n" +
+	"\x05state\x18\x04 \x01(\x0e2\x1a.bookstore.v1.AuctionStateR\x05state\x12*\n" +
+	"\x02at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x02at\"G\n" +
 	"\x13ExportReportRequest\x12\x14\n" +
 	"\x05shelf\x18\x01 \x01(\x03R\x05shelf\x12\x1a\n" +
 	"\bfilename\x18\x02 \x01(\tR\bfilename\":\n" +
 	"\x06Report\x12\x1a\n" +
 	"\bfilename\x18\x01 \x01(\tR\bfilename\x12\x14\n" +
-	"\x05books\x18\x02 \x01(\x03R\x05books*\x8f\x01\n" +
+	"\x05books\x18\x02 \x01(\x03R\x05books\"R\n" +
+	"\x12ImportBooksRequest\x12\x14\n" +
+	"\x05shelf\x18\x01 \x01(\x03R\x05shelf\x12&\n" +
+	"\x04book\x18\x02 \x01(\v2\x12.bookstore.v1.BookR\x04book\")\n" +
+	"\rImportSummary\x12\x18\n" +
+	"\acreated\x18\x01 \x01(\x05R\acreated*\x8f\x01\n" +
 	"\tCondition\x12\x19\n" +
 	"\x15CONDITION_UNSPECIFIED\x10\x00\x12\x12\n" +
 	"\x0eCONDITION_FINE\x10\x01\x12\x17\n" +
@@ -1497,11 +1834,14 @@ const file_bookstore_v1_bookstore_proto_rawDesc = "" +
 	"CreateBook\x12\x1f.bookstore.v1.CreateBookRequest\x1a\x12.bookstore.v1.Book\"\x00\x12=\n" +
 	"\aGetBook\x12\x1c.bookstore.v1.GetBookRequest\x1a\x12.bookstore.v1.Book\"\x00\x12G\n" +
 	"\n" +
-	"DeleteBook\x12\x1f.bookstore.v1.DeleteBookRequest\x1a\x16.google.protobuf.Empty\"\x002\xb4\x01\n" +
+	"DeleteBook\x12\x1f.bookstore.v1.DeleteBookRequest\x1a\x16.google.protobuf.Empty\"\x002\xcd\x02\n" +
 	"\x0fAuctionsService\x12J\n" +
 	"\rCreateAuction\x12\".bookstore.v1.CreateAuctionRequest\x1a\x15.bookstore.v1.Auction\x12U\n" +
-	"\fListAuctions\x12!.bookstore.v1.ListAuctionsRequest\x1a\".bookstore.v1.ListAuctionsResponse2]\n" +
-	"\x10InventoryService\x12I\n" +
+	"\fListAuctions\x12!.bookstore.v1.ListAuctionsRequest\x1a\".bookstore.v1.ListAuctionsResponse\x12P\n" +
+	"\fWatchAuction\x12!.bookstore.v1.WatchAuctionRequest\x1a\x1b.bookstore.v1.AuctionUpdate0\x01\x12E\n" +
+	"\x03Bid\x12\x1d.bookstore.v1.PlaceBidRequest\x1a\x1b.bookstore.v1.AuctionUpdate(\x010\x012\xad\x01\n" +
+	"\x10InventoryService\x12N\n" +
+	"\vImportBooks\x12 .bookstore.v1.ImportBooksRequest\x1a\x1b.bookstore.v1.ImportSummary(\x01\x12I\n" +
 	"\fExportReport\x12!.bookstore.v1.ExportReportRequest\x1a\x14.bookstore.v1.Report\"\x00B^Z\\github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1;bookstorev1b\x06proto3"
 
 var (
@@ -1517,7 +1857,7 @@ func file_bookstore_v1_bookstore_proto_rawDescGZIP() []byte {
 }
 
 var file_bookstore_v1_bookstore_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_bookstore_v1_bookstore_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_bookstore_v1_bookstore_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_bookstore_v1_bookstore_proto_goTypes = []any{
 	(Condition)(0),                // 0: bookstore.v1.Condition
 	(AuctionState)(0),             // 1: bookstore.v1.AuctionState
@@ -1541,11 +1881,16 @@ var file_bookstore_v1_bookstore_proto_goTypes = []any{
 	(*CreateAuctionRequest)(nil),  // 19: bookstore.v1.CreateAuctionRequest
 	(*ListAuctionsRequest)(nil),   // 20: bookstore.v1.ListAuctionsRequest
 	(*ListAuctionsResponse)(nil),  // 21: bookstore.v1.ListAuctionsResponse
-	(*ExportReportRequest)(nil),   // 22: bookstore.v1.ExportReportRequest
-	(*Report)(nil),                // 23: bookstore.v1.Report
-	nil,                           // 24: bookstore.v1.Lot.AttributesEntry
-	(*timestamppb.Timestamp)(nil), // 25: google.protobuf.Timestamp
-	(*emptypb.Empty)(nil),         // 26: google.protobuf.Empty
+	(*WatchAuctionRequest)(nil),   // 22: bookstore.v1.WatchAuctionRequest
+	(*PlaceBidRequest)(nil),       // 23: bookstore.v1.PlaceBidRequest
+	(*AuctionUpdate)(nil),         // 24: bookstore.v1.AuctionUpdate
+	(*ExportReportRequest)(nil),   // 25: bookstore.v1.ExportReportRequest
+	(*Report)(nil),                // 26: bookstore.v1.Report
+	(*ImportBooksRequest)(nil),    // 27: bookstore.v1.ImportBooksRequest
+	(*ImportSummary)(nil),         // 28: bookstore.v1.ImportSummary
+	nil,                           // 29: bookstore.v1.Lot.AttributesEntry
+	(*timestamppb.Timestamp)(nil), // 30: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),         // 31: google.protobuf.Empty
 }
 var file_bookstore_v1_bookstore_proto_depIdxs = []int32{
 	2,  // 0: bookstore.v1.ListShelvesResponse.shelves:type_name -> bookstore.v1.Shelf
@@ -1557,42 +1902,51 @@ var file_bookstore_v1_bookstore_proto_depIdxs = []int32{
 	3,  // 6: bookstore.v1.Lot.book:type_name -> bookstore.v1.Book
 	0,  // 7: bookstore.v1.Lot.condition:type_name -> bookstore.v1.Condition
 	16, // 8: bookstore.v1.Lot.flaws:type_name -> bookstore.v1.Flaw
-	24, // 9: bookstore.v1.Lot.attributes:type_name -> bookstore.v1.Lot.AttributesEntry
+	29, // 9: bookstore.v1.Lot.attributes:type_name -> bookstore.v1.Lot.AttributesEntry
 	15, // 10: bookstore.v1.Lot.consignor:type_name -> bookstore.v1.Consignor
 	17, // 11: bookstore.v1.Auction.lot:type_name -> bookstore.v1.Lot
 	1,  // 12: bookstore.v1.Auction.state:type_name -> bookstore.v1.AuctionState
-	25, // 13: bookstore.v1.Auction.ends_at:type_name -> google.protobuf.Timestamp
+	30, // 13: bookstore.v1.Auction.ends_at:type_name -> google.protobuf.Timestamp
 	17, // 14: bookstore.v1.CreateAuctionRequest.lot:type_name -> bookstore.v1.Lot
-	25, // 15: bookstore.v1.CreateAuctionRequest.starts_at:type_name -> google.protobuf.Timestamp
+	30, // 15: bookstore.v1.CreateAuctionRequest.starts_at:type_name -> google.protobuf.Timestamp
 	1,  // 16: bookstore.v1.ListAuctionsRequest.state:type_name -> bookstore.v1.AuctionState
 	18, // 17: bookstore.v1.ListAuctionsResponse.auctions:type_name -> bookstore.v1.Auction
-	26, // 18: bookstore.v1.BookstoreService.ListShelves:input_type -> google.protobuf.Empty
-	5,  // 19: bookstore.v1.BookstoreService.CreateShelf:input_type -> bookstore.v1.CreateShelfRequest
-	6,  // 20: bookstore.v1.BookstoreService.GetShelf:input_type -> bookstore.v1.GetShelfRequest
-	7,  // 21: bookstore.v1.BookstoreService.DeleteShelf:input_type -> bookstore.v1.DeleteShelfRequest
-	8,  // 22: bookstore.v1.BookstoreService.ListBooks:input_type -> bookstore.v1.ListBooksRequest
-	10, // 23: bookstore.v1.BookstoreService.CreateBook:input_type -> bookstore.v1.CreateBookRequest
-	11, // 24: bookstore.v1.BookstoreService.GetBook:input_type -> bookstore.v1.GetBookRequest
-	12, // 25: bookstore.v1.BookstoreService.DeleteBook:input_type -> bookstore.v1.DeleteBookRequest
-	19, // 26: bookstore.v1.AuctionsService.CreateAuction:input_type -> bookstore.v1.CreateAuctionRequest
-	20, // 27: bookstore.v1.AuctionsService.ListAuctions:input_type -> bookstore.v1.ListAuctionsRequest
-	22, // 28: bookstore.v1.InventoryService.ExportReport:input_type -> bookstore.v1.ExportReportRequest
-	4,  // 29: bookstore.v1.BookstoreService.ListShelves:output_type -> bookstore.v1.ListShelvesResponse
-	2,  // 30: bookstore.v1.BookstoreService.CreateShelf:output_type -> bookstore.v1.Shelf
-	2,  // 31: bookstore.v1.BookstoreService.GetShelf:output_type -> bookstore.v1.Shelf
-	26, // 32: bookstore.v1.BookstoreService.DeleteShelf:output_type -> google.protobuf.Empty
-	9,  // 33: bookstore.v1.BookstoreService.ListBooks:output_type -> bookstore.v1.ListBooksResponse
-	3,  // 34: bookstore.v1.BookstoreService.CreateBook:output_type -> bookstore.v1.Book
-	3,  // 35: bookstore.v1.BookstoreService.GetBook:output_type -> bookstore.v1.Book
-	26, // 36: bookstore.v1.BookstoreService.DeleteBook:output_type -> google.protobuf.Empty
-	18, // 37: bookstore.v1.AuctionsService.CreateAuction:output_type -> bookstore.v1.Auction
-	21, // 38: bookstore.v1.AuctionsService.ListAuctions:output_type -> bookstore.v1.ListAuctionsResponse
-	23, // 39: bookstore.v1.InventoryService.ExportReport:output_type -> bookstore.v1.Report
-	29, // [29:40] is the sub-list for method output_type
-	18, // [18:29] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	1,  // 18: bookstore.v1.AuctionUpdate.state:type_name -> bookstore.v1.AuctionState
+	30, // 19: bookstore.v1.AuctionUpdate.at:type_name -> google.protobuf.Timestamp
+	3,  // 20: bookstore.v1.ImportBooksRequest.book:type_name -> bookstore.v1.Book
+	31, // 21: bookstore.v1.BookstoreService.ListShelves:input_type -> google.protobuf.Empty
+	5,  // 22: bookstore.v1.BookstoreService.CreateShelf:input_type -> bookstore.v1.CreateShelfRequest
+	6,  // 23: bookstore.v1.BookstoreService.GetShelf:input_type -> bookstore.v1.GetShelfRequest
+	7,  // 24: bookstore.v1.BookstoreService.DeleteShelf:input_type -> bookstore.v1.DeleteShelfRequest
+	8,  // 25: bookstore.v1.BookstoreService.ListBooks:input_type -> bookstore.v1.ListBooksRequest
+	10, // 26: bookstore.v1.BookstoreService.CreateBook:input_type -> bookstore.v1.CreateBookRequest
+	11, // 27: bookstore.v1.BookstoreService.GetBook:input_type -> bookstore.v1.GetBookRequest
+	12, // 28: bookstore.v1.BookstoreService.DeleteBook:input_type -> bookstore.v1.DeleteBookRequest
+	19, // 29: bookstore.v1.AuctionsService.CreateAuction:input_type -> bookstore.v1.CreateAuctionRequest
+	20, // 30: bookstore.v1.AuctionsService.ListAuctions:input_type -> bookstore.v1.ListAuctionsRequest
+	22, // 31: bookstore.v1.AuctionsService.WatchAuction:input_type -> bookstore.v1.WatchAuctionRequest
+	23, // 32: bookstore.v1.AuctionsService.Bid:input_type -> bookstore.v1.PlaceBidRequest
+	27, // 33: bookstore.v1.InventoryService.ImportBooks:input_type -> bookstore.v1.ImportBooksRequest
+	25, // 34: bookstore.v1.InventoryService.ExportReport:input_type -> bookstore.v1.ExportReportRequest
+	4,  // 35: bookstore.v1.BookstoreService.ListShelves:output_type -> bookstore.v1.ListShelvesResponse
+	2,  // 36: bookstore.v1.BookstoreService.CreateShelf:output_type -> bookstore.v1.Shelf
+	2,  // 37: bookstore.v1.BookstoreService.GetShelf:output_type -> bookstore.v1.Shelf
+	31, // 38: bookstore.v1.BookstoreService.DeleteShelf:output_type -> google.protobuf.Empty
+	9,  // 39: bookstore.v1.BookstoreService.ListBooks:output_type -> bookstore.v1.ListBooksResponse
+	3,  // 40: bookstore.v1.BookstoreService.CreateBook:output_type -> bookstore.v1.Book
+	3,  // 41: bookstore.v1.BookstoreService.GetBook:output_type -> bookstore.v1.Book
+	31, // 42: bookstore.v1.BookstoreService.DeleteBook:output_type -> google.protobuf.Empty
+	18, // 43: bookstore.v1.AuctionsService.CreateAuction:output_type -> bookstore.v1.Auction
+	21, // 44: bookstore.v1.AuctionsService.ListAuctions:output_type -> bookstore.v1.ListAuctionsResponse
+	24, // 45: bookstore.v1.AuctionsService.WatchAuction:output_type -> bookstore.v1.AuctionUpdate
+	24, // 46: bookstore.v1.AuctionsService.Bid:output_type -> bookstore.v1.AuctionUpdate
+	28, // 47: bookstore.v1.InventoryService.ImportBooks:output_type -> bookstore.v1.ImportSummary
+	26, // 48: bookstore.v1.InventoryService.ExportReport:output_type -> bookstore.v1.Report
+	35, // [35:49] is the sub-list for method output_type
+	21, // [21:35] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_bookstore_v1_bookstore_proto_init() }
@@ -1600,13 +1954,17 @@ func file_bookstore_v1_bookstore_proto_init() {
 	if File_bookstore_v1_bookstore_proto != nil {
 		return
 	}
+	file_bookstore_v1_bookstore_proto_msgTypes[20].OneofWrappers = []any{
+		(*WatchAuctionRequest_Auction)(nil),
+		(*WatchAuctionRequest_Author)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_bookstore_v1_bookstore_proto_rawDesc), len(file_bookstore_v1_bookstore_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   23,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   3,
 		},

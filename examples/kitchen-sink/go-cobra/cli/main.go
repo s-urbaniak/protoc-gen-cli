@@ -16,24 +16,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// lineFormat writes each record on one line, with a prefix.
-type lineFormat struct{}
-
-func (lineFormat) Format(w io.Writer, r secondv1.Records) error {
-	for {
-		rec, err := r.Next()
-		if errors.Is(err, io.EOF) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		if _, err := fmt.Fprintf(w, "line: %s\n", rec); err != nil {
-			return err
-		}
-	}
-}
-
 func main() {
 	conn, err := grpc.NewClient("localhost:50055",
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -41,19 +23,68 @@ func main() {
 		log.Fatal(err)
 	}
 
+	lineFmt := func(w io.Writer, next func() ([]byte, error)) error {
+		for {
+			rec, err := next()
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
+			if err != nil {
+				return err
+			}
+			if _, err := fmt.Fprintf(w, "line: %s\n", rec); err != nil {
+				return err
+			}
+		}
+	}
+	printers := map[string]func(io.Writer, func() ([]byte, error)) error{"line": lineFmt}
+	noPretty := map[string]func(io.Writer, func() ([]byte, error)) error{
+		"line":        lineFmt,
+		"json-pretty": nil,
+	}
+	views := map[string][]string{
+		"kitchensink.v1.MessagesRequest": {
+			"OUTER:outer.stringLeaf",
+			"DEEPEST:outer.middle.inner.deep.deeper.deepest.leaf",
+		},
+		"kitchensink.v1.Outer": {"LEAF:stringLeaf", "MIDDLE:middle.leaf"},
+	}
+
 	root := &cobra.Command{
 		Use:   "kitchen-sink",
 		Short: "Kitchen-sink fixture CLI",
 	}
 	root.AddCommand(
-		kitchensinkv1.NewFieldsServiceCommand(conn),
-		kitchensinkv1.NewNamesServiceCommand(conn),
-		secondv1.NewSecondServiceCommand(conn),
+		kitchensinkv1.NewFieldsServiceCommand(
+			conn,
+			kitchensinkv1.FieldsServiceOptions{
+				DefaultOutput: "yaml",
+				Printers:      noPretty,
+				Views:         views,
+			},
+		),
+		kitchensinkv1.NewNamesServiceCommand(
+			conn,
+			kitchensinkv1.NamesServiceOptions{
+				DefaultOutput: "yaml",
+				Printers:      noPretty,
+				Views:         views,
+			},
+		),
+		kitchensinkv1.NewStreamsServiceCommand(
+			conn,
+			kitchensinkv1.StreamsServiceOptions{
+				DefaultOutput: "yaml",
+				Printers:      noPretty,
+				Views:         views,
+			},
+		),
+		kitchensinkv1.NewRelayServiceCommand(conn),
+		kitchensinkv1.NewFeedServiceCommand(conn),
+		kitchensinkv1.NewIngestServiceCommand(conn),
+		secondv1.NewSecondServiceCommand(conn,
+			secondv1.SecondServiceOptions{DefaultOutput: "yaml", Printers: printers}),
 	)
-
-	secondv1.RegisterFormat("line", lineFormat{})
-	secondv1.UnregisterFormat("json-pretty")
-	secondv1.SetDefaultFormat("yaml")
 
 	if err := root.Execute(); err != nil {
 		os.Exit(1)

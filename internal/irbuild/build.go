@@ -15,11 +15,10 @@ import (
 // Options configures the IR builder.
 type Options struct {
 	PluginVersion string // "" means "dev"
-	// Files, keyed by proto path, locates the file declaring a command's request message.
-	Files map[string]*protogen.File
-	// Warn receives generation warnings.
+	// Files indexes every compilation file by proto path.
+	Files               map[string]*protogen.File
 	Warn                func(string)
-	RequestExpandDepth  int // 0 = only the request's own fields get flags
+	RequestExpandDepth  int // 0 = only the request's own fields get params
 	ResponseExpandDepth int // 0 = only the response's own fields become view fields
 }
 
@@ -29,19 +28,32 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 		opts.PluginVersion = "dev"
 	}
 
+	// A request message shared by several RPCs would repeat its warnings.
+	warned := map[string]bool{}
+	warn := opts.Warn
+	opts.Warn = func(msg string) {
+		if warned[msg] {
+			return
+		}
+		warned[msg] = true
+		warn(msg)
+	}
+
 	model := &ir.Model{
-		PluginVersion: opts.PluginVersion,
-		ProtoFile:     file.Desc.Path(),
-		ProtoPackage:  string(file.Desc.Package()),
+		PluginVersion:           opts.PluginVersion,
+		ProtoFile:               file.Desc.Path(),
+		GeneratedFilenamePrefix: file.GeneratedFilenamePrefix,
+		ProtoPackage:            string(file.Desc.Package()),
 		FileOptions: ir.FileOptions{
-			GoPackageName: string(file.GoPackageName),
-			GoImportPath:  string(file.GoImportPath),
+			GoPackageName:    string(file.GoPackageName),
+			GoImportPath:     string(file.GoImportPath),
+			GoDescriptorName: file.GoDescriptorIdent.GoName,
 		},
 	}
 
 	for _, svc := range file.Services {
 		name := strcase.KebabCase(string(svc.Desc.Name()))
-		if s, ok := strings.CutSuffix(name, "-service"); ok && s != "" {
+		if s, ok := strings.CutSuffix(name, "-service"); ok {
 			name = s
 		}
 
@@ -64,25 +76,39 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 				GoName:       m.Input.GoIdent.GoName,
 				GoImportPath: string(m.Input.GoIdent.GoImportPath),
 			}
-			if f := opts.Files[request.ProtoFile]; f != nil {
-				request.GoPackageName = string(f.GoPackageName)
-			}
+			request.GoPackageName = string(opts.Files[request.ProtoFile].GoPackageName)
+
+			clientStreaming := m.Desc.IsStreamingClient()
+			serverStreaming := m.Desc.IsStreamingServer()
 
 			doc := cleanComment(string(m.Comments.Leading))
-			reqDoc := cleanComment(string(m.Input.Comments.Leading))
-			short, long := helpFrom(doc, reqDoc)
+			notes := []string{cleanComment(string(m.Input.Comments.Leading))}
+			if clientStreaming {
+				notes = append(notes, "Reads JSON requests from stdin, one after another.")
+			}
+			if serverStreaming {
+				notes = append(
+					notes,
+					"The server may send multiple responses; each prints as it arrives.",
+				)
+			}
+			short, long := helpFrom(doc, notes...)
 
 			cmd := &ir.Command{
-				ProtoName: string(m.Desc.Name()),
-				GoName:    m.GoName,
-				Name:      strcase.KebabCase(string(m.Desc.Name())),
-				Input:     request,
-				Output:    string(m.Output.Desc.FullName()),
-				ShortHelp: short,
-				LongHelp:  long,
+				ProtoName:       string(m.Desc.Name()),
+				GoName:          m.GoName,
+				Name:            strcase.KebabCase(string(m.Desc.Name())),
+				Input:           request,
+				Output:          string(m.Output.Desc.FullName()),
+				ClientStreaming: clientStreaming,
+				ServerStreaming: serverStreaming,
+				ShortHelp:       short,
+				LongHelp:        long,
 			}
 
-			cmd.Flags = buildFlags(m.Input.Desc, opts)
+			if !clientStreaming {
+				cmd.Params = buildParams(m.Input.Desc, opts)
+			}
 			cmd.View = buildView(m.Output.Desc, opts)
 
 			service.Commands = append(service.Commands, cmd)
@@ -119,7 +145,7 @@ func cleanComment(s string) string {
 	return strings.TrimSpace(strings.Join(lines, "\n"))
 }
 
-// isExpandable reports whether fd's sub-fields each get their own flag and column.
+// isExpandable reports whether fd's sub-fields expand into entries of their own.
 func isExpandable(fd protoreflect.FieldDescriptor) bool {
 	if fd.Kind() != protoreflect.MessageKind || fd.IsList() || fd.IsMap() {
 		return false
