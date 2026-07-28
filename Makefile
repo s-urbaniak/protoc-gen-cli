@@ -42,16 +42,22 @@ lintfix: ## Fix lint errors
 
 .PHONY: gen
 gen: clean ## Regenerate proto code
+	$(MAKE) gen-proto
 	$(MAKE) gen-examples
+
+.PHONY: gen-proto
+gen-proto: fmt ## Regenerate cli.v0 schema
+	buf generate
 
 .PHONY: gen-examples
 gen-examples: fmt ## Regenerate examples
 	cd examples/bookstore && buf generate
+	cd examples/bookstore-annotated && buf generate
 	cd examples/kitchen-sink && buf generate
 
 .PHONY: verify-examples-regen
 verify-examples-regen: gen ## Fail if regenerating examples changes anything
-	@status=$$(git status --porcelain -- examples/); \
+	@status=$$(git status --porcelain -- examples/ proto/); \
 	if [ -n "$$status" ]; then echo "$$status"; exit 1; fi
 
 .PHONY: fmt
@@ -73,4 +79,5 @@ upgrade: ## Upgrade dependencies
 clean: ## Delete build artifacts
 	rm -rf .tmp dist
 	rm -rf examples/bookstore/go-cobra/gen
+	rm -rf examples/bookstore-annotated/go-cobra/gen
 	rm -rf examples/kitchen-sink/go-cobra/gen

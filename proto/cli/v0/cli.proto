@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+// The cli.v0 options let a proto's owner shape the CLI generated from it;
+// without them, every name derives from the proto.
+package cli.v0;
+
+import "google/protobuf/descriptor.proto";
+
+option go_package = "github.com/braveokafor/proto-to-cli/proto/cli/v0;cliv0";
+
+// ServiceOptions shapes the command a service generates.
+message ServiceOptions {
+  // name replaces the derived command name.
+  string name = 1;
+}
+
+// CommandOptions shapes the subcommand an rpc generates.
+message CommandOptions {
+  // name replaces the derived subcommand name.
+  string name = 1;
+}
+
+// 86471: an arbitrary number in protobuf's internal-use extension range
+// (50000–99999).
+extend google.protobuf.ServiceOptions {
+  ServiceOptions service = 86471;
+}
+
+extend google.protobuf.MethodOptions {
+  CommandOptions command = 86471;
+}

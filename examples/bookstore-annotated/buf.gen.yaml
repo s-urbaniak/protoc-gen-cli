@@ -1,0 +1,22 @@
+version: v2
+managed:
+  enabled: false
+plugins:
+  - local: [go, tool, protoc-gen-go]
+    out: go-cobra/gen
+    opt: [paths=source_relative, default_api_level=API_OPAQUE]
+  - local: [go, tool, protoc-gen-go-grpc]
+    out: go-cobra/gen
+    opt: [paths=source_relative]
+  - local: [go, run, github.com/braveokafor/proto-to-cli/cmd/protoc-gen-cli]
+    out: go-cobra/gen
+    opt:
+      [
+        paths=source_relative,
+        target=gocobra,
+        dump-ir=true,
+        request-expand-depth=2,
+        response-expand-depth=3,
+      ]
+inputs:
+  - directory: proto

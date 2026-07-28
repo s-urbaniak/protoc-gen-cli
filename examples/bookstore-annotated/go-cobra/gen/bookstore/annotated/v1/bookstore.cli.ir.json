@@ -1,0 +1,839 @@
+{
+  "plugin_version": "dev",
+  "proto_file": "bookstore/annotated/v1/bookstore.proto",
+  "generated_filename_prefix": "bookstore/annotated/v1/bookstore",
+  "proto_package": "bookstore.annotated.v1",
+  "file_options": {
+    "go_package_name": "bookstoreannotatedv1",
+    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1",
+    "go_descriptor_name": "File_bookstore_annotated_v1_bookstore_proto"
+  },
+  "services": [
+    {
+      "proto_name": "BookstoreService",
+      "go_name": "BookstoreService",
+      "name": "catalog",
+      "short_help": "A simple Bookstore API.",
+      "long_help": "A simple Bookstore API.\n\nThe API manages shelves and books resources. Shelves contain books.",
+      "commands": [
+        {
+          "proto_name": "ListShelves",
+          "go_name": "ListShelves",
+          "name": "list-shelves",
+          "short_help": "Returns a list of all shelves in the bookstore.",
+          "long_help": "Returns a list of all shelves in the bookstore.\n\nA generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:\n\n    service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }",
+          "input": {
+            "full_name": "google.protobuf.Empty",
+            "proto_file": "google/protobuf/empty.proto",
+            "proto_package": "google.protobuf",
+            "go_name": "Empty",
+            "go_import_path": "google.golang.org/protobuf/types/known/emptypb",
+            "go_package_name": "emptypb"
+          },
+          "output": "bookstore.annotated.v1.ListShelvesResponse",
+          "view": {
+            "full_name": "bookstore.annotated.v1.ListShelvesResponse",
+            "lists": [
+              {
+                "full_name": "bookstore.annotated.v1.Shelf",
+                "label": "shelves",
+                "path": "shelves",
+                "fields": [
+                  {
+                    "label": "id",
+                    "path": "id"
+                  },
+                  {
+                    "label": "theme",
+                    "path": "theme"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "CreateShelf",
+          "go_name": "CreateShelf",
+          "name": "create-shelf",
+          "short_help": "Creates a new shelf in the bookstore.",
+          "long_help": "Creates a new shelf in the bookstore.\n\nRequest message for CreateShelf method.",
+          "input": {
+            "full_name": "bookstore.annotated.v1.CreateShelfRequest",
+            "proto_file": "bookstore/annotated/v1/bookstore.proto",
+            "proto_package": "bookstore.annotated.v1",
+            "go_name": "CreateShelfRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1",
+            "go_package_name": "bookstoreannotatedv1"
+          },
+          "output": "bookstore.annotated.v1.Shelf",
+          "params": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "json"
+            },
+            {
+              "proto_path": "shelf.id",
+              "name": "shelf.id",
+              "bind": "int"
+            },
+            {
+              "proto_path": "shelf.theme",
+              "name": "shelf.theme",
+              "bind": "string"
+            }
+          ],
+          "view": {
+            "full_name": "bookstore.annotated.v1.Shelf",
+            "fields": [
+              {
+                "label": "id",
+                "path": "id"
+              },
+              {
+                "label": "theme",
+                "path": "theme"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "GetShelf",
+          "go_name": "GetShelf",
+          "name": "get-shelf",
+          "short_help": "Returns a specific bookstore shelf.",
+          "long_help": "Returns a specific bookstore shelf.\n\nRequest message for GetShelf method.",
+          "input": {
+            "full_name": "bookstore.annotated.v1.GetShelfRequest",
+            "proto_file": "bookstore/annotated/v1/bookstore.proto",
+            "proto_package": "bookstore.annotated.v1",
+            "go_name": "GetShelfRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1",
+            "go_package_name": "bookstoreannotatedv1"
+          },
+          "output": "bookstore.annotated.v1.Shelf",
+          "params": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "int"
+            }
+          ],
+          "view": {
+            "full_name": "bookstore.annotated.v1.Shelf",
+            "fields": [
+              {
+                "label": "id",
+                "path": "id"
+              },
+              {
+                "label": "theme",
+                "path": "theme"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "DeleteShelf",
+          "go_name": "DeleteShelf",
+          "name": "delete-shelf",
+          "short_help": "Deletes a shelf, including all books that are stored on the shelf.",
+          "long_help": "Deletes a shelf, including all books that are stored on the shelf.\n\nRequest message for DeleteShelf method.",
+          "input": {
+            "full_name": "bookstore.annotated.v1.DeleteShelfRequest",
+            "proto_file": "bookstore/annotated/v1/bookstore.proto",
+            "proto_package": "bookstore.annotated.v1",
+            "go_name": "DeleteShelfRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1",
+            "go_package_name": "bookstoreannotatedv1"
+          },
+          "output": "google.protobuf.Empty",
+          "params": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "int"
+            }
+          ],
+          "view": {
+            "full_name": "google.protobuf.Empty"
+          }
+        },
+        {
+          "proto_name": "ListBooks",
+          "go_name": "ListBooks",
+          "name": "list",
+          "short_help": "Returns a list of books on a shelf.",
+          "long_help": "Returns a list of books on a shelf.\n\nRequest message for ListBooks method.",
+          "input": {
+            "full_name": "bookstore.annotated.v1.ListBooksRequest",
+            "proto_file": "bookstore/annotated/v1/bookstore.proto",
+            "proto_package": "bookstore.annotated.v1",
+            "go_name": "ListBooksRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1",
+            "go_package_name": "bookstoreannotatedv1"
+          },
+          "output": "bookstore.annotated.v1.ListBooksResponse",
+          "params": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "int"
+            }
+          ],
+          "view": {
+            "full_name": "bookstore.annotated.v1.ListBooksResponse",
+            "lists": [
+              {
+                "full_name": "bookstore.annotated.v1.Book",
+                "label": "books",
+                "path": "books",
+                "fields": [
+                  {
+                    "label": "id",
+                    "path": "id"
+                  },
+                  {
+                    "label": "author",
+                    "path": "author"
+                  },
+                  {
+                    "label": "title",
+                    "path": "title"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "CreateBook",
+          "go_name": "CreateBook",
+          "name": "add",
+          "short_help": "Creates a new book.",
+          "long_help": "Creates a new book.\n\nRequest message for CreateBook method.",
+          "input": {
+            "full_name": "bookstore.annotated.v1.CreateBookRequest",
+            "proto_file": "bookstore/annotated/v1/bookstore.proto",
+            "proto_package": "bookstore.annotated.v1",
+            "go_name": "CreateBookRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1",
+            "go_package_name": "bookstoreannotatedv1"
+          },
+          "output": "bookstore.annotated.v1.Book",
+          "params": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "int"
+            },
+            {
+              "proto_path": "book",
+              "name": "book",
+              "bind": "json"
+            },
+            {
+              "proto_path": "book.id",
+              "name": "book.id",
+              "bind": "int"
+            },
+            {
+              "proto_path": "book.author",
+              "name": "book.author",
+              "bind": "string"
+            },
+            {
+              "proto_path": "book.title",
+              "name": "book.title",
+              "bind": "string"
+            }
+          ],
+          "view": {
+            "full_name": "bookstore.annotated.v1.Book",
+            "fields": [
+              {
+                "label": "id",
+                "path": "id"
+              },
+              {
+                "label": "author",
+                "path": "author"
+              },
+              {
+                "label": "title",
+                "path": "title"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "GetBook",
+          "go_name": "GetBook",
+          "name": "get",
+          "short_help": "Returns a specific book.",
+          "long_help": "Returns a specific book.\n\nRequest message for GetBook method.",
+          "input": {
+            "full_name": "bookstore.annotated.v1.GetBookRequest",
+            "proto_file": "bookstore/annotated/v1/bookstore.proto",
+            "proto_package": "bookstore.annotated.v1",
+            "go_name": "GetBookRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1",
+            "go_package_name": "bookstoreannotatedv1"
+          },
+          "output": "bookstore.annotated.v1.Book",
+          "params": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "int"
+            },
+            {
+              "proto_path": "book",
+              "name": "book",
+              "bind": "int"
+            }
+          ],
+          "view": {
+            "full_name": "bookstore.annotated.v1.Book",
+            "fields": [
+              {
+                "label": "id",
+                "path": "id"
+              },
+              {
+                "label": "author",
+                "path": "author"
+              },
+              {
+                "label": "title",
+                "path": "title"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "DeleteBook",
+          "go_name": "DeleteBook",
+          "name": "delete",
+          "short_help": "Deletes a book from a shelf.",
+          "long_help": "Deletes a book from a shelf.\n\nRequest message for DeleteBook method.",
+          "input": {
+            "full_name": "bookstore.annotated.v1.DeleteBookRequest",
+            "proto_file": "bookstore/annotated/v1/bookstore.proto",
+            "proto_package": "bookstore.annotated.v1",
+            "go_name": "DeleteBookRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1",
+            "go_package_name": "bookstoreannotatedv1"
+          },
+          "output": "google.protobuf.Empty",
+          "params": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "int"
+            },
+            {
+              "proto_path": "book",
+              "name": "book",
+              "bind": "int"
+            }
+          ],
+          "view": {
+            "full_name": "google.protobuf.Empty"
+          }
+        }
+      ]
+    },
+    {
+      "proto_name": "AuctionsService",
+      "go_name": "AuctionsService",
+      "name": "auctions",
+      "short_help": "AuctionsService sells the store's rare books under the hammer.",
+      "commands": [
+        {
+          "proto_name": "CreateAuction",
+          "go_name": "CreateAuction",
+          "name": "create",
+          "short_help": "CreateAuction consigns a lot and schedules its auction.",
+          "input": {
+            "full_name": "bookstore.annotated.v1.CreateAuctionRequest",
+            "proto_file": "bookstore/annotated/v1/bookstore.proto",
+            "proto_package": "bookstore.annotated.v1",
+            "go_name": "CreateAuctionRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1",
+            "go_package_name": "bookstoreannotatedv1"
+          },
+          "output": "bookstore.annotated.v1.Auction",
+          "params": [
+            {
+              "proto_path": "lot",
+              "name": "lot",
+              "bind": "json"
+            },
+            {
+              "proto_path": "lot.id",
+              "name": "lot.id",
+              "bind": "int"
+            },
+            {
+              "proto_path": "lot.book",
+              "name": "lot.book",
+              "bind": "json"
+            },
+            {
+              "proto_path": "lot.book.id",
+              "name": "lot.book.id",
+              "bind": "int"
+            },
+            {
+              "proto_path": "lot.book.author",
+              "name": "lot.book.author",
+              "bind": "string"
+            },
+            {
+              "proto_path": "lot.book.title",
+              "name": "lot.book.title",
+              "bind": "string"
+            },
+            {
+              "proto_path": "lot.condition",
+              "name": "lot.condition",
+              "bind": "string",
+              "enum_values": [
+                "CONDITION_UNSPECIFIED",
+                "CONDITION_FINE",
+                "CONDITION_VERY_GOOD",
+                "CONDITION_GOOD",
+                "CONDITION_FAIR",
+                "CONDITION_POOR"
+              ]
+            },
+            {
+              "proto_path": "lot.reserve_price",
+              "name": "lot.reserve-price",
+              "bind": "float"
+            },
+            {
+              "proto_path": "lot.provenance",
+              "name": "lot.provenance",
+              "bind": "string",
+              "repeated": true
+            },
+            {
+              "proto_path": "lot.flaws",
+              "name": "lot.flaws",
+              "bind": "json",
+              "repeated": true
+            },
+            {
+              "proto_path": "lot.attributes",
+              "name": "lot.attributes",
+              "bind": "string",
+              "map": true
+            },
+            {
+              "proto_path": "lot.consignor",
+              "name": "lot.consignor",
+              "bind": "json"
+            },
+            {
+              "proto_path": "lot.consignor.name",
+              "name": "lot.consignor.name",
+              "bind": "string"
+            },
+            {
+              "proto_path": "lot.consignor.address",
+              "name": "lot.consignor.address",
+              "bind": "json"
+            },
+            {
+              "proto_path": "starts_at",
+              "name": "starts-at",
+              "bind": "string"
+            }
+          ],
+          "view": {
+            "full_name": "bookstore.annotated.v1.Auction",
+            "fields": [
+              {
+                "label": "id",
+                "path": "id"
+              },
+              {
+                "label": "lot.id",
+                "path": "lot.id"
+              },
+              {
+                "label": "lot.book.id",
+                "path": "lot.book.id"
+              },
+              {
+                "label": "lot.book.author",
+                "path": "lot.book.author"
+              },
+              {
+                "label": "lot.book.title",
+                "path": "lot.book.title"
+              },
+              {
+                "label": "lot.condition",
+                "path": "lot.condition"
+              },
+              {
+                "label": "lot.reserve_price",
+                "path": "lot.reservePrice"
+              },
+              {
+                "label": "lot.provenance",
+                "path": "lot.provenance"
+              },
+              {
+                "label": "lot.flaws",
+                "path": "lot.flaws"
+              },
+              {
+                "label": "lot.attributes",
+                "path": "lot.attributes"
+              },
+              {
+                "label": "lot.consignor.name",
+                "path": "lot.consignor.name"
+              },
+              {
+                "label": "lot.consignor.address.street",
+                "path": "lot.consignor.address.street"
+              },
+              {
+                "label": "lot.consignor.address.city",
+                "path": "lot.consignor.address.city"
+              },
+              {
+                "label": "lot.consignor.address.country",
+                "path": "lot.consignor.address.country"
+              },
+              {
+                "label": "state",
+                "path": "state"
+              },
+              {
+                "label": "high_bid",
+                "path": "highBid"
+              },
+              {
+                "label": "high_bidder",
+                "path": "highBidder"
+              },
+              {
+                "label": "ends_at",
+                "path": "endsAt"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "ListAuctions",
+          "go_name": "ListAuctions",
+          "name": "list",
+          "short_help": "ListAuctions lists auctions, optionally filtered by state.",
+          "input": {
+            "full_name": "bookstore.annotated.v1.ListAuctionsRequest",
+            "proto_file": "bookstore/annotated/v1/bookstore.proto",
+            "proto_package": "bookstore.annotated.v1",
+            "go_name": "ListAuctionsRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1",
+            "go_package_name": "bookstoreannotatedv1"
+          },
+          "output": "bookstore.annotated.v1.ListAuctionsResponse",
+          "params": [
+            {
+              "proto_path": "state",
+              "name": "state",
+              "bind": "string",
+              "enum_values": [
+                "AUCTION_STATE_UNSPECIFIED",
+                "AUCTION_STATE_SCHEDULED",
+                "AUCTION_STATE_OPEN",
+                "AUCTION_STATE_HAMMERED",
+                "AUCTION_STATE_SETTLED"
+              ]
+            }
+          ],
+          "view": {
+            "full_name": "bookstore.annotated.v1.ListAuctionsResponse",
+            "fields": [
+              {
+                "label": "next_page_token",
+                "path": "nextPageToken"
+              },
+              {
+                "label": "total_size",
+                "path": "totalSize"
+              }
+            ],
+            "lists": [
+              {
+                "full_name": "bookstore.annotated.v1.Auction",
+                "label": "auctions",
+                "path": "auctions",
+                "fields": [
+                  {
+                    "label": "id",
+                    "path": "id"
+                  },
+                  {
+                    "label": "lot.id",
+                    "path": "lot.id"
+                  },
+                  {
+                    "label": "lot.book.id",
+                    "path": "lot.book.id"
+                  },
+                  {
+                    "label": "lot.book.author",
+                    "path": "lot.book.author"
+                  },
+                  {
+                    "label": "lot.book.title",
+                    "path": "lot.book.title"
+                  },
+                  {
+                    "label": "lot.condition",
+                    "path": "lot.condition"
+                  },
+                  {
+                    "label": "lot.reserve_price",
+                    "path": "lot.reservePrice"
+                  },
+                  {
+                    "label": "lot.provenance",
+                    "path": "lot.provenance"
+                  },
+                  {
+                    "label": "lot.flaws",
+                    "path": "lot.flaws"
+                  },
+                  {
+                    "label": "lot.attributes",
+                    "path": "lot.attributes"
+                  },
+                  {
+                    "label": "lot.consignor.name",
+                    "path": "lot.consignor.name"
+                  },
+                  {
+                    "label": "lot.consignor.address.street",
+                    "path": "lot.consignor.address.street"
+                  },
+                  {
+                    "label": "lot.consignor.address.city",
+                    "path": "lot.consignor.address.city"
+                  },
+                  {
+                    "label": "lot.consignor.address.country",
+                    "path": "lot.consignor.address.country"
+                  },
+                  {
+                    "label": "state",
+                    "path": "state"
+                  },
+                  {
+                    "label": "high_bid",
+                    "path": "highBid"
+                  },
+                  {
+                    "label": "high_bidder",
+                    "path": "highBidder"
+                  },
+                  {
+                    "label": "ends_at",
+                    "path": "endsAt"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "WatchAuction",
+          "go_name": "WatchAuction",
+          "name": "watch",
+          "short_help": "WatchAuction streams bidding updates for the selected auctions as a live feed until the client cancels.",
+          "long_help": "WatchAuction streams bidding updates for the selected auctions as a live\nfeed until the client cancels.\n\nWatchAuctionRequest selects auctions by exactly one of auction or author.\n\nThe server may send multiple responses; each prints as it arrives.",
+          "input": {
+            "full_name": "bookstore.annotated.v1.WatchAuctionRequest",
+            "proto_file": "bookstore/annotated/v1/bookstore.proto",
+            "proto_package": "bookstore.annotated.v1",
+            "go_name": "WatchAuctionRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1",
+            "go_package_name": "bookstoreannotatedv1"
+          },
+          "output": "bookstore.annotated.v1.AuctionUpdate",
+          "server_streaming": true,
+          "params": [
+            {
+              "proto_path": "auction",
+              "name": "auction",
+              "bind": "int",
+              "oneof": "subject"
+            },
+            {
+              "proto_path": "author",
+              "name": "author",
+              "bind": "string",
+              "oneof": "subject"
+            },
+            {
+              "proto_path": "limit",
+              "name": "limit",
+              "bind": "int"
+            }
+          ],
+          "view": {
+            "full_name": "bookstore.annotated.v1.AuctionUpdate",
+            "fields": [
+              {
+                "label": "auction",
+                "path": "auction"
+              },
+              {
+                "label": "high_bid",
+                "path": "highBid"
+              },
+              {
+                "label": "bidder",
+                "path": "bidder"
+              },
+              {
+                "label": "state",
+                "path": "state"
+              },
+              {
+                "label": "at",
+                "path": "at"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "Bid",
+          "go_name": "Bid",
+          "name": "bid",
+          "short_help": "Bid places bids and streams back every update on the bid's auction.",
+          "long_help": "Bid places bids and streams back every update on the bid's auction.\n\nReads JSON requests from stdin, one after another.\n\nThe server may send multiple responses; each prints as it arrives.",
+          "input": {
+            "full_name": "bookstore.annotated.v1.PlaceBidRequest",
+            "proto_file": "bookstore/annotated/v1/bookstore.proto",
+            "proto_package": "bookstore.annotated.v1",
+            "go_name": "PlaceBidRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1",
+            "go_package_name": "bookstoreannotatedv1"
+          },
+          "output": "bookstore.annotated.v1.AuctionUpdate",
+          "client_streaming": true,
+          "server_streaming": true,
+          "view": {
+            "full_name": "bookstore.annotated.v1.AuctionUpdate",
+            "fields": [
+              {
+                "label": "auction",
+                "path": "auction"
+              },
+              {
+                "label": "high_bid",
+                "path": "highBid"
+              },
+              {
+                "label": "bidder",
+                "path": "bidder"
+              },
+              {
+                "label": "state",
+                "path": "state"
+              },
+              {
+                "label": "at",
+                "path": "at"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "proto_name": "InventoryService",
+      "go_name": "InventoryService",
+      "name": "inventory",
+      "short_help": "InventoryService is the back office's stock system.",
+      "commands": [
+        {
+          "proto_name": "ImportBooks",
+          "go_name": "ImportBooks",
+          "name": "import",
+          "short_help": "ImportBooks ingests a book catalogue as a stream of records.",
+          "long_help": "ImportBooks ingests a book catalogue as a stream of records.\n\nImportBooksRequest is one record of a catalogue import.\n\nReads JSON requests from stdin, one after another.",
+          "input": {
+            "full_name": "bookstore.annotated.v1.ImportBooksRequest",
+            "proto_file": "bookstore/annotated/v1/bookstore.proto",
+            "proto_package": "bookstore.annotated.v1",
+            "go_name": "ImportBooksRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1",
+            "go_package_name": "bookstoreannotatedv1"
+          },
+          "output": "bookstore.annotated.v1.ImportSummary",
+          "client_streaming": true,
+          "view": {
+            "full_name": "bookstore.annotated.v1.ImportSummary",
+            "fields": [
+              {
+                "label": "created",
+                "path": "created"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "ExportReport",
+          "go_name": "ExportReport",
+          "name": "export",
+          "short_help": "ExportReport renders a shelf's stock report and writes it to a file on the server.",
+          "long_help": "ExportReport renders a shelf's stock report and writes it to a file on\nthe server.\n\nRequest message for ExportReport method.",
+          "input": {
+            "full_name": "bookstore.annotated.v1.ExportReportRequest",
+            "proto_file": "bookstore/annotated/v1/bookstore.proto",
+            "proto_package": "bookstore.annotated.v1",
+            "go_name": "ExportReportRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1",
+            "go_package_name": "bookstoreannotatedv1"
+          },
+          "output": "bookstore.annotated.v1.Report",
+          "params": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "int"
+            },
+            {
+              "proto_path": "filename",
+              "name": "arg-filename",
+              "bind": "string"
+            }
+          ],
+          "view": {
+            "full_name": "bookstore.annotated.v1.Report",
+            "fields": [
+              {
+                "label": "filename",
+                "path": "filename"
+              },
+              {
+                "label": "books",
+                "path": "books"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

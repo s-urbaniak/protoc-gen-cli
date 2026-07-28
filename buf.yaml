@@ -1,6 +1,8 @@
 version: v2
 modules:
+  - path: proto
   - path: examples/bookstore/proto
+  - path: examples/bookstore-annotated/proto
   - path: examples/kitchen-sink/proto
 lint:
   use:
@@ -11,6 +13,8 @@ lint:
     - RPC_RESPONSE_STANDARD_NAME
     - RPC_REQUEST_RESPONSE_UNIQUE
   ignore_only:
+    PACKAGE_VERSION_SUFFIX:
+      - proto/cli/v0/cli.proto
     RPC_PASCAL_CASE:
       - examples/kitchen-sink/proto/kitchensink/v1/names.proto
     FIELD_LOWER_SNAKE_CASE:

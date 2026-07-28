@@ -1,0 +1,9 @@
+version: v2
+managed:
+  enabled: false
+plugins:
+  - local: [go, tool, protoc-gen-go]
+    out: proto
+    opt: [paths=source_relative, default_api_level=API_OPAQUE]
+inputs:
+  - directory: proto

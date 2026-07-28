@@ -2,6 +2,7 @@
 package irbuild
 
 import (
+	"cmp"
 	"go/doc"
 	"slices"
 	"strings"
@@ -63,7 +64,7 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 		service := &ir.Service{
 			ProtoName: string(svc.Desc.Name()),
 			GoName:    svc.GoName,
-			Name:      name,
+			Name:      cmp.Or(serviceOptions(svc.Desc).GetName(), name),
 			ShortHelp: short,
 			LongHelp:  long,
 		}
@@ -95,9 +96,12 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 			short, long := helpFrom(doc, notes...)
 
 			cmd := &ir.Command{
-				ProtoName:       string(m.Desc.Name()),
-				GoName:          m.GoName,
-				Name:            strcase.KebabCase(string(m.Desc.Name())),
+				ProtoName: string(m.Desc.Name()),
+				GoName:    m.GoName,
+				Name: cmp.Or(
+					commandOptions(m.Desc).GetName(),
+					strcase.KebabCase(string(m.Desc.Name())),
+				),
 				Input:           request,
 				Output:          string(m.Output.Desc.FullName()),
 				ClientStreaming: clientStreaming,

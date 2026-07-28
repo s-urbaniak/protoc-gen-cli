@@ -24,7 +24,7 @@ type FileOptions struct {
 	GoDescriptorName string `json:"go_descriptor_name,omitempty"`
 }
 
-// A Service is one service block: a command group with one command per RPC.
+// A Service is one service block: a command with one subcommand per RPC.
 type Service struct {
 	ProtoName string     `json:"proto_name,omitempty"`
 	GoName    string     `json:"go_name,omitempty"`

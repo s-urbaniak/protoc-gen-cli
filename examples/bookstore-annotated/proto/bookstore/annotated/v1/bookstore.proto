@@ -1,0 +1,304 @@
+// Copyright 2016 Google Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+syntax = "proto3";
+
+package bookstore.annotated.v1;
+
+import "cli/v0/cli.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1;bookstoreannotatedv1";
+
+// A simple Bookstore API.
+//
+// The API manages shelves and books resources. Shelves contain books.
+service BookstoreService {
+  option (cli.v0.service).name = "catalog";
+
+  // Returns a list of all shelves in the bookstore.
+  rpc ListShelves(google.protobuf.Empty) returns (ListShelvesResponse) {}
+  // Creates a new shelf in the bookstore.
+  rpc CreateShelf(CreateShelfRequest) returns (Shelf) {}
+  // Returns a specific bookstore shelf.
+  rpc GetShelf(GetShelfRequest) returns (Shelf) {}
+  // Deletes a shelf, including all books that are stored on the shelf.
+  rpc DeleteShelf(DeleteShelfRequest) returns (google.protobuf.Empty) {}
+  // Returns a list of books on a shelf.
+  rpc ListBooks(ListBooksRequest) returns (ListBooksResponse) {
+    option (cli.v0.command).name = "list";
+  }
+  // Creates a new book.
+  rpc CreateBook(CreateBookRequest) returns (Book) {
+    option (cli.v0.command).name = "add";
+  }
+  // Returns a specific book.
+  rpc GetBook(GetBookRequest) returns (Book) {
+    option (cli.v0.command).name = "get";
+  }
+  // Deletes a book from a shelf.
+  rpc DeleteBook(DeleteBookRequest) returns (google.protobuf.Empty) {
+    option (cli.v0.command).name = "delete";
+  }
+}
+
+// A shelf resource.
+message Shelf {
+  // A unique shelf id.
+  int64 id = 1;
+  // A theme of the shelf (fiction, poetry, etc).
+  string theme = 2;
+}
+
+// A book resource.
+message Book {
+  // A unique book id.
+  int64 id = 1;
+  // An author of the book.
+  string author = 2;
+  // A book title.
+  string title = 3;
+}
+
+// Response to ListShelves call.
+message ListShelvesResponse {
+  // Shelves in the bookstore.
+  repeated Shelf shelves = 1;
+}
+
+// Request message for CreateShelf method.
+message CreateShelfRequest {
+  // The shelf resource to create.
+  Shelf shelf = 1;
+}
+
+// Request message for GetShelf method.
+message GetShelfRequest {
+  // The ID of the shelf resource to retrieve.
+  int64 shelf = 1;
+}
+
+// Request message for DeleteShelf method.
+message DeleteShelfRequest {
+  // The ID of the shelf to delete.
+  int64 shelf = 1;
+}
+
+// Request message for ListBooks method.
+message ListBooksRequest {
+  // ID of the shelf which books to list.
+  int64 shelf = 1;
+}
+
+// Response message to ListBooks method.
+message ListBooksResponse {
+  // The books on the shelf.
+  repeated Book books = 1;
+}
+
+// Request message for CreateBook method.
+message CreateBookRequest {
+  // The ID of the shelf on which to create a book.
+  int64 shelf = 1;
+  // A book resource to create on the shelf.
+  Book book = 2;
+}
+
+// Request message for GetBook method.
+message GetBookRequest {
+  // The ID of the shelf from which to retrieve a book.
+  int64 shelf = 1;
+  // The ID of the book to retrieve.
+  int64 book = 2;
+}
+
+// Request message for DeleteBook method.
+message DeleteBookRequest {
+  // The ID of the shelf from which to delete a book.
+  int64 shelf = 1;
+  // The ID of the book to delete.
+  int64 book = 2;
+}
+
+// AuctionsService sells the store's rare books under the hammer.
+service AuctionsService {
+  // CreateAuction consigns a lot and schedules its auction.
+  rpc CreateAuction(CreateAuctionRequest) returns (Auction) {
+    option (cli.v0.command).name = "create";
+  }
+
+  // ListAuctions lists auctions, optionally filtered by state.
+  rpc ListAuctions(ListAuctionsRequest) returns (ListAuctionsResponse) {
+    option (cli.v0.command).name = "list";
+  }
+
+  // WatchAuction streams bidding updates for the selected auctions as a live
+  // feed until the client cancels.
+  rpc WatchAuction(WatchAuctionRequest) returns (stream AuctionUpdate) {
+    option (cli.v0.command).name = "watch";
+  }
+
+  // Bid places bids and streams back every update on the bid's auction.
+  rpc Bid(stream PlaceBidRequest) returns (stream AuctionUpdate);
+}
+
+// Condition grades a lot on the book trade's scale.
+enum Condition {
+  CONDITION_UNSPECIFIED = 0;
+  CONDITION_FINE = 1;
+  CONDITION_VERY_GOOD = 2;
+  CONDITION_GOOD = 3;
+  CONDITION_FAIR = 4;
+  CONDITION_POOR = 5;
+}
+
+// AuctionState tracks an auction from consignment to settlement.
+enum AuctionState {
+  AUCTION_STATE_UNSPECIFIED = 0;
+  AUCTION_STATE_SCHEDULED = 1;
+  AUCTION_STATE_OPEN = 2;
+  AUCTION_STATE_HAMMERED = 3;
+  AUCTION_STATE_SETTLED = 4;
+}
+
+// Country is a nation by ISO code.
+message Country {
+  string code = 1;
+  string name = 2;
+}
+
+// Address is a postal address, nested under a consignor.
+message Address {
+  string street = 1;
+  string city = 2;
+  Country country = 3;
+}
+
+// Consignor is who entrusted a lot for sale.
+message Consignor {
+  string name = 1;
+  Address address = 2;
+}
+
+// Flaw is one defect in a lot's condition.
+message Flaw {
+  string kind = 1;
+  string detail = 2;
+}
+
+// Lot is a book consigned for auction.
+message Lot {
+  int64 id = 1;
+  Book book = 2;
+  Condition condition = 3;
+  double reserve_price = 4;
+  // Chain of custody, oldest first.
+  repeated string provenance = 5;
+  repeated Flaw flaws = 6;
+  // Collector attributes, e.g. signed=true.
+  map<string, string> attributes = 7;
+  Consignor consignor = 8;
+}
+
+// Auction is one lot under the hammer.
+message Auction {
+  int64 id = 1;
+  Lot lot = 2;
+  AuctionState state = 3;
+  double high_bid = 4;
+  string high_bidder = 5;
+  google.protobuf.Timestamp ends_at = 6;
+}
+
+message CreateAuctionRequest {
+  Lot lot = 1;
+  google.protobuf.Timestamp starts_at = 2;
+}
+
+message ListAuctionsRequest {
+  AuctionState state = 1;
+}
+
+message ListAuctionsResponse {
+  repeated Auction auctions = 1;
+  string next_page_token = 2;
+  int32 total_size = 3;
+}
+
+// WatchAuctionRequest selects auctions by exactly one of auction or author.
+message WatchAuctionRequest {
+  oneof subject {
+    int64 auction = 1;
+    string author = 2;
+  }
+  // Cap on the number of updates streamed back.
+  int32 limit = 3;
+}
+
+message PlaceBidRequest {
+  int64 auction = 1;
+  double amount = 2;
+}
+
+// AuctionUpdate is one change to an auction's bidding state.
+message AuctionUpdate {
+  int64 auction = 1;
+  double high_bid = 2;
+  string bidder = 3;
+  AuctionState state = 4;
+  google.protobuf.Timestamp at = 5;
+}
+
+// InventoryService is the back office's stock system.
+service InventoryService {
+  // ImportBooks ingests a book catalogue as a stream of records.
+  rpc ImportBooks(stream ImportBooksRequest) returns (ImportSummary) {
+    option (cli.v0.command).name = "import";
+  }
+
+  // ExportReport renders a shelf's stock report and writes it to a file on
+  // the server.
+  rpc ExportReport(ExportReportRequest) returns (Report) {
+    option (cli.v0.command).name = "export";
+  }
+}
+
+// Request message for ExportReport method.
+message ExportReportRequest {
+  // The ID of the shelf to report on.
+  int64 shelf = 1;
+  // The file to write the report to.
+  string filename = 2;
+}
+
+// A stock report resource.
+message Report {
+  // The file the report was written to.
+  string filename = 1;
+  // Number of books in the report.
+  int64 books = 2;
+}
+
+// ImportBooksRequest is one record of a catalogue import.
+message ImportBooksRequest {
+  int64 shelf = 1;
+  Book book = 2;
+}
+
+message ImportSummary {
+  int32 created = 1;
+}
