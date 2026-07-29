@@ -1,31 +1,88 @@
 syntax = "proto3";
 
-// The cli.v0 options let a proto's owner shape the CLI generated from it;
-// without them, every name derives from the proto.
+// The cli.v0 options give a proto's owner control of the generated CLI.
+// Without them, everything derives from the proto.
 package cli.v0;
 
 import "google/protobuf/descriptor.proto";
 
 option go_package = "github.com/braveokafor/proto-to-cli/proto/cli/v0;cliv0";
 
-// ServiceOptions shapes the command a service generates.
+// ServiceOptions controls the command that a service generates.
 message ServiceOptions {
   // name replaces the derived command name.
   string name = 1;
+  // hidden removes the command from the lists. The command continues to operate.
+  bool hidden = 2;
+  // aliases are other names for the command.
+  repeated string aliases = 3;
 }
 
-// CommandOptions shapes the subcommand an rpc generates.
+// CommandOptions controls the subcommand that an rpc generates.
 message CommandOptions {
   // name replaces the derived subcommand name.
   string name = 1;
+  // hidden removes the subcommand from the lists. The subcommand continues to
+  // operate.
+  bool hidden = 2;
+  // aliases are other names for the subcommand.
+  repeated string aliases = 3;
 }
 
-// 86471: an arbitrary number in protobuf's internal-use extension range
-// (50000–99999).
+// ParamOptions controls the param that a request field generates.
+message ParamOptions {
+  // name replaces the field's derived segment in param names.
+  string name = 1;
+  // hidden removes the param from the lists. The param continues to parse.
+  bool hidden = 2;
+  // shorthand is the one-letter form of the param. The letters f, i, h and o
+  // are reserved.
+  string shorthand = 3;
+  // skip derives no params from the field or its subtree. Whole-request input
+  // continues to set the field.
+  bool skip = 4;
+  // required means that the user must type the param. Whole-request input is
+  // not sufficient.
+  bool required = 5;
+  // expand_depth sets the sub-param budget below the field. Zero keeps only
+  // the field's own param.
+  optional int32 expand_depth = 6;
+  // hoist moves the field's sub-params into the parent namespace. The field's
+  // own param remains.
+  bool hoist = 7;
+}
+
+// ViewOptions declares the view of a message.
+message ViewOptions {
+  // fields replace the derived view fields in all views of the message.
+  repeated ViewField fields = 1;
+  // expand_depth sets the sub-field budget of the message's derived view.
+  optional int32 expand_depth = 2;
+}
+
+// ViewField is one field of a declared view.
+message ViewField {
+  // label is the text that shows for the field. An empty label uses the path.
+  string label = 1;
+  // path joins proto field names with dots, from the viewed message. The path
+  // can go through only singular message fields that expand.
+  string path = 2;
+}
+
+// The number 86471 is an arbitrary choice from protobuf's internal-use
+// extension range (50000–99999).
 extend google.protobuf.ServiceOptions {
   ServiceOptions service = 86471;
 }
 
 extend google.protobuf.MethodOptions {
   CommandOptions command = 86471;
+}
+
+extend google.protobuf.FieldOptions {
+  ParamOptions param = 86471;
+}
+
+extend google.protobuf.MessageOptions {
+  ViewOptions view = 86471;
 }

@@ -1,6 +1,7 @@
 package irbuild
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
 
@@ -9,10 +10,8 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// Flag names the generated code and cobra claim for themselves.
-var reservedFlagNames = []string{"filename", "input", "help", "output"}
-
-// messageBinds is protojson's message types rendered as a single JSON value.
+// messageBinds contains the message types that protojson shows as one JSON
+// value.
 var messageBinds = map[protoreflect.FullName]ir.Bind{
 	"google.protobuf.Timestamp": ir.BindString,
 	"google.protobuf.Duration":  ir.BindString,
@@ -61,8 +60,14 @@ func buildParams(md protoreflect.MessageDescriptor, opts Options) []*ir.Param {
 		fields := md.Fields()
 		for i := range fields.Len() {
 			fd := fields.Get(i)
+			po := paramOptions(fd)
+
+			if po.GetSkip() {
+				continue
+			}
+
 			path := protoPrefix + string(fd.Name())
-			name := cliPrefix + strcase.KebabCase(string(fd.Name()))
+			name := cliPrefix + cmp.Or(po.GetName(), strcase.KebabCase(string(fd.Name())))
 			bind, ok, enumValues := fieldBind(fd)
 
 			var oneof string
@@ -79,7 +84,7 @@ func buildParams(md protoreflect.MessageDescriptor, opts Options) []*ir.Param {
 				continue
 			}
 
-			if slices.Contains(reservedFlagNames, name) {
+			if po.GetName() == "" && slices.Contains(ir.ReservedParamNames, name) {
 				opts.Warn(fmt.Sprintf(
 					"field %s.%s: --%s is reserved by a built-in flag; its flag is --arg-%s",
 					md.FullName(),
@@ -90,10 +95,47 @@ func buildParams(md protoreflect.MessageDescriptor, opts Options) []*ir.Param {
 				name = "arg-" + name
 			}
 
+			if !isExpandable(fd) && po.HasExpandDepth() {
+				opts.Warn(fmt.Sprintf(
+					"field %s.%s: expand_depth is dropped; the field does not expand into sub-flags",
+					md.FullName(),
+					fd.Name(),
+				))
+			}
+
+			descend := budget
+			if po.HasExpandDepth() {
+				descend = int(po.GetExpandDepth())
+			}
+			expands := isExpandable(fd) && descend > 0 &&
+				!slices.Contains(ancestors, fd.Message().FullName())
+
+			if po.GetHoist() && !expands {
+				opts.Warn(fmt.Sprintf(
+					"field %s.%s: hoist is dropped; the field does not expand into sub-flags",
+					md.FullName(),
+					fd.Name(),
+				))
+			}
+
+			required := po.GetRequired()
+			if required && expands {
+				opts.Warn(fmt.Sprintf(
+					"field %s.%s: required is dropped; sub-flags set the field without typing --%s",
+					md.FullName(),
+					fd.Name(),
+					name,
+				))
+				required = false
+			}
+
 			params = append(params,
 				&ir.Param{
 					ProtoPath:  path,
 					Name:       name,
+					Shorthand:  po.GetShorthand(),
+					Hidden:     po.GetHidden(),
+					Required:   required,
 					Bind:       bind,
 					Repeated:   fd.IsList(),
 					Map:        fd.IsMap(),
@@ -101,9 +143,12 @@ func buildParams(md protoreflect.MessageDescriptor, opts Options) []*ir.Param {
 					Oneof:      oneof,
 				})
 
-			if isExpandable(fd) && budget > 0 &&
-				!slices.Contains(ancestors, fd.Message().FullName()) {
-				walk(fd.Message(), path+".", name+".", budget-1,
+			if expands {
+				childPrefix := name + "."
+				if po.GetHoist() {
+					childPrefix = cliPrefix
+				}
+				walk(fd.Message(), path+".", childPrefix, descend-1,
 					append(ancestors, fd.Message().FullName()))
 			}
 		}

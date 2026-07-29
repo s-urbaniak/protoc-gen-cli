@@ -1,4 +1,4 @@
-// Command bookstore is the example CLI for the bookstore fixture: a
+// Command bookstore is the example CLI for the bookstore fixture. It is a
 // hand-written root that mounts the generated command tree.
 package main
 
@@ -40,7 +40,8 @@ func main() {
 	}
 
 	catalog := bookstorev1.NewBookstoreServiceCommand(conn)
-	// Renamed in code: the generated name "bookstore" would stutter under the root.
+	// The code renames the command. The generated name "bookstore" repeats
+	// under the root.
 	catalog.Use = "catalog"
 	root.AddCommand(catalog)
 	root.AddCommand(bookstorev1.NewAuctionsServiceCommand(conn, auctionOpts))

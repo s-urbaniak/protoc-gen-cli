@@ -1,0 +1,341 @@
+{
+  "plugin_version": "dev",
+  "proto_file": "kitchensink/v1/annotations.proto",
+  "generated_filename_prefix": "kitchensink/v1/annotations",
+  "proto_package": "kitchensink.v1",
+  "file_options": {
+    "go_package_name": "kitchensinkv1",
+    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+    "go_descriptor_name": "File_kitchensink_v1_annotations_proto"
+  },
+  "services": [
+    {
+      "proto_name": "AnnotationsService",
+      "go_name": "AnnotationsService",
+      "name": "annotations",
+      "aliases": [
+        "ann"
+      ],
+      "short_help": "AnnotationsService's RPCs echo their requests.",
+      "commands": [
+        {
+          "proto_name": "Echo",
+          "go_name": "Echo",
+          "name": "echo",
+          "aliases": [
+            "e",
+            "say"
+          ],
+          "input": {
+            "full_name": "kitchensink.v1.EchoRequest",
+            "proto_file": "kitchensink/v1/annotations.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "EchoRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.EchoRequest",
+          "params": [
+            {
+              "proto_path": "text",
+              "name": "text",
+              "bind": "string"
+            }
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.EchoRequest",
+            "fields": [
+              {
+                "label": "text",
+                "path": "text"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "Knobs",
+          "go_name": "Knobs",
+          "name": "knobs",
+          "input": {
+            "full_name": "kitchensink.v1.KnobsRequest",
+            "proto_file": "kitchensink/v1/annotations.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "KnobsRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.KnobsRequest",
+          "params": [
+            {
+              "proto_path": "capital",
+              "name": "capital",
+              "shorthand": "S",
+              "bind": "string"
+            },
+            {
+              "proto_path": "shallow",
+              "name": "shallow",
+              "bind": "json"
+            },
+            {
+              "proto_path": "shallow.gadget",
+              "name": "shallow.gadget",
+              "bind": "json"
+            },
+            {
+              "proto_path": "shallow.gadget.gizmo",
+              "name": "shallow.gadget.gizmo",
+              "bind": "json"
+            },
+            {
+              "proto_path": "shallow.gadget.leaf",
+              "name": "shallow.gadget.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "shallow.leaf",
+              "name": "shallow.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "whole",
+              "name": "whole",
+              "bind": "json"
+            },
+            {
+              "proto_path": "lifted",
+              "name": "lifted",
+              "bind": "string"
+            },
+            {
+              "proto_path": "deepened",
+              "name": "deepened",
+              "bind": "string"
+            },
+            {
+              "proto_path": "insisted",
+              "name": "insisted",
+              "bind": "json"
+            },
+            {
+              "proto_path": "insisted.gadget",
+              "name": "insisted.gadget",
+              "bind": "json"
+            },
+            {
+              "proto_path": "insisted.gadget.gizmo",
+              "name": "insisted.gadget.gizmo",
+              "bind": "json"
+            },
+            {
+              "proto_path": "insisted.gadget.gizmo.leaf",
+              "name": "insisted.gadget.gizmo.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "insisted.gadget.leaf",
+              "name": "insisted.gadget.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "insisted.leaf",
+              "name": "insisted.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "blob",
+              "name": "blob",
+              "shorthand": "j",
+              "bind": "json"
+            }
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.KnobsRequest",
+            "fields": [
+              {
+                "label": "capital",
+                "path": "capital"
+              },
+              {
+                "label": "shallow.gadget.gizmo.leaf",
+                "path": "shallow.gadget.gizmo.leaf"
+              },
+              {
+                "label": "shallow.gadget.leaf",
+                "path": "shallow.gadget.leaf"
+              },
+              {
+                "label": "shallow.leaf",
+                "path": "shallow.leaf"
+              },
+              {
+                "label": "whole.gadget.gizmo.leaf",
+                "path": "whole.gadget.gizmo.leaf"
+              },
+              {
+                "label": "whole.gadget.leaf",
+                "path": "whole.gadget.leaf"
+              },
+              {
+                "label": "whole.leaf",
+                "path": "whole.leaf"
+              },
+              {
+                "label": "lifted",
+                "path": "lifted"
+              },
+              {
+                "label": "deepened",
+                "path": "deepened"
+              },
+              {
+                "label": "insisted.gadget.gizmo.leaf",
+                "path": "insisted.gadget.gizmo.leaf"
+              },
+              {
+                "label": "insisted.gadget.leaf",
+                "path": "insisted.gadget.leaf"
+              },
+              {
+                "label": "insisted.leaf",
+                "path": "insisted.leaf"
+              },
+              {
+                "label": "blob",
+                "path": "blob"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "Curated",
+          "go_name": "Curated",
+          "name": "curated",
+          "input": {
+            "full_name": "kitchensink.v1.CuratedRequest",
+            "proto_file": "kitchensink/v1/annotations.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "CuratedRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.CuratedRequest",
+          "params": [
+            {
+              "proto_path": "key",
+              "name": "key",
+              "bind": "string"
+            },
+            {
+              "proto_path": "widget",
+              "name": "widget",
+              "bind": "json"
+            },
+            {
+              "proto_path": "widget.gadget",
+              "name": "widget.gadget",
+              "bind": "json"
+            },
+            {
+              "proto_path": "widget.gadget.gizmo",
+              "name": "widget.gadget.gizmo",
+              "bind": "json"
+            },
+            {
+              "proto_path": "widget.gadget.gizmo.leaf",
+              "name": "widget.gadget.gizmo.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "widget.gadget.leaf",
+              "name": "widget.gadget.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "widget.leaf",
+              "name": "widget.leaf",
+              "bind": "string"
+            }
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.CuratedRequest",
+            "fields": [
+              {
+                "label": "KEY",
+                "path": "key"
+              },
+              {
+                "label": "widget.gadget.leaf",
+                "path": "widget.gadget.leaf"
+              }
+            ]
+          }
+        },
+        {
+          "proto_name": "Flat",
+          "go_name": "Flat",
+          "name": "flat",
+          "input": {
+            "full_name": "kitchensink.v1.FlatRequest",
+            "proto_file": "kitchensink/v1/annotations.proto",
+            "proto_package": "kitchensink.v1",
+            "go_name": "FlatRequest",
+            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_package_name": "kitchensinkv1"
+          },
+          "output": "kitchensink.v1.FlatRequest",
+          "params": [
+            {
+              "proto_path": "widget",
+              "name": "widget",
+              "bind": "json"
+            },
+            {
+              "proto_path": "widget.gadget",
+              "name": "widget.gadget",
+              "bind": "json"
+            },
+            {
+              "proto_path": "widget.gadget.gizmo",
+              "name": "widget.gadget.gizmo",
+              "bind": "json"
+            },
+            {
+              "proto_path": "widget.gadget.gizmo.leaf",
+              "name": "widget.gadget.gizmo.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "widget.gadget.leaf",
+              "name": "widget.gadget.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "widget.leaf",
+              "name": "widget.leaf",
+              "bind": "string"
+            },
+            {
+              "proto_path": "note",
+              "name": "note",
+              "bind": "string"
+            }
+          ],
+          "view": {
+            "full_name": "kitchensink.v1.FlatRequest",
+            "fields": [
+              {
+                "label": "widget",
+                "path": "widget"
+              },
+              {
+                "label": "note",
+                "path": "note"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

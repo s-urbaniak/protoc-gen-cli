@@ -19,8 +19,8 @@
           "proto_name": "Ingest",
           "go_name": "Ingest",
           "name": "ingest",
-          "short_help": "Counts the streamed records.",
-          "long_help": "Counts the streamed records.\n\nReads JSON requests from stdin, one after another.",
+          "short_help": "Ingest counts the streamed records.",
+          "long_help": "Ingest counts the streamed records.\n\nReads JSON requests from stdin, one after another.",
           "input": {
             "full_name": "kitchensink.v1.IngestRecord",
             "proto_file": "kitchensink/v1/ingest.proto",
@@ -45,8 +45,8 @@
           "proto_name": "Absorb",
           "go_name": "Absorb",
           "name": "absorb",
-          "short_help": "Counts the streamed requests.",
-          "long_help": "Counts the streamed requests.\n\nReads JSON requests from stdin, one after another.",
+          "short_help": "Absorb counts the streamed requests.",
+          "long_help": "Absorb counts the streamed requests.\n\nReads JSON requests from stdin, one after another.",
           "input": {
             "full_name": "imported.v1.ImportedRequest",
             "proto_file": "imported/v1/imported.proto",

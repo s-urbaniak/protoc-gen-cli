@@ -38,13 +38,14 @@ type cli_kitchensink_v1_feed_proto_viewList struct {
 	Fields   []cli_kitchensink_v1_feed_proto_viewField
 }
 
-// A view projects a message for display.
+// A view is the display projection of a message.
 type cli_kitchensink_v1_feed_proto_view struct {
 	Lists  []cli_kitchensink_v1_feed_proto_viewList
 	Fields []cli_kitchensink_v1_feed_proto_viewField
 }
 
-// fullName's derived view with any configured fields applied.
+// viewFor returns the view of fullName. Configured fields replace the
+// derived fields.
 func cli_kitchensink_v1_feed_proto_viewFor(fullName string, messageViews map[string]cli_kitchensink_v1_feed_proto_view, views map[string][]cli_kitchensink_v1_feed_proto_viewField) cli_kitchensink_v1_feed_proto_view {
 	v := messageViews[fullName]
 	if fields, ok := views[fullName]; ok {
@@ -74,19 +75,20 @@ func cli_kitchensink_v1_feed_proto_viewFields(message string, entries []string) 
 	return fields
 }
 
-// One request document.
+// A fragment is one request document.
 type cli_kitchensink_v1_feed_proto_fragment struct {
 	Source string
 	JSON   []byte
 }
 
-// One input format; decode turns its document encoding into JSON.
+// A decoder is one input format. decode changes its document encoding into
+// JSON.
 type cli_kitchensink_v1_feed_proto_decoder struct {
 	name   string
 	decode func([]byte) ([]byte, error)
 }
 
-// The built-in -f and -i formats.
+// decoderFns returns the built-in -f and -i formats.
 func cli_kitchensink_v1_feed_proto_decoderFns() map[string]func([]byte) ([]byte, error) {
 	return map[string]func([]byte) ([]byte, error){
 		"json": func(body []byte) ([]byte, error) {
@@ -99,7 +101,7 @@ func cli_kitchensink_v1_feed_proto_decoderFns() map[string]func([]byte) ([]byte,
 	}
 }
 
-// json before yaml: every JSON document is valid YAML.
+// json comes before yaml because every JSON document is valid YAML.
 func cli_kitchensink_v1_feed_proto_decoders(fns map[string]func([]byte) ([]byte, error)) []cli_kitchensink_v1_feed_proto_decoder {
 	decoders := make([]cli_kitchensink_v1_feed_proto_decoder, 0, len(fns))
 	for _, name := range []string{"json", "yaml"} {
@@ -114,8 +116,8 @@ func cli_kitchensink_v1_feed_proto_decoders(fns map[string]func([]byte) ([]byte,
 	return decoders
 }
 
-// Returns m as compact JSON. json.Compact makes protojson's deliberately
-// unstable spacing reproducible.
+// marshalJSON returns m as compact JSON. The spacing of protojson is
+// unstable by design. json.Compact makes it stable.
 func cli_kitchensink_v1_feed_proto_marshalJSON(m proto.Message) ([]byte, error) {
 	raw, err := protojson.Marshal(m)
 	if err != nil {
@@ -128,7 +130,7 @@ func cli_kitchensink_v1_feed_proto_marshalJSON(m proto.Message) ([]byte, error) 
 	return buf.Bytes(), nil
 }
 
-// Writes each record as a line of JSON.
+// printJSON writes each record as one line of JSON.
 func cli_kitchensink_v1_feed_proto_printJSON(indent bool) func(io.Writer, cli_kitchensink_v1_feed_proto_view, func() ([]byte, error)) error {
 	return func(w io.Writer, _ cli_kitchensink_v1_feed_proto_view, next func() ([]byte, error)) error {
 		for {
@@ -153,7 +155,8 @@ func cli_kitchensink_v1_feed_proto_printJSON(indent bool) func(io.Writer, cli_ki
 	}
 }
 
-// Writes each record as a YAML document, separated by "---".
+// printYAML writes each record as one YAML document. "---" separates the
+// documents.
 func cli_kitchensink_v1_feed_proto_printYAML(w io.Writer, _ cli_kitchensink_v1_feed_proto_view, next func() ([]byte, error)) error {
 	first := true
 	for {
@@ -180,8 +183,8 @@ func cli_kitchensink_v1_feed_proto_printYAML(w io.Writer, _ cli_kitchensink_v1_f
 	}
 }
 
-// Renders a JSON value as one table cell: top-level entries stack, deeper
-// nesting inlines.
+// cell renders a JSON value as one table cell. Top-level entries stack.
+// Deeper levels go inline.
 func cli_kitchensink_v1_feed_proto_cell(v gjson.Result, sep string) string {
 	switch {
 	case v.IsArray():
@@ -203,7 +206,7 @@ func cli_kitchensink_v1_feed_proto_cell(v gjson.Result, sep string) string {
 	}
 }
 
-// Renders each record as a table under its view.
+// printTable renders each record as a table under its view.
 func cli_kitchensink_v1_feed_proto_printTable(w io.Writer, v cli_kitchensink_v1_feed_proto_view, next func() ([]byte, error)) error {
 	width := 0
 	if f, ok := w.(*os.File); ok {
@@ -277,7 +280,7 @@ func cli_kitchensink_v1_feed_proto_printTable(w io.Writer, v cli_kitchensink_v1_
 	}
 }
 
-// The built-in -o formats.
+// printers returns the built-in -o formats.
 func cli_kitchensink_v1_feed_proto_printers() map[string]func(io.Writer, cli_kitchensink_v1_feed_proto_view, func() ([]byte, error)) error {
 	return map[string]func(io.Writer, cli_kitchensink_v1_feed_proto_view, func() ([]byte, error)) error{
 		"json":        cli_kitchensink_v1_feed_proto_printJSON(false),
@@ -297,8 +300,9 @@ func cli_kitchensink_v1_feed_proto_checkDefaultOutput(printers map[string]func(i
 	}
 }
 
-// Resolves -o to its print function. Empty -o means the configured default,
-// or JSON: pretty on a terminal, compact otherwise.
+// outputPrinter resolves -o to its print function. An empty -o means the
+// configured default, or JSON. JSON is pretty on a terminal and compact in
+// a pipe.
 func cli_kitchensink_v1_feed_proto_outputPrinter(cmd *cobra.Command, printers map[string]func(io.Writer, cli_kitchensink_v1_feed_proto_view, func() ([]byte, error)) error, defaultOutput string) (func(io.Writer, cli_kitchensink_v1_feed_proto_view, func() ([]byte, error)) error, error) {
 	format, _ := cmd.Flags().GetString("output")
 	if format == "" {
@@ -319,7 +323,7 @@ func cli_kitchensink_v1_feed_proto_outputPrinter(cmd *cobra.Command, printers ma
 	return p, nil
 }
 
-// The -o usage text.
+// outputHelp returns the -o usage text.
 func cli_kitchensink_v1_feed_proto_outputHelp(printers map[string]func(io.Writer, cli_kitchensink_v1_feed_proto_view, func() ([]byte, error)) error, defaultOutput string) string {
 	help := "Output format: " + strings.Join(slices.Sorted(maps.Keys(printers)), ", ") + ".\n"
 	if defaultOutput != "" {
@@ -328,9 +332,10 @@ func cli_kitchensink_v1_feed_proto_outputHelp(printers map[string]func(io.Writer
 	return help + "Default: pretty JSON on a terminal, compact when piped."
 }
 
-// Returns the request fragments for the -f and -i values in merge order:
-// -f documents in argument order ("-" reads stdin), then -i values.
-// Content picks each input's format; empty inputs are skipped.
+// loadInputs returns the request fragments for the -f and -i values.
+// The fragments come in merge order: first the -f documents in argument
+// order, then the -i values. A "-" filename reads stdin. Content selects
+// the format of each input. loadInputs skips empty inputs.
 func cli_kitchensink_v1_feed_proto_loadInputs(decoders []cli_kitchensink_v1_feed_proto_decoder, cmd *cobra.Command) ([]cli_kitchensink_v1_feed_proto_fragment, error) {
 	files, _ := cmd.Flags().GetStringArray("filename")
 	inline, _ := cmd.Flags().GetStringArray("input")
@@ -383,10 +388,11 @@ func cli_kitchensink_v1_feed_proto_loadInputs(decoders []cli_kitchensink_v1_feed
 	return out, nil
 }
 
-// Merges the fragments into req in order, with proto.Merge semantics.
+// buildRequest merges the fragments into req in order, with proto.Merge
+// semantics.
 func cli_kitchensink_v1_feed_proto_buildRequest(req proto.Message, frags []cli_kitchensink_v1_feed_proto_fragment) error {
-	// Required-ness is a property of the assembled request, checked after
-	// the merge.
+	// Required fields are a property of the assembled request. The check
+	// comes after the merge.
 	for _, frag := range frags {
 		next := req.ProtoReflect().New().Interface()
 		if err := (protojson.UnmarshalOptions{AllowPartial: true}).Unmarshal(frag.JSON, next); err != nil {
@@ -416,23 +422,25 @@ func cli_kitchensink_v1_feed_proto_addInputFlags(fs *pflag.FlagSet, decoders []c
 
 // FeedServiceOptions configures the FeedService commands.
 type FeedServiceOptions struct {
-	// Printers adds -o formats: print pulls JSON records from next until
-	// io.EOF; a nil func removes the named format.
+	// Printers adds -o formats. A print function pulls JSON records from
+	// next until io.EOF. A nil function removes the named format.
 	Printers map[string]func(w io.Writer, next func() ([]byte, error)) error
-	// DefaultOutput is the format used when -o is empty.
+	// DefaultOutput is the format for an empty -o.
 	DefaultOutput string
-	// Decoders adds -f and -i input formats, content-tried after json and
-	// yaml in name order; a nil func removes the named format. Streaming
-	// stdin is JSON only.
+	// Decoders adds -f and -i input formats. The content test tries them
+	// after json and yaml, in name order. A nil function removes the named
+	// format. Stdin for streaming RPCs is JSON only.
 	Decoders map[string]func([]byte) ([]byte, error)
 	// Views maps a message's full proto name to its "Label:path" fields
-	// (gjson paths), replacing the message's derived fields wherever it
-	// renders; a malformed entry panics, a name never displayed is inert.
+	// (gjson paths). These fields replace the message's derived fields in
+	// all of its views. A malformed entry panics. A name that never displays
+	// has no effect.
 	Views map[string][]string
 }
 
-// NewFeedServiceCommand returns the FeedService command with one
-// subcommand per RPC. Later opts override earlier ones per entry.
+// NewFeedServiceCommand returns the FeedService command with
+// one subcommand for each RPC. Later opts override earlier opts for each
+// entry.
 func NewFeedServiceCommand(conn grpc.ClientConnInterface, opts ...FeedServiceOptions) *cobra.Command {
 	client := NewFeedServiceClient(conn)
 
@@ -467,7 +475,8 @@ func NewFeedServiceCommand(conn grpc.ClientConnInterface, opts ...FeedServiceOpt
 	cli_kitchensink_v1_feed_proto_checkDefaultOutput(printers, defaultOutput)
 	decoders := cli_kitchensink_v1_feed_proto_decoders(decoderFns)
 
-	// The derived views; Options.Views entries override them.
+	// messageViews contains the derived views. Options.Views entries
+	// override them.
 	messageViews := map[string]cli_kitchensink_v1_feed_proto_view{
 		"kitchensink.v1.FeedEvent": {Fields: []cli_kitchensink_v1_feed_proto_viewField{
 			{Label: "index", Path: "index"},
