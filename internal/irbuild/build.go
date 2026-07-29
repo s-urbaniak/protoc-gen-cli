@@ -1,4 +1,4 @@
-// Package irbuild lifts a protogen.File into a validated ir.Model.
+// Package irbuild makes a validated ir.Model from a protogen.File.
 package irbuild
 
 import (
@@ -15,21 +15,21 @@ import (
 
 // Options configures the IR builder.
 type Options struct {
-	PluginVersion string // "" means "dev"
-	// Files indexes every compilation file by proto path.
+	PluginVersion string // An empty string means "dev".
+	// Files contains every compilation file, with the proto path as the key.
 	Files               map[string]*protogen.File
 	Warn                func(string)
-	RequestExpandDepth  int // 0 = only the request's own fields get params
-	ResponseExpandDepth int // 0 = only the response's own fields become view fields
+	RequestExpandDepth  int // At zero, only the request's own fields get params.
+	ResponseExpandDepth int // At zero, only the response's own fields become view fields.
 }
 
-// Build produces the ir.Model for one proto file.
+// Build makes the ir.Model for one proto file.
 func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 	if opts.PluginVersion == "" {
 		opts.PluginVersion = "dev"
 	}
 
-	// A request message shared by several RPCs would repeat its warnings.
+	// A request message that several RPCs share can repeat its warnings.
 	warned := map[string]bool{}
 	warn := opts.Warn
 	opts.Warn = func(msg string) {
@@ -61,10 +61,13 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 		comment := cleanComment(string(svc.Comments.Leading))
 		short, long := helpFrom(comment)
 
+		so := serviceOptions(svc.Desc)
 		service := &ir.Service{
 			ProtoName: string(svc.Desc.Name()),
 			GoName:    svc.GoName,
-			Name:      cmp.Or(serviceOptions(svc.Desc).GetName(), name),
+			Name:      cmp.Or(so.GetName(), name),
+			Aliases:   so.GetAliases(),
+			Hidden:    so.GetHidden(),
 			ShortHelp: short,
 			LongHelp:  long,
 		}
@@ -95,13 +98,16 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 			}
 			short, long := helpFrom(doc, notes...)
 
+			co := commandOptions(m.Desc)
 			cmd := &ir.Command{
 				ProtoName: string(m.Desc.Name()),
 				GoName:    m.GoName,
 				Name: cmp.Or(
-					commandOptions(m.Desc).GetName(),
+					co.GetName(),
 					strcase.KebabCase(string(m.Desc.Name())),
 				),
+				Aliases:         co.GetAliases(),
+				Hidden:          co.GetHidden(),
 				Input:           request,
 				Output:          string(m.Output.Desc.FullName()),
 				ClientStreaming: clientStreaming,
@@ -128,7 +134,7 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 	return model, nil
 }
 
-// short is primary's first sentence; long is all docs joined, "" when it adds nothing to short.
+// long is empty when it would only repeat short.
 func helpFrom(primary string, extra ...string) (short, long string) {
 	short = new(doc.Package).Synopsis(strings.TrimSpace(primary))
 	parts := slices.DeleteFunc(
@@ -149,7 +155,7 @@ func cleanComment(s string) string {
 	return strings.TrimSpace(strings.Join(lines, "\n"))
 }
 
-// isExpandable reports whether fd's sub-fields expand into entries of their own.
+// isExpandable tells if the sub-fields of fd expand into their own entries.
 func isExpandable(fd protoreflect.FieldDescriptor) bool {
 	if fd.Kind() != protoreflect.MessageKind || fd.IsList() || fd.IsMap() {
 		return false

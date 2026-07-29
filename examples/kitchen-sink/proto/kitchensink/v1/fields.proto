@@ -1,4 +1,4 @@
-// The flag surface: one RPC per field-shape family.
+// The flag surface has one RPC for each field-shape family.
 
 syntax = "proto3";
 
@@ -14,29 +14,29 @@ import "google/protobuf/wrappers.proto";
 
 option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
 
-// FieldsService echoes each request, so the response shows exactly what
+// FieldsService echoes each request. Thus the response shows exactly what
 // arrived.
 service FieldsService {
-  // Scalars carries every proto scalar type.
+  // Scalars contains every proto scalar type.
   rpc Scalars(ScalarsRequest) returns (ScalarsRequest) {}
-  // Messages carries every shape of message field.
+  // Messages contains every shape of message field.
   rpc Messages(MessagesRequest) returns (MessagesRequest) {}
-  // Repeated carries one repeated field per element type.
+  // Repeated contains one repeated field for each element type.
   rpc Repeated(RepeatedRequest) returns (RepeatedRequest) {}
-  // Maps carries one map field per value type, plus integer and bool keys.
+  // Maps contains one map field for each value type, plus integer and bool keys.
   rpc Maps(MapsRequest) returns (MapsRequest) {}
-  // Wrappers carries the nine wrapper types plus repeated and map compositions.
+  // Wrappers contains the nine wrapper types plus repeated and map compositions.
   rpc Wrappers(WrappersRequest) returns (WrappersRequest) {}
-  // WellKnown carries the document-form well-known types.
+  // WellKnown contains the document-form well-known types.
   rpc WellKnown(WellKnownRequest) returns (WellKnownRequest) {}
-  // Enums carries an enum in every shape, plus aliases and a nested enum.
+  // Enums contains an enum in every shape, plus aliases and a nested enum.
   rpc Enums(EnumsRequest) returns (EnumsRequest) {}
-  // Oneofs carries a scalar-and-enum oneof, a message-and-scalar oneof, and a
+  // Oneofs contains a scalar-and-enum oneof, a message-and-scalar oneof, and a
   // single-member oneof.
   rpc Oneofs(OneofsRequest) returns (OneofsRequest) {}
-  // Optionals carries proto3 optional fields.
+  // Optionals contains proto3 optional fields.
   rpc Optionals(OptionalsRequest) returns (OptionalsRequest) {}
-  // Collections carries two message lists.
+  // Collections contains two message lists.
   rpc Collections(CollectionsRequest) returns (CollectionsRequest) {}
 }
 

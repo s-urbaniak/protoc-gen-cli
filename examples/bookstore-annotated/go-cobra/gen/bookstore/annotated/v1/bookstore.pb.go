@@ -2472,15 +2472,15 @@ const file_bookstore_annotated_v1_bookstore_proto_rawDesc = "" +
 	"&bookstore/annotated/v1/bookstore.proto\x12\x16bookstore.annotated.v1\x1a\x10cli/v0/cli.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"-\n" +
 	"\x05Shelf\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
-	"\x05theme\x18\x02 \x01(\tR\x05theme\"D\n" +
-	"\x04Book\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x16\n" +
-	"\x06author\x18\x02 \x01(\tR\x06author\x12\x14\n" +
-	"\x05title\x18\x03 \x01(\tR\x05title\"N\n" +
+	"\x05theme\x18\x02 \x01(\tR\x05theme\"`\n" +
+	"\x04Book\x12\x16\n" +
+	"\x02id\x18\x01 \x01(\x03B\x06\xba\x9c*\x02 \x01R\x02id\x12\x1f\n" +
+	"\x06author\x18\x02 \x01(\tB\a\xba\x9c*\x03\x1a\x01aR\x06author\x12\x1f\n" +
+	"\x05title\x18\x03 \x01(\tB\t\xba\x9c*\x05\x1a\x01t(\x01R\x05title\"N\n" +
 	"\x13ListShelvesResponse\x127\n" +
-	"\ashelves\x18\x01 \x03(\v2\x1d.bookstore.annotated.v1.ShelfR\ashelves\"I\n" +
-	"\x12CreateShelfRequest\x123\n" +
-	"\x05shelf\x18\x01 \x01(\v2\x1d.bookstore.annotated.v1.ShelfR\x05shelf\"'\n" +
+	"\ashelves\x18\x01 \x03(\v2\x1d.bookstore.annotated.v1.ShelfR\ashelves\"Q\n" +
+	"\x12CreateShelfRequest\x12;\n" +
+	"\x05shelf\x18\x01 \x01(\v2\x1d.bookstore.annotated.v1.ShelfB\x06\xba\x9c*\x020\x00R\x05shelf\"'\n" +
 	"\x0fGetShelfRequest\x12\x14\n" +
 	"\x05shelf\x18\x01 \x01(\x03R\x05shelf\"*\n" +
 	"\x12DeleteShelfRequest\x12\x14\n" +
@@ -2488,13 +2488,13 @@ const file_bookstore_annotated_v1_bookstore_proto_rawDesc = "" +
 	"\x10ListBooksRequest\x12\x14\n" +
 	"\x05shelf\x18\x01 \x01(\x03R\x05shelf\"G\n" +
 	"\x11ListBooksResponse\x122\n" +
-	"\x05books\x18\x01 \x03(\v2\x1c.bookstore.annotated.v1.BookR\x05books\"[\n" +
-	"\x11CreateBookRequest\x12\x14\n" +
-	"\x05shelf\x18\x01 \x01(\x03R\x05shelf\x120\n" +
-	"\x04book\x18\x02 \x01(\v2\x1c.bookstore.annotated.v1.BookR\x04book\":\n" +
-	"\x0eGetBookRequest\x12\x14\n" +
-	"\x05shelf\x18\x01 \x01(\x03R\x05shelf\x12\x12\n" +
-	"\x04book\x18\x02 \x01(\x03R\x04book\"=\n" +
+	"\x05books\x18\x01 \x03(\v2\x1c.bookstore.annotated.v1.BookR\x05books\"c\n" +
+	"\x11CreateBookRequest\x12\x1c\n" +
+	"\x05shelf\x18\x01 \x01(\x03B\x06\xba\x9c*\x02(\x01R\x05shelf\x120\n" +
+	"\x04book\x18\x02 \x01(\v2\x1c.bookstore.annotated.v1.BookR\x04book\"J\n" +
+	"\x0eGetBookRequest\x12\x1c\n" +
+	"\x05shelf\x18\x01 \x01(\x03B\x06\xba\x9c*\x02(\x01R\x05shelf\x12\x1a\n" +
+	"\x04book\x18\x02 \x01(\x03B\x06\xba\x9c*\x02(\x01R\x04book\"=\n" +
 	"\x11DeleteBookRequest\x12\x14\n" +
 	"\x05shelf\x18\x01 \x01(\x03R\x05shelf\x12\x12\n" +
 	"\x04book\x18\x02 \x01(\x03R\x04book\"1\n" +
@@ -2510,12 +2510,13 @@ const file_bookstore_annotated_v1_bookstore_proto_rawDesc = "" +
 	"\aaddress\x18\x02 \x01(\v2\x1f.bookstore.annotated.v1.AddressR\aaddress\"2\n" +
 	"\x04Flaw\x12\x12\n" +
 	"\x04kind\x18\x01 \x01(\tR\x04kind\x12\x16\n" +
-	"\x06detail\x18\x02 \x01(\tR\x06detail\"\xce\x03\n" +
-	"\x03Lot\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\x120\n" +
+	"\x06detail\x18\x02 \x01(\tR\x06detail\"\xe5\x03\n" +
+	"\x03Lot\x12\x16\n" +
+	"\x02id\x18\x01 \x01(\x03B\x06\xba\x9c*\x02 \x01R\x02id\x120\n" +
 	"\x04book\x18\x02 \x01(\v2\x1c.bookstore.annotated.v1.BookR\x04book\x12?\n" +
-	"\tcondition\x18\x03 \x01(\x0e2!.bookstore.annotated.v1.ConditionR\tcondition\x12#\n" +
-	"\rreserve_price\x18\x04 \x01(\x01R\freservePrice\x12\x1e\n" +
+	"\tcondition\x18\x03 \x01(\x0e2!.bookstore.annotated.v1.ConditionR\tcondition\x122\n" +
+	"\rreserve_price\x18\x04 \x01(\x01B\r\xba\x9c*\t\n" +
+	"\areserveR\freservePrice\x12\x1e\n" +
 	"\n" +
 	"provenance\x18\x05 \x03(\tR\n" +
 	"provenance\x122\n" +
@@ -2526,7 +2527,7 @@ const file_bookstore_annotated_v1_bookstore_proto_rawDesc = "" +
 	"\tconsignor\x18\b \x01(\v2!.bookstore.annotated.v1.ConsignorR\tconsignor\x1a=\n" +
 	"\x0fAttributesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xf5\x01\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x95\x03\n" +
 	"\aAuction\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12-\n" +
 	"\x03lot\x18\x02 \x01(\v2\x1b.bookstore.annotated.v1.LotR\x03lot\x12:\n" +
@@ -2534,9 +2535,23 @@ const file_bookstore_annotated_v1_bookstore_proto_rawDesc = "" +
 	"\bhigh_bid\x18\x04 \x01(\x01R\ahighBid\x12\x1f\n" +
 	"\vhigh_bidder\x18\x05 \x01(\tR\n" +
 	"highBidder\x123\n" +
-	"\aends_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x06endsAt\"~\n" +
-	"\x14CreateAuctionRequest\x12-\n" +
-	"\x03lot\x18\x01 \x01(\v2\x1b.bookstore.annotated.v1.LotR\x03lot\x127\n" +
+	"\aends_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\x06endsAt:\x9d\x01\xba\x9c*\x98\x01\n" +
+	"\b\n" +
+	"\x02ID\x12\x02id\n" +
+	"\x17\n" +
+	"\x05TITLE\x12\x0elot.book.title\n" +
+	"\x19\n" +
+	"\x06AUTHOR\x12\x0flot.book.author\n" +
+	"\x1a\n" +
+	"\tCONDITION\x12\rlot.condition\n" +
+	"\x14\n" +
+	"\bHIGH BID\x12\bhigh_bid\n" +
+	"\x15\n" +
+	"\x06BIDDER\x12\vhigh_bidder\n" +
+	"\x0f\n" +
+	"\x04ENDS\x12\aends_at\"\x86\x01\n" +
+	"\x14CreateAuctionRequest\x125\n" +
+	"\x03lot\x18\x01 \x01(\v2\x1b.bookstore.annotated.v1.LotB\x06\xba\x9c*\x028\x01R\x03lot\x127\n" +
 	"\tstarts_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\bstartsAt\"Q\n" +
 	"\x13ListAuctionsRequest\x12:\n" +
 	"\x05state\x18\x01 \x01(\x0e2$.bookstore.annotated.v1.AuctionStateR\x05state\"\x9a\x01\n" +
@@ -2544,11 +2559,11 @@ const file_bookstore_annotated_v1_bookstore_proto_rawDesc = "" +
 	"\bauctions\x18\x01 \x03(\v2\x1f.bookstore.annotated.v1.AuctionR\bauctions\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\x12\x1d\n" +
 	"\n" +
-	"total_size\x18\x03 \x01(\x05R\ttotalSize\"l\n" +
+	"total_size\x18\x03 \x01(\x05R\ttotalSize\"t\n" +
 	"\x13WatchAuctionRequest\x12\x1a\n" +
 	"\aauction\x18\x01 \x01(\x03H\x00R\aauction\x12\x18\n" +
-	"\x06author\x18\x02 \x01(\tH\x00R\x06author\x12\x14\n" +
-	"\x05limit\x18\x03 \x01(\x05R\x05limitB\t\n" +
+	"\x06author\x18\x02 \x01(\tH\x00R\x06author\x12\x1c\n" +
+	"\x05limit\x18\x03 \x01(\x05B\x06\xba\x9c*\x02\x10\x01R\x05limitB\t\n" +
 	"\asubject\"C\n" +
 	"\x0fPlaceBidRequest\x12\x18\n" +
 	"\aauction\x18\x01 \x01(\x03R\aauction\x12\x16\n" +
@@ -2558,10 +2573,11 @@ const file_bookstore_annotated_v1_bookstore_proto_rawDesc = "" +
 	"\bhigh_bid\x18\x02 \x01(\x01R\ahighBid\x12\x16\n" +
 	"\x06bidder\x18\x03 \x01(\tR\x06bidder\x12:\n" +
 	"\x05state\x18\x04 \x01(\x0e2$.bookstore.annotated.v1.AuctionStateR\x05state\x12*\n" +
-	"\x02at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x02at\"G\n" +
+	"\x02at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\x02at\"Z\n" +
 	"\x13ExportReportRequest\x12\x14\n" +
-	"\x05shelf\x18\x01 \x01(\x03R\x05shelf\x12\x1a\n" +
-	"\bfilename\x18\x02 \x01(\tR\bfilename\":\n" +
+	"\x05shelf\x18\x01 \x01(\x03R\x05shelf\x12-\n" +
+	"\bfilename\x18\x02 \x01(\tB\x11\xba\x9c*\r\n" +
+	"\vreport-fileR\bfilename\":\n" +
 	"\x06Report\x12\x1a\n" +
 	"\bfilename\x18\x01 \x01(\tR\bfilename\x12\x14\n" +
 	"\x05books\x18\x02 \x01(\x03R\x05books\"\\\n" +
@@ -2582,12 +2598,12 @@ const file_bookstore_annotated_v1_bookstore_proto_rawDesc = "" +
 	"\x17AUCTION_STATE_SCHEDULED\x10\x01\x12\x16\n" +
 	"\x12AUCTION_STATE_OPEN\x10\x02\x12\x1a\n" +
 	"\x16AUCTION_STATE_HAMMERED\x10\x03\x12\x19\n" +
-	"\x15AUCTION_STATE_SETTLED\x10\x042\x89\x06\n" +
-	"\x10BookstoreService\x12T\n" +
-	"\vListShelves\x12\x16.google.protobuf.Empty\x1a+.bookstore.annotated.v1.ListShelvesResponse\"\x00\x12Z\n" +
+	"\x15AUCTION_STATE_SETTLED\x10\x042\xa7\x06\n" +
+	"\x10BookstoreService\x12a\n" +
+	"\vListShelves\x12\x16.google.protobuf.Empty\x1a+.bookstore.annotated.v1.ListShelvesResponse\"\r\xba\x9c*\t\x1a\ashelves\x12Z\n" +
 	"\vCreateShelf\x12*.bookstore.annotated.v1.CreateShelfRequest\x1a\x1d.bookstore.annotated.v1.Shelf\"\x00\x12T\n" +
-	"\bGetShelf\x12'.bookstore.annotated.v1.GetShelfRequest\x1a\x1d.bookstore.annotated.v1.Shelf\"\x00\x12S\n" +
-	"\vDeleteShelf\x12*.bookstore.annotated.v1.DeleteShelfRequest\x1a\x16.google.protobuf.Empty\"\x00\x12l\n" +
+	"\bGetShelf\x12'.bookstore.annotated.v1.GetShelfRequest\x1a\x1d.bookstore.annotated.v1.Shelf\"\x00\x12Y\n" +
+	"\vDeleteShelf\x12*.bookstore.annotated.v1.DeleteShelfRequest\x1a\x16.google.protobuf.Empty\"\x06\xba\x9c*\x02\x10\x01\x12l\n" +
 	"\tListBooks\x12(.bookstore.annotated.v1.ListBooksRequest\x1a).bookstore.annotated.v1.ListBooksResponse\"\n" +
 	"\xba\x9c*\x06\n" +
 	"\x04list\x12`\n" +
@@ -2595,11 +2611,11 @@ const file_bookstore_annotated_v1_bookstore_proto_rawDesc = "" +
 	"CreateBook\x12).bookstore.annotated.v1.CreateBookRequest\x1a\x1c.bookstore.annotated.v1.Book\"\t\xba\x9c*\x05\n" +
 	"\x03add\x12Z\n" +
 	"\aGetBook\x12&.bookstore.annotated.v1.GetBookRequest\x1a\x1c.bookstore.annotated.v1.Book\"\t\xba\x9c*\x05\n" +
-	"\x03get\x12]\n" +
+	"\x03get\x12a\n" +
 	"\n" +
-	"DeleteBook\x12).bookstore.annotated.v1.DeleteBookRequest\x1a\x16.google.protobuf.Empty\"\f\xba\x9c*\b\n" +
-	"\x06delete\x1a\r\xba\x9c*\t\n" +
-	"\acatalog2\xc4\x03\n" +
+	"DeleteBook\x12).bookstore.annotated.v1.DeleteBookRequest\x1a\x16.google.protobuf.Empty\"\x10\xba\x9c*\f\n" +
+	"\x06delete\x1a\x02rm\x1a\x14\xba\x9c*\x10\n" +
+	"\acatalog\x1a\x05books2\xc4\x03\n" +
 	"\x0fAuctionsService\x12l\n" +
 	"\rCreateAuction\x12,.bookstore.annotated.v1.CreateAuctionRequest\x1a\x1f.bookstore.annotated.v1.Auction\"\f\xba\x9c*\b\n" +
 	"\x06create\x12u\n" +
@@ -2608,12 +2624,12 @@ const file_bookstore_annotated_v1_bookstore_proto_rawDesc = "" +
 	"\x04list\x12q\n" +
 	"\fWatchAuction\x12+.bookstore.annotated.v1.WatchAuctionRequest\x1a%.bookstore.annotated.v1.AuctionUpdate\"\v\xba\x9c*\a\n" +
 	"\x05watch0\x01\x12Y\n" +
-	"\x03Bid\x12'.bookstore.annotated.v1.PlaceBidRequest\x1a%.bookstore.annotated.v1.AuctionUpdate(\x010\x012\xef\x01\n" +
+	"\x03Bid\x12'.bookstore.annotated.v1.PlaceBidRequest\x1a%.bookstore.annotated.v1.AuctionUpdate(\x010\x012\xf7\x01\n" +
 	"\x10InventoryService\x12p\n" +
 	"\vImportBooks\x12*.bookstore.annotated.v1.ImportBooksRequest\x1a%.bookstore.annotated.v1.ImportSummary\"\f\xba\x9c*\b\n" +
 	"\x06import(\x01\x12i\n" +
 	"\fExportReport\x12+.bookstore.annotated.v1.ExportReportRequest\x1a\x1e.bookstore.annotated.v1.Report\"\f\xba\x9c*\b\n" +
-	"\x06exportB{Zygithub.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1;bookstoreannotatedv1b\x06proto3"
+	"\x06export\x1a\x06\xba\x9c*\x02\x10\x01B{Zygithub.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1;bookstoreannotatedv1b\x06proto3"
 
 var file_bookstore_annotated_v1_bookstore_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_bookstore_annotated_v1_bookstore_proto_msgTypes = make([]protoimpl.MessageInfo, 28)

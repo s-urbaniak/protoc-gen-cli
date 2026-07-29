@@ -13,14 +13,14 @@
       "proto_name": "FieldsService",
       "go_name": "FieldsService",
       "name": "fields",
-      "short_help": "FieldsService echoes each request, so the response shows exactly what arrived.",
-      "long_help": "FieldsService echoes each request, so the response shows exactly what\narrived.",
+      "short_help": "FieldsService echoes each request.",
+      "long_help": "FieldsService echoes each request. Thus the response shows exactly what\narrived.",
       "commands": [
         {
           "proto_name": "Scalars",
           "go_name": "Scalars",
           "name": "scalars",
-          "short_help": "Scalars carries every proto scalar type.",
+          "short_help": "Scalars contains every proto scalar type.",
           "input": {
             "full_name": "kitchensink.v1.ScalarsRequest",
             "proto_file": "kitchensink/v1/fields.proto",
@@ -177,7 +177,7 @@
           "proto_name": "Messages",
           "go_name": "Messages",
           "name": "messages",
-          "short_help": "Messages carries every shape of message field.",
+          "short_help": "Messages contains every shape of message field.",
           "input": {
             "full_name": "kitchensink.v1.MessagesRequest",
             "proto_file": "kitchensink/v1/fields.proto",
@@ -506,7 +506,7 @@
           "proto_name": "Repeated",
           "go_name": "Repeated",
           "name": "repeated",
-          "short_help": "Repeated carries one repeated field per element type.",
+          "short_help": "Repeated contains one repeated field for each element type.",
           "input": {
             "full_name": "kitchensink.v1.RepeatedRequest",
             "proto_file": "kitchensink/v1/fields.proto",
@@ -631,7 +631,7 @@
           "proto_name": "Maps",
           "go_name": "Maps",
           "name": "maps",
-          "short_help": "Maps carries one map field per value type, plus integer and bool keys.",
+          "short_help": "Maps contains one map field for each value type, plus integer and bool keys.",
           "input": {
             "full_name": "kitchensink.v1.MapsRequest",
             "proto_file": "kitchensink/v1/fields.proto",
@@ -743,7 +743,7 @@
           "proto_name": "Wrappers",
           "go_name": "Wrappers",
           "name": "wrappers",
-          "short_help": "Wrappers carries the nine wrapper types plus repeated and map compositions.",
+          "short_help": "Wrappers contains the nine wrapper types plus repeated and map compositions.",
           "input": {
             "full_name": "kitchensink.v1.WrappersRequest",
             "proto_file": "kitchensink/v1/fields.proto",
@@ -866,7 +866,7 @@
           "proto_name": "WellKnown",
           "go_name": "WellKnown",
           "name": "well-known",
-          "short_help": "WellKnown carries the document-form well-known types.",
+          "short_help": "WellKnown contains the document-form well-known types.",
           "input": {
             "full_name": "kitchensink.v1.WellKnownRequest",
             "proto_file": "kitchensink/v1/fields.proto",
@@ -933,7 +933,7 @@
           "proto_name": "Enums",
           "go_name": "Enums",
           "name": "enums",
-          "short_help": "Enums carries an enum in every shape, plus aliases and a nested enum.",
+          "short_help": "Enums contains an enum in every shape, plus aliases and a nested enum.",
           "input": {
             "full_name": "kitchensink.v1.EnumsRequest",
             "proto_file": "kitchensink/v1/fields.proto",
@@ -1041,8 +1041,8 @@
           "proto_name": "Oneofs",
           "go_name": "Oneofs",
           "name": "oneofs",
-          "short_help": "Oneofs carries a scalar-and-enum oneof, a message-and-scalar oneof, and a single-member oneof.",
-          "long_help": "Oneofs carries a scalar-and-enum oneof, a message-and-scalar oneof, and a\nsingle-member oneof.",
+          "short_help": "Oneofs contains a scalar-and-enum oneof, a message-and-scalar oneof, and a single-member oneof.",
+          "long_help": "Oneofs contains a scalar-and-enum oneof, a message-and-scalar oneof, and a\nsingle-member oneof.",
           "input": {
             "full_name": "kitchensink.v1.OneofsRequest",
             "proto_file": "kitchensink/v1/fields.proto",
@@ -1218,7 +1218,7 @@
           "proto_name": "Optionals",
           "go_name": "Optionals",
           "name": "optionals",
-          "short_help": "Optionals carries proto3 optional fields.",
+          "short_help": "Optionals contains proto3 optional fields.",
           "input": {
             "full_name": "kitchensink.v1.OptionalsRequest",
             "proto_file": "kitchensink/v1/fields.proto",
@@ -1272,7 +1272,7 @@
           "proto_name": "Collections",
           "go_name": "Collections",
           "name": "collections",
-          "short_help": "Collections carries two message lists.",
+          "short_help": "Collections contains two message lists.",
           "input": {
             "full_name": "kitchensink.v1.CollectionsRequest",
             "proto_file": "kitchensink/v1/fields.proto",

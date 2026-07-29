@@ -4,8 +4,8 @@
 // 	protoc        (unknown)
 // source: cli/v0/cli.proto
 
-// The cli.v0 options let a proto's owner shape the CLI generated from it;
-// without them, every name derives from the proto.
+// The cli.v0 options give a proto's owner control of the generated CLI.
+// Without them, everything derives from the proto.
 
 package cliv0
 
@@ -24,12 +24,14 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// ServiceOptions shapes the command a service generates.
+// ServiceOptions controls the command that a service generates.
 type ServiceOptions struct {
-	state           protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Name string                 `protobuf:"bytes,1,opt,name=name,proto3"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Name    string                 `protobuf:"bytes,1,opt,name=name,proto3"`
+	xxx_hidden_Hidden  bool                   `protobuf:"varint,2,opt,name=hidden,proto3"`
+	xxx_hidden_Aliases []string               `protobuf:"bytes,3,rep,name=aliases,proto3"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *ServiceOptions) Reset() {
@@ -64,8 +66,30 @@ func (x *ServiceOptions) GetName() string {
 	return ""
 }
 
+func (x *ServiceOptions) GetHidden() bool {
+	if x != nil {
+		return x.xxx_hidden_Hidden
+	}
+	return false
+}
+
+func (x *ServiceOptions) GetAliases() []string {
+	if x != nil {
+		return x.xxx_hidden_Aliases
+	}
+	return nil
+}
+
 func (x *ServiceOptions) SetName(v string) {
 	x.xxx_hidden_Name = v
+}
+
+func (x *ServiceOptions) SetHidden(v bool) {
+	x.xxx_hidden_Hidden = v
+}
+
+func (x *ServiceOptions) SetAliases(v []string) {
+	x.xxx_hidden_Aliases = v
 }
 
 type ServiceOptions_builder struct {
@@ -73,6 +97,10 @@ type ServiceOptions_builder struct {
 
 	// name replaces the derived command name.
 	Name string
+	// hidden removes the command from the lists. The command continues to operate.
+	Hidden bool
+	// aliases are other names for the command.
+	Aliases []string
 }
 
 func (b0 ServiceOptions_builder) Build() *ServiceOptions {
@@ -80,15 +108,19 @@ func (b0 ServiceOptions_builder) Build() *ServiceOptions {
 	b, x := &b0, m0
 	_, _ = b, x
 	x.xxx_hidden_Name = b.Name
+	x.xxx_hidden_Hidden = b.Hidden
+	x.xxx_hidden_Aliases = b.Aliases
 	return m0
 }
 
-// CommandOptions shapes the subcommand an rpc generates.
+// CommandOptions controls the subcommand that an rpc generates.
 type CommandOptions struct {
-	state           protoimpl.MessageState `protogen:"opaque.v1"`
-	xxx_hidden_Name string                 `protobuf:"bytes,1,opt,name=name,proto3"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state              protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Name    string                 `protobuf:"bytes,1,opt,name=name,proto3"`
+	xxx_hidden_Hidden  bool                   `protobuf:"varint,2,opt,name=hidden,proto3"`
+	xxx_hidden_Aliases []string               `protobuf:"bytes,3,rep,name=aliases,proto3"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *CommandOptions) Reset() {
@@ -123,8 +155,30 @@ func (x *CommandOptions) GetName() string {
 	return ""
 }
 
+func (x *CommandOptions) GetHidden() bool {
+	if x != nil {
+		return x.xxx_hidden_Hidden
+	}
+	return false
+}
+
+func (x *CommandOptions) GetAliases() []string {
+	if x != nil {
+		return x.xxx_hidden_Aliases
+	}
+	return nil
+}
+
 func (x *CommandOptions) SetName(v string) {
 	x.xxx_hidden_Name = v
+}
+
+func (x *CommandOptions) SetHidden(v bool) {
+	x.xxx_hidden_Hidden = v
+}
+
+func (x *CommandOptions) SetAliases(v []string) {
+	x.xxx_hidden_Aliases = v
 }
 
 type CommandOptions_builder struct {
@@ -132,6 +186,11 @@ type CommandOptions_builder struct {
 
 	// name replaces the derived subcommand name.
 	Name string
+	// hidden removes the subcommand from the lists. The subcommand continues to
+	// operate.
+	Hidden bool
+	// aliases are other names for the subcommand.
+	Aliases []string
 }
 
 func (b0 CommandOptions_builder) Build() *CommandOptions {
@@ -139,6 +198,349 @@ func (b0 CommandOptions_builder) Build() *CommandOptions {
 	b, x := &b0, m0
 	_, _ = b, x
 	x.xxx_hidden_Name = b.Name
+	x.xxx_hidden_Hidden = b.Hidden
+	x.xxx_hidden_Aliases = b.Aliases
+	return m0
+}
+
+// ParamOptions controls the param that a request field generates.
+type ParamOptions struct {
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Name        string                 `protobuf:"bytes,1,opt,name=name,proto3"`
+	xxx_hidden_Hidden      bool                   `protobuf:"varint,2,opt,name=hidden,proto3"`
+	xxx_hidden_Shorthand   string                 `protobuf:"bytes,3,opt,name=shorthand,proto3"`
+	xxx_hidden_Skip        bool                   `protobuf:"varint,4,opt,name=skip,proto3"`
+	xxx_hidden_Required    bool                   `protobuf:"varint,5,opt,name=required,proto3"`
+	xxx_hidden_ExpandDepth int32                  `protobuf:"varint,6,opt,name=expand_depth,json=expandDepth,proto3,oneof"`
+	xxx_hidden_Hoist       bool                   `protobuf:"varint,7,opt,name=hoist,proto3"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *ParamOptions) Reset() {
+	*x = ParamOptions{}
+	mi := &file_cli_v0_cli_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ParamOptions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ParamOptions) ProtoMessage() {}
+
+func (x *ParamOptions) ProtoReflect() protoreflect.Message {
+	mi := &file_cli_v0_cli_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *ParamOptions) GetName() string {
+	if x != nil {
+		return x.xxx_hidden_Name
+	}
+	return ""
+}
+
+func (x *ParamOptions) GetHidden() bool {
+	if x != nil {
+		return x.xxx_hidden_Hidden
+	}
+	return false
+}
+
+func (x *ParamOptions) GetShorthand() string {
+	if x != nil {
+		return x.xxx_hidden_Shorthand
+	}
+	return ""
+}
+
+func (x *ParamOptions) GetSkip() bool {
+	if x != nil {
+		return x.xxx_hidden_Skip
+	}
+	return false
+}
+
+func (x *ParamOptions) GetRequired() bool {
+	if x != nil {
+		return x.xxx_hidden_Required
+	}
+	return false
+}
+
+func (x *ParamOptions) GetExpandDepth() int32 {
+	if x != nil {
+		return x.xxx_hidden_ExpandDepth
+	}
+	return 0
+}
+
+func (x *ParamOptions) GetHoist() bool {
+	if x != nil {
+		return x.xxx_hidden_Hoist
+	}
+	return false
+}
+
+func (x *ParamOptions) SetName(v string) {
+	x.xxx_hidden_Name = v
+}
+
+func (x *ParamOptions) SetHidden(v bool) {
+	x.xxx_hidden_Hidden = v
+}
+
+func (x *ParamOptions) SetShorthand(v string) {
+	x.xxx_hidden_Shorthand = v
+}
+
+func (x *ParamOptions) SetSkip(v bool) {
+	x.xxx_hidden_Skip = v
+}
+
+func (x *ParamOptions) SetRequired(v bool) {
+	x.xxx_hidden_Required = v
+}
+
+func (x *ParamOptions) SetExpandDepth(v int32) {
+	x.xxx_hidden_ExpandDepth = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 5, 7)
+}
+
+func (x *ParamOptions) SetHoist(v bool) {
+	x.xxx_hidden_Hoist = v
+}
+
+func (x *ParamOptions) HasExpandDepth() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 5)
+}
+
+func (x *ParamOptions) ClearExpandDepth() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 5)
+	x.xxx_hidden_ExpandDepth = 0
+}
+
+type ParamOptions_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	// name replaces the field's derived segment in param names.
+	Name string
+	// hidden removes the param from the lists. The param continues to parse.
+	Hidden bool
+	// shorthand is the one-letter form of the param. The letters f, i, h and o
+	// are reserved.
+	Shorthand string
+	// skip derives no params from the field or its subtree. Whole-request input
+	// continues to set the field.
+	Skip bool
+	// required means that the user must type the param. Whole-request input is
+	// not sufficient.
+	Required bool
+	// expand_depth sets the sub-param budget below the field. Zero keeps only
+	// the field's own param.
+	ExpandDepth *int32
+	// hoist moves the field's sub-params into the parent namespace. The field's
+	// own param remains.
+	Hoist bool
+}
+
+func (b0 ParamOptions_builder) Build() *ParamOptions {
+	m0 := &ParamOptions{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Name = b.Name
+	x.xxx_hidden_Hidden = b.Hidden
+	x.xxx_hidden_Shorthand = b.Shorthand
+	x.xxx_hidden_Skip = b.Skip
+	x.xxx_hidden_Required = b.Required
+	if b.ExpandDepth != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 5, 7)
+		x.xxx_hidden_ExpandDepth = *b.ExpandDepth
+	}
+	x.xxx_hidden_Hoist = b.Hoist
+	return m0
+}
+
+// ViewOptions declares the view of a message.
+type ViewOptions struct {
+	state                  protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Fields      *[]*ViewField          `protobuf:"bytes,1,rep,name=fields,proto3"`
+	xxx_hidden_ExpandDepth int32                  `protobuf:"varint,2,opt,name=expand_depth,json=expandDepth,proto3,oneof"`
+	XXX_raceDetectHookData protoimpl.RaceDetectHookData
+	XXX_presence           [1]uint32
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
+}
+
+func (x *ViewOptions) Reset() {
+	*x = ViewOptions{}
+	mi := &file_cli_v0_cli_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ViewOptions) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ViewOptions) ProtoMessage() {}
+
+func (x *ViewOptions) ProtoReflect() protoreflect.Message {
+	mi := &file_cli_v0_cli_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *ViewOptions) GetFields() []*ViewField {
+	if x != nil {
+		if x.xxx_hidden_Fields != nil {
+			return *x.xxx_hidden_Fields
+		}
+	}
+	return nil
+}
+
+func (x *ViewOptions) GetExpandDepth() int32 {
+	if x != nil {
+		return x.xxx_hidden_ExpandDepth
+	}
+	return 0
+}
+
+func (x *ViewOptions) SetFields(v []*ViewField) {
+	x.xxx_hidden_Fields = &v
+}
+
+func (x *ViewOptions) SetExpandDepth(v int32) {
+	x.xxx_hidden_ExpandDepth = v
+	protoimpl.X.SetPresent(&(x.XXX_presence[0]), 1, 2)
+}
+
+func (x *ViewOptions) HasExpandDepth() bool {
+	if x == nil {
+		return false
+	}
+	return protoimpl.X.Present(&(x.XXX_presence[0]), 1)
+}
+
+func (x *ViewOptions) ClearExpandDepth() {
+	protoimpl.X.ClearPresent(&(x.XXX_presence[0]), 1)
+	x.xxx_hidden_ExpandDepth = 0
+}
+
+type ViewOptions_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	// fields replace the derived view fields in all views of the message.
+	Fields []*ViewField
+	// expand_depth sets the sub-field budget of the message's derived view.
+	ExpandDepth *int32
+}
+
+func (b0 ViewOptions_builder) Build() *ViewOptions {
+	m0 := &ViewOptions{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Fields = &b.Fields
+	if b.ExpandDepth != nil {
+		protoimpl.X.SetPresentNonAtomic(&(x.XXX_presence[0]), 1, 2)
+		x.xxx_hidden_ExpandDepth = *b.ExpandDepth
+	}
+	return m0
+}
+
+// ViewField is one field of a declared view.
+type ViewField struct {
+	state            protoimpl.MessageState `protogen:"opaque.v1"`
+	xxx_hidden_Label string                 `protobuf:"bytes,1,opt,name=label,proto3"`
+	xxx_hidden_Path  string                 `protobuf:"bytes,2,opt,name=path,proto3"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *ViewField) Reset() {
+	*x = ViewField{}
+	mi := &file_cli_v0_cli_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ViewField) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ViewField) ProtoMessage() {}
+
+func (x *ViewField) ProtoReflect() protoreflect.Message {
+	mi := &file_cli_v0_cli_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+func (x *ViewField) GetLabel() string {
+	if x != nil {
+		return x.xxx_hidden_Label
+	}
+	return ""
+}
+
+func (x *ViewField) GetPath() string {
+	if x != nil {
+		return x.xxx_hidden_Path
+	}
+	return ""
+}
+
+func (x *ViewField) SetLabel(v string) {
+	x.xxx_hidden_Label = v
+}
+
+func (x *ViewField) SetPath(v string) {
+	x.xxx_hidden_Path = v
+}
+
+type ViewField_builder struct {
+	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
+
+	// label is the text that shows for the field. An empty label uses the path.
+	Label string
+	// path joins proto field names with dots, from the viewed message. The path
+	// can go through only singular message fields that expand.
+	Path string
+}
+
+func (b0 ViewField_builder) Build() *ViewField {
+	m0 := &ViewField{}
+	b, x := &b0, m0
+	_, _ = b, x
+	x.xxx_hidden_Label = b.Label
+	x.xxx_hidden_Path = b.Path
 	return m0
 }
 
@@ -159,6 +561,22 @@ var file_cli_v0_cli_proto_extTypes = []protoimpl.ExtensionInfo{
 		Tag:           "bytes,86471,opt,name=command",
 		Filename:      "cli/v0/cli.proto",
 	},
+	{
+		ExtendedType:  (*descriptorpb.FieldOptions)(nil),
+		ExtensionType: (*ParamOptions)(nil),
+		Field:         86471,
+		Name:          "cli.v0.param",
+		Tag:           "bytes,86471,opt,name=param",
+		Filename:      "cli/v0/cli.proto",
+	},
+	{
+		ExtendedType:  (*descriptorpb.MessageOptions)(nil),
+		ExtensionType: (*ViewOptions)(nil),
+		Field:         86471,
+		Name:          "cli.v0.view",
+		Tag:           "bytes,86471,opt,name=view",
+		Filename:      "cli/v0/cli.proto",
+	},
 }
 
 // Extension fields to descriptorpb.ServiceOptions.
@@ -173,35 +591,79 @@ var (
 	E_Command = &file_cli_v0_cli_proto_extTypes[1]
 )
 
+// Extension fields to descriptorpb.FieldOptions.
+var (
+	// optional cli.v0.ParamOptions param = 86471;
+	E_Param = &file_cli_v0_cli_proto_extTypes[2]
+)
+
+// Extension fields to descriptorpb.MessageOptions.
+var (
+	// optional cli.v0.ViewOptions view = 86471;
+	E_View = &file_cli_v0_cli_proto_extTypes[3]
+)
+
 var File_cli_v0_cli_proto protoreflect.FileDescriptor
 
 const file_cli_v0_cli_proto_rawDesc = "" +
 	"\n" +
-	"\x10cli/v0/cli.proto\x12\x06cli.v0\x1a google/protobuf/descriptor.proto\"$\n" +
+	"\x10cli/v0/cli.proto\x12\x06cli.v0\x1a google/protobuf/descriptor.proto\"V\n" +
 	"\x0eServiceOptions\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"$\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
+	"\x06hidden\x18\x02 \x01(\bR\x06hidden\x12\x18\n" +
+	"\aaliases\x18\x03 \x03(\tR\aaliases\"V\n" +
 	"\x0eCommandOptions\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name:S\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
+	"\x06hidden\x18\x02 \x01(\bR\x06hidden\x12\x18\n" +
+	"\aaliases\x18\x03 \x03(\tR\aaliases\"\xd7\x01\n" +
+	"\fParamOptions\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
+	"\x06hidden\x18\x02 \x01(\bR\x06hidden\x12\x1c\n" +
+	"\tshorthand\x18\x03 \x01(\tR\tshorthand\x12\x12\n" +
+	"\x04skip\x18\x04 \x01(\bR\x04skip\x12\x1a\n" +
+	"\brequired\x18\x05 \x01(\bR\brequired\x12&\n" +
+	"\fexpand_depth\x18\x06 \x01(\x05H\x00R\vexpandDepth\x88\x01\x01\x12\x14\n" +
+	"\x05hoist\x18\a \x01(\bR\x05hoistB\x0f\n" +
+	"\r_expand_depth\"q\n" +
+	"\vViewOptions\x12)\n" +
+	"\x06fields\x18\x01 \x03(\v2\x11.cli.v0.ViewFieldR\x06fields\x12&\n" +
+	"\fexpand_depth\x18\x02 \x01(\x05H\x00R\vexpandDepth\x88\x01\x01B\x0f\n" +
+	"\r_expand_depth\"5\n" +
+	"\tViewField\x12\x14\n" +
+	"\x05label\x18\x01 \x01(\tR\x05label\x12\x12\n" +
+	"\x04path\x18\x02 \x01(\tR\x04path:S\n" +
 	"\aservice\x12\x1f.google.protobuf.ServiceOptions\x18ǣ\x05 \x01(\v2\x16.cli.v0.ServiceOptionsR\aservice:R\n" +
-	"\acommand\x12\x1e.google.protobuf.MethodOptions\x18ǣ\x05 \x01(\v2\x16.cli.v0.CommandOptionsR\acommandB8Z6github.com/braveokafor/proto-to-cli/proto/cli/v0;cliv0b\x06proto3"
+	"\acommand\x12\x1e.google.protobuf.MethodOptions\x18ǣ\x05 \x01(\v2\x16.cli.v0.CommandOptionsR\acommand:K\n" +
+	"\x05param\x12\x1d.google.protobuf.FieldOptions\x18ǣ\x05 \x01(\v2\x14.cli.v0.ParamOptionsR\x05param:J\n" +
+	"\x04view\x12\x1f.google.protobuf.MessageOptions\x18ǣ\x05 \x01(\v2\x13.cli.v0.ViewOptionsR\x04viewB8Z6github.com/braveokafor/proto-to-cli/proto/cli/v0;cliv0b\x06proto3"
 
-var file_cli_v0_cli_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_cli_v0_cli_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_cli_v0_cli_proto_goTypes = []any{
 	(*ServiceOptions)(nil),              // 0: cli.v0.ServiceOptions
 	(*CommandOptions)(nil),              // 1: cli.v0.CommandOptions
-	(*descriptorpb.ServiceOptions)(nil), // 2: google.protobuf.ServiceOptions
-	(*descriptorpb.MethodOptions)(nil),  // 3: google.protobuf.MethodOptions
+	(*ParamOptions)(nil),                // 2: cli.v0.ParamOptions
+	(*ViewOptions)(nil),                 // 3: cli.v0.ViewOptions
+	(*ViewField)(nil),                   // 4: cli.v0.ViewField
+	(*descriptorpb.ServiceOptions)(nil), // 5: google.protobuf.ServiceOptions
+	(*descriptorpb.MethodOptions)(nil),  // 6: google.protobuf.MethodOptions
+	(*descriptorpb.FieldOptions)(nil),   // 7: google.protobuf.FieldOptions
+	(*descriptorpb.MessageOptions)(nil), // 8: google.protobuf.MessageOptions
 }
 var file_cli_v0_cli_proto_depIdxs = []int32{
-	2, // 0: cli.v0.service:extendee -> google.protobuf.ServiceOptions
-	3, // 1: cli.v0.command:extendee -> google.protobuf.MethodOptions
-	0, // 2: cli.v0.service:type_name -> cli.v0.ServiceOptions
-	1, // 3: cli.v0.command:type_name -> cli.v0.CommandOptions
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	2, // [2:4] is the sub-list for extension type_name
-	0, // [0:2] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	4, // 0: cli.v0.ViewOptions.fields:type_name -> cli.v0.ViewField
+	5, // 1: cli.v0.service:extendee -> google.protobuf.ServiceOptions
+	6, // 2: cli.v0.command:extendee -> google.protobuf.MethodOptions
+	7, // 3: cli.v0.param:extendee -> google.protobuf.FieldOptions
+	8, // 4: cli.v0.view:extendee -> google.protobuf.MessageOptions
+	0, // 5: cli.v0.service:type_name -> cli.v0.ServiceOptions
+	1, // 6: cli.v0.command:type_name -> cli.v0.CommandOptions
+	2, // 7: cli.v0.param:type_name -> cli.v0.ParamOptions
+	3, // 8: cli.v0.view:type_name -> cli.v0.ViewOptions
+	9, // [9:9] is the sub-list for method output_type
+	9, // [9:9] is the sub-list for method input_type
+	5, // [5:9] is the sub-list for extension type_name
+	1, // [1:5] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_cli_v0_cli_proto_init() }
@@ -209,14 +671,16 @@ func file_cli_v0_cli_proto_init() {
 	if File_cli_v0_cli_proto != nil {
 		return
 	}
+	file_cli_v0_cli_proto_msgTypes[2].OneofWrappers = []any{}
+	file_cli_v0_cli_proto_msgTypes[3].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cli_v0_cli_proto_rawDesc), len(file_cli_v0_cli_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
-			NumExtensions: 2,
+			NumMessages:   5,
+			NumExtensions: 4,
 			NumServices:   0,
 		},
 		GoTypes:           file_cli_v0_cli_proto_goTypes,

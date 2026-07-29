@@ -13,14 +13,14 @@
       "proto_name": "FeedService",
       "go_name": "FeedService",
       "name": "feed",
-      "short_help": "FeedService streams fabricated events.",
+      "short_help": "FeedService streams fake events.",
       "commands": [
         {
           "proto_name": "Tail",
           "go_name": "Tail",
           "name": "tail",
-          "short_help": "Streams the requested number of events, then ends the feed.",
-          "long_help": "Streams the requested number of events, then ends the feed.\n\nThe server may send multiple responses; each prints as it arrives.",
+          "short_help": "Tail streams the requested number of events and then ends the feed.",
+          "long_help": "Tail streams the requested number of events and then ends the feed.\n\nThe server may send multiple responses; each prints as it arrives.",
           "input": {
             "full_name": "kitchensink.v1.TailRequest",
             "proto_file": "kitchensink/v1/feed.proto",

@@ -18,20 +18,20 @@ import (
 	"google.golang.org/protobuf/types/pluginpb"
 )
 
-// version is set via -ldflags at build time; "dev" otherwise.
+// The -ldflags option sets version at build time. The default is "dev".
 var version = "dev"
 
-// Config holds one invocation's inputs.
+// Config contains the inputs of one invocation.
 type Config struct {
-	// Parsed from opt=.
-	Target              string // key into Targets
-	DumpIR              bool   // also emit each file's IR beside it as <file>.cli.ir.json
-	RequestExpandDepth  int    // 0 = only the request's own fields get params
-	ResponseExpandDepth int    // 0 = only the response's own fields become view fields
+	// These come from opt=.
+	Target              string // Target selects from Targets.
+	DumpIR              bool   // DumpIR also emits each file's IR beside it as <file>.cli.ir.json.
+	RequestExpandDepth  int    // At zero, only the request's own fields get params.
+	ResponseExpandDepth int    // At zero, only the response's own fields become view fields.
 
-	// Wired in main.
-	Version string                   // stamped into generated-file headers
-	Targets map[string]target.Target // the selectable back-ends, e.g. "gocobra"
+	// main sets these.
+	Version string                   // Version goes into the generated-file headers.
+	Targets map[string]target.Target // Targets contains the selectable back-ends, for example "gocobra".
 }
 
 func main() {
@@ -63,7 +63,8 @@ func main() {
 	})
 }
 
-// run builds each generating file's IR and hands it to the selected target.
+// run builds the IR of each file with Generate set and gives it to the
+// selected target.
 func run(plug *protogen.Plugin, cfg *Config) error {
 	targetNames := slices.Sorted(maps.Keys(cfg.Targets))
 	if cfg.Target == "" {

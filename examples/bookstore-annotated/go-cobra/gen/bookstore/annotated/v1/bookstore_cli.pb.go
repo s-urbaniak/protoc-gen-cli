@@ -40,13 +40,14 @@ type cli_bookstore_annotated_v1_bookstore_proto_viewList struct {
 	Fields   []cli_bookstore_annotated_v1_bookstore_proto_viewField
 }
 
-// A view projects a message for display.
+// A view is the display projection of a message.
 type cli_bookstore_annotated_v1_bookstore_proto_view struct {
 	Lists  []cli_bookstore_annotated_v1_bookstore_proto_viewList
 	Fields []cli_bookstore_annotated_v1_bookstore_proto_viewField
 }
 
-// fullName's derived view with any configured fields applied.
+// viewFor returns the view of fullName. Configured fields replace the
+// derived fields.
 func cli_bookstore_annotated_v1_bookstore_proto_viewFor(fullName string, messageViews map[string]cli_bookstore_annotated_v1_bookstore_proto_view, views map[string][]cli_bookstore_annotated_v1_bookstore_proto_viewField) cli_bookstore_annotated_v1_bookstore_proto_view {
 	v := messageViews[fullName]
 	if fields, ok := views[fullName]; ok {
@@ -76,19 +77,20 @@ func cli_bookstore_annotated_v1_bookstore_proto_viewFields(message string, entri
 	return fields
 }
 
-// One request document.
+// A fragment is one request document.
 type cli_bookstore_annotated_v1_bookstore_proto_fragment struct {
 	Source string
 	JSON   []byte
 }
 
-// One input format; decode turns its document encoding into JSON.
+// A decoder is one input format. decode changes its document encoding into
+// JSON.
 type cli_bookstore_annotated_v1_bookstore_proto_decoder struct {
 	name   string
 	decode func([]byte) ([]byte, error)
 }
 
-// The built-in -f and -i formats.
+// decoderFns returns the built-in -f and -i formats.
 func cli_bookstore_annotated_v1_bookstore_proto_decoderFns() map[string]func([]byte) ([]byte, error) {
 	return map[string]func([]byte) ([]byte, error){
 		"json": func(body []byte) ([]byte, error) {
@@ -101,7 +103,7 @@ func cli_bookstore_annotated_v1_bookstore_proto_decoderFns() map[string]func([]b
 	}
 }
 
-// json before yaml: every JSON document is valid YAML.
+// json comes before yaml because every JSON document is valid YAML.
 func cli_bookstore_annotated_v1_bookstore_proto_decoders(fns map[string]func([]byte) ([]byte, error)) []cli_bookstore_annotated_v1_bookstore_proto_decoder {
 	decoders := make([]cli_bookstore_annotated_v1_bookstore_proto_decoder, 0, len(fns))
 	for _, name := range []string{"json", "yaml"} {
@@ -116,8 +118,8 @@ func cli_bookstore_annotated_v1_bookstore_proto_decoders(fns map[string]func([]b
 	return decoders
 }
 
-// Returns m as compact JSON. json.Compact makes protojson's deliberately
-// unstable spacing reproducible.
+// marshalJSON returns m as compact JSON. The spacing of protojson is
+// unstable by design. json.Compact makes it stable.
 func cli_bookstore_annotated_v1_bookstore_proto_marshalJSON(m proto.Message) ([]byte, error) {
 	raw, err := protojson.Marshal(m)
 	if err != nil {
@@ -130,7 +132,7 @@ func cli_bookstore_annotated_v1_bookstore_proto_marshalJSON(m proto.Message) ([]
 	return buf.Bytes(), nil
 }
 
-// Writes each record as a line of JSON.
+// printJSON writes each record as one line of JSON.
 func cli_bookstore_annotated_v1_bookstore_proto_printJSON(indent bool) func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error {
 	return func(w io.Writer, _ cli_bookstore_annotated_v1_bookstore_proto_view, next func() ([]byte, error)) error {
 		for {
@@ -155,7 +157,8 @@ func cli_bookstore_annotated_v1_bookstore_proto_printJSON(indent bool) func(io.W
 	}
 }
 
-// Writes each record as a YAML document, separated by "---".
+// printYAML writes each record as one YAML document. "---" separates the
+// documents.
 func cli_bookstore_annotated_v1_bookstore_proto_printYAML(w io.Writer, _ cli_bookstore_annotated_v1_bookstore_proto_view, next func() ([]byte, error)) error {
 	first := true
 	for {
@@ -182,8 +185,8 @@ func cli_bookstore_annotated_v1_bookstore_proto_printYAML(w io.Writer, _ cli_boo
 	}
 }
 
-// Renders a JSON value as one table cell: top-level entries stack, deeper
-// nesting inlines.
+// cell renders a JSON value as one table cell. Top-level entries stack.
+// Deeper levels go inline.
 func cli_bookstore_annotated_v1_bookstore_proto_cell(v gjson.Result, sep string) string {
 	switch {
 	case v.IsArray():
@@ -205,7 +208,7 @@ func cli_bookstore_annotated_v1_bookstore_proto_cell(v gjson.Result, sep string)
 	}
 }
 
-// Renders each record as a table under its view.
+// printTable renders each record as a table under its view.
 func cli_bookstore_annotated_v1_bookstore_proto_printTable(w io.Writer, v cli_bookstore_annotated_v1_bookstore_proto_view, next func() ([]byte, error)) error {
 	width := 0
 	if f, ok := w.(*os.File); ok {
@@ -279,7 +282,7 @@ func cli_bookstore_annotated_v1_bookstore_proto_printTable(w io.Writer, v cli_bo
 	}
 }
 
-// The built-in -o formats.
+// printers returns the built-in -o formats.
 func cli_bookstore_annotated_v1_bookstore_proto_printers() map[string]func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error {
 	return map[string]func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error{
 		"json":        cli_bookstore_annotated_v1_bookstore_proto_printJSON(false),
@@ -299,8 +302,9 @@ func cli_bookstore_annotated_v1_bookstore_proto_checkDefaultOutput(printers map[
 	}
 }
 
-// Resolves -o to its print function. Empty -o means the configured default,
-// or JSON: pretty on a terminal, compact otherwise.
+// outputPrinter resolves -o to its print function. An empty -o means the
+// configured default, or JSON. JSON is pretty on a terminal and compact in
+// a pipe.
 func cli_bookstore_annotated_v1_bookstore_proto_outputPrinter(cmd *cobra.Command, printers map[string]func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error, defaultOutput string) (func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error, error) {
 	format, _ := cmd.Flags().GetString("output")
 	if format == "" {
@@ -321,7 +325,7 @@ func cli_bookstore_annotated_v1_bookstore_proto_outputPrinter(cmd *cobra.Command
 	return p, nil
 }
 
-// The -o usage text.
+// outputHelp returns the -o usage text.
 func cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers map[string]func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error, defaultOutput string) string {
 	help := "Output format: " + strings.Join(slices.Sorted(maps.Keys(printers)), ", ") + ".\n"
 	if defaultOutput != "" {
@@ -330,7 +334,7 @@ func cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers map[string]f
 	return help + "Default: pretty JSON on a terminal, compact when piped."
 }
 
-// Yields m once, then io.EOF.
+// oneRecord yields m once and then io.EOF.
 func cli_bookstore_annotated_v1_bookstore_proto_oneRecord(m proto.Message) func() ([]byte, error) {
 	done := false
 	return func() ([]byte, error) {
@@ -342,9 +346,10 @@ func cli_bookstore_annotated_v1_bookstore_proto_oneRecord(m proto.Message) func(
 	}
 }
 
-// Returns the request fragments for the -f and -i values in merge order:
-// -f documents in argument order ("-" reads stdin), then -i values.
-// Content picks each input's format; empty inputs are skipped.
+// loadInputs returns the request fragments for the -f and -i values.
+// The fragments come in merge order: first the -f documents in argument
+// order, then the -i values. A "-" filename reads stdin. Content selects
+// the format of each input. loadInputs skips empty inputs.
 func cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders []cli_bookstore_annotated_v1_bookstore_proto_decoder, cmd *cobra.Command) ([]cli_bookstore_annotated_v1_bookstore_proto_fragment, error) {
 	files, _ := cmd.Flags().GetStringArray("filename")
 	inline, _ := cmd.Flags().GetStringArray("input")
@@ -397,10 +402,11 @@ func cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders []cli_bookst
 	return out, nil
 }
 
-// Merges the fragments into req in order, with proto.Merge semantics.
+// buildRequest merges the fragments into req in order, with proto.Merge
+// semantics.
 func cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req proto.Message, frags []cli_bookstore_annotated_v1_bookstore_proto_fragment) error {
-	// Required-ness is a property of the assembled request, checked after
-	// the merge.
+	// Required fields are a property of the assembled request. The check
+	// comes after the merge.
 	for _, frag := range frags {
 		next := req.ProtoReflect().New().Interface()
 		if err := (protojson.UnmarshalOptions{AllowPartial: true}).Unmarshal(frag.JSON, next); err != nil {
@@ -428,7 +434,8 @@ func cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(fs *pflag.FlagSet,
 			"Repeatable; merges after -f files and before flags.")
 }
 
-// Decodes JSON requests from in, one after another, and sends each.
+// pumpRequests decodes JSON requests from in, one after another, and sends
+// each request.
 func cli_bookstore_annotated_v1_bookstore_proto_pumpRequests(ctx context.Context, in io.Reader, errW io.Writer, send func(n int, raw json.RawMessage) error) error {
 	if f, ok := in.(*os.File); ok && term.IsTerminal(int(f.Fd())) {
 		fmt.Fprintln(errW,
@@ -452,9 +459,10 @@ func cli_bookstore_annotated_v1_bookstore_proto_pumpRequests(ctx context.Context
 	}
 }
 
-// Renders responses while a goroutine pumps stdin requests over the stream's
-// ctx. The pump is never joined (it may be blocked on stdin); a pump failure
-// cancels the stream, so its error wins over the canceled render.
+// runBidi renders responses while a goroutine pumps stdin requests over the
+// stream's ctx. runBidi never joins the pump, because the pump can stay
+// blocked on stdin. A pump failure cancels the stream. Thus the pump error
+// wins over the canceled render.
 func cli_bookstore_annotated_v1_bookstore_proto_runBidi(ctx context.Context, cancel context.CancelFunc, cmd *cobra.Command, print func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error, v cli_bookstore_annotated_v1_bookstore_proto_view, send func(int, json.RawMessage) error, closeSend func() error, next func() ([]byte, error)) error {
 	sendErr := make(chan error, 1)
 	go func() {
@@ -482,23 +490,25 @@ func cli_bookstore_annotated_v1_bookstore_proto_runBidi(ctx context.Context, can
 
 // BookstoreServiceOptions configures the BookstoreService commands.
 type BookstoreServiceOptions struct {
-	// Printers adds -o formats: print pulls JSON records from next until
-	// io.EOF; a nil func removes the named format.
+	// Printers adds -o formats. A print function pulls JSON records from
+	// next until io.EOF. A nil function removes the named format.
 	Printers map[string]func(w io.Writer, next func() ([]byte, error)) error
-	// DefaultOutput is the format used when -o is empty.
+	// DefaultOutput is the format for an empty -o.
 	DefaultOutput string
-	// Decoders adds -f and -i input formats, content-tried after json and
-	// yaml in name order; a nil func removes the named format. Streaming
-	// stdin is JSON only.
+	// Decoders adds -f and -i input formats. The content test tries them
+	// after json and yaml, in name order. A nil function removes the named
+	// format. Stdin for streaming RPCs is JSON only.
 	Decoders map[string]func([]byte) ([]byte, error)
 	// Views maps a message's full proto name to its "Label:path" fields
-	// (gjson paths), replacing the message's derived fields wherever it
-	// renders; a malformed entry panics, a name never displayed is inert.
+	// (gjson paths). These fields replace the message's derived fields in
+	// all of its views. A malformed entry panics. A name that never displays
+	// has no effect.
 	Views map[string][]string
 }
 
-// NewBookstoreServiceCommand returns the BookstoreService command with one
-// subcommand per RPC. Later opts override earlier ones per entry.
+// NewBookstoreServiceCommand returns the BookstoreService command with
+// one subcommand for each RPC. Later opts override earlier opts for each
+// entry.
 func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...BookstoreServiceOptions) *cobra.Command {
 	client := NewBookstoreServiceClient(conn)
 
@@ -533,7 +543,8 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 	cli_bookstore_annotated_v1_bookstore_proto_checkDefaultOutput(printers, defaultOutput)
 	decoders := cli_bookstore_annotated_v1_bookstore_proto_decoders(decoderFns)
 
-	// The derived views; Options.Views entries override them.
+	// messageViews contains the derived views. Options.Views entries
+	// override them.
 	messageViews := map[string]cli_bookstore_annotated_v1_bookstore_proto_view{
 		"bookstore.annotated.v1.Book": {Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{
 			{Label: "id", Path: "id"},
@@ -568,13 +579,15 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 	}
 
 	cmd := &cobra.Command{
-		Use: "catalog",
+		Use:     "catalog",
+		Aliases: []string{"books"},
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers, defaultOutput))
 	cmd.AddCommand(func() *cobra.Command {
 		sub := &cobra.Command{
-			Use:  "list-shelves",
-			Args: cobra.NoArgs,
+			Use:     "list-shelves",
+			Aliases: []string{"shelves"},
+			Args:    cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				print, err := outputPrinter(cmd)
 				if err != nil {
@@ -600,8 +613,6 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 	}())
 	cmd.AddCommand(func() *cobra.Command {
 		var flagShelf string
-		var flagShelfId int64
-		var flagShelfTheme string
 		sub := &cobra.Command{
 			Use:  "create-shelf",
 			Args: cobra.NoArgs,
@@ -624,20 +635,6 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 					}
 					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --shelf", JSON: doc})
 				}
-				if cmd.Flags().Changed("shelf.id") {
-					doc, err := sjson.SetBytes([]byte("{}"), "shelf.id", flagShelfId)
-					if err != nil {
-						return fmt.Errorf("flag --shelf.id: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --shelf.id", JSON: doc})
-				}
-				if cmd.Flags().Changed("shelf.theme") {
-					doc, err := sjson.SetBytes([]byte("{}"), "shelf.theme", flagShelfTheme)
-					if err != nil {
-						return fmt.Errorf("flag --shelf.theme: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --shelf.theme", JSON: doc})
-				}
 				req := &CreateShelfRequest{}
 				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
 					return err
@@ -650,8 +647,6 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 			},
 		}
 		sub.Flags().StringVar(&flagShelf, "shelf", flagShelf, "")
-		sub.Flags().Int64Var(&flagShelfId, "shelf.id", flagShelfId, "")
-		sub.Flags().StringVar(&flagShelfTheme, "shelf.theme", flagShelfTheme, "")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())
@@ -694,8 +689,9 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 	cmd.AddCommand(func() *cobra.Command {
 		var flagShelf int64
 		sub := &cobra.Command{
-			Use:  "delete-shelf",
-			Args: cobra.NoArgs,
+			Use:    "delete-shelf",
+			Hidden: true,
+			Args:   cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				print, err := outputPrinter(cmd)
 				if err != nil {
@@ -766,13 +762,22 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 	cmd.AddCommand(func() *cobra.Command {
 		var flagShelf int64
 		var flagBook string
-		var flagBookId int64
 		var flagBookAuthor string
 		var flagBookTitle string
 		sub := &cobra.Command{
 			Use:  "add",
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				var missing []string
+				if !cmd.Flags().Changed("shelf") {
+					missing = append(missing, "--shelf")
+				}
+				if !cmd.Flags().Changed("book.title") {
+					missing = append(missing, "--book.title")
+				}
+				if missing != nil {
+					return fmt.Errorf("missing required flags: %s", strings.Join(missing, ", "))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -797,13 +802,6 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 						return fmt.Errorf("flag --book: %w", err)
 					}
 					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --book", JSON: doc})
-				}
-				if cmd.Flags().Changed("book.id") {
-					doc, err := sjson.SetBytes([]byte("{}"), "book.id", flagBookId)
-					if err != nil {
-						return fmt.Errorf("flag --book.id: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --book.id", JSON: doc})
 				}
 				if cmd.Flags().Changed("book.author") {
 					doc, err := sjson.SetBytes([]byte("{}"), "book.author", flagBookAuthor)
@@ -830,11 +828,10 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.Book"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
+		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "(required)")
 		sub.Flags().StringVar(&flagBook, "book", flagBook, "")
-		sub.Flags().Int64Var(&flagBookId, "book.id", flagBookId, "")
-		sub.Flags().StringVar(&flagBookAuthor, "book.author", flagBookAuthor, "")
-		sub.Flags().StringVar(&flagBookTitle, "book.title", flagBookTitle, "")
+		sub.Flags().StringVarP(&flagBookAuthor, "book.author", "a", flagBookAuthor, "")
+		sub.Flags().StringVarP(&flagBookTitle, "book.title", "t", flagBookTitle, "(required)")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())
@@ -845,6 +842,16 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 			Use:  "get",
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				var missing []string
+				if !cmd.Flags().Changed("shelf") {
+					missing = append(missing, "--shelf")
+				}
+				if !cmd.Flags().Changed("book") {
+					missing = append(missing, "--book")
+				}
+				if missing != nil {
+					return fmt.Errorf("missing required flags: %s", strings.Join(missing, ", "))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -878,8 +885,8 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.Book"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
-		sub.Flags().Int64Var(&flagBook, "book", flagBook, "")
+		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "(required)")
+		sub.Flags().Int64Var(&flagBook, "book", flagBook, "(required)")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())
@@ -887,8 +894,9 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 		var flagShelf int64
 		var flagBook int64
 		sub := &cobra.Command{
-			Use:  "delete",
-			Args: cobra.NoArgs,
+			Use:     "delete",
+			Aliases: []string{"rm"},
+			Args:    cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
 				print, err := outputPrinter(cmd)
 				if err != nil {
@@ -933,23 +941,25 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 
 // AuctionsServiceOptions configures the AuctionsService commands.
 type AuctionsServiceOptions struct {
-	// Printers adds -o formats: print pulls JSON records from next until
-	// io.EOF; a nil func removes the named format.
+	// Printers adds -o formats. A print function pulls JSON records from
+	// next until io.EOF. A nil function removes the named format.
 	Printers map[string]func(w io.Writer, next func() ([]byte, error)) error
-	// DefaultOutput is the format used when -o is empty.
+	// DefaultOutput is the format for an empty -o.
 	DefaultOutput string
-	// Decoders adds -f and -i input formats, content-tried after json and
-	// yaml in name order; a nil func removes the named format. Streaming
-	// stdin is JSON only.
+	// Decoders adds -f and -i input formats. The content test tries them
+	// after json and yaml, in name order. A nil function removes the named
+	// format. Stdin for streaming RPCs is JSON only.
 	Decoders map[string]func([]byte) ([]byte, error)
 	// Views maps a message's full proto name to its "Label:path" fields
-	// (gjson paths), replacing the message's derived fields wherever it
-	// renders; a malformed entry panics, a name never displayed is inert.
+	// (gjson paths). These fields replace the message's derived fields in
+	// all of its views. A malformed entry panics. A name that never displays
+	// has no effect.
 	Views map[string][]string
 }
 
-// NewAuctionsServiceCommand returns the AuctionsService command with one
-// subcommand per RPC. Later opts override earlier ones per entry.
+// NewAuctionsServiceCommand returns the AuctionsService command with
+// one subcommand for each RPC. Later opts override earlier opts for each
+// entry.
 func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsServiceOptions) *cobra.Command {
 	client := NewAuctionsServiceClient(conn)
 
@@ -984,27 +994,17 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 	cli_bookstore_annotated_v1_bookstore_proto_checkDefaultOutput(printers, defaultOutput)
 	decoders := cli_bookstore_annotated_v1_bookstore_proto_decoders(decoderFns)
 
-	// The derived views; Options.Views entries override them.
+	// messageViews contains the derived views. Options.Views entries
+	// override them.
 	messageViews := map[string]cli_bookstore_annotated_v1_bookstore_proto_view{
 		"bookstore.annotated.v1.Auction": {Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{
-			{Label: "id", Path: "id"},
-			{Label: "lot.id", Path: "lot.id"},
-			{Label: "lot.book.id", Path: "lot.book.id"},
-			{Label: "lot.book.author", Path: "lot.book.author"},
-			{Label: "lot.book.title", Path: "lot.book.title"},
-			{Label: "lot.condition", Path: "lot.condition"},
-			{Label: "lot.reserve_price", Path: "lot.reservePrice"},
-			{Label: "lot.provenance", Path: "lot.provenance"},
-			{Label: "lot.flaws", Path: "lot.flaws"},
-			{Label: "lot.attributes", Path: "lot.attributes"},
-			{Label: "lot.consignor.name", Path: "lot.consignor.name"},
-			{Label: "lot.consignor.address.street", Path: "lot.consignor.address.street"},
-			{Label: "lot.consignor.address.city", Path: "lot.consignor.address.city"},
-			{Label: "lot.consignor.address.country", Path: "lot.consignor.address.country"},
-			{Label: "state", Path: "state"},
-			{Label: "high_bid", Path: "highBid"},
-			{Label: "high_bidder", Path: "highBidder"},
-			{Label: "ends_at", Path: "endsAt"},
+			{Label: "ID", Path: "id"},
+			{Label: "TITLE", Path: "lot.book.title"},
+			{Label: "AUTHOR", Path: "lot.book.author"},
+			{Label: "CONDITION", Path: "lot.condition"},
+			{Label: "HIGH BID", Path: "highBid"},
+			{Label: "BIDDER", Path: "highBidder"},
+			{Label: "ENDS", Path: "endsAt"},
 		}},
 		"bookstore.annotated.v1.AuctionUpdate": {Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{
 			{Label: "auction", Path: "auction"},
@@ -1018,24 +1018,13 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 			{Label: "total_size", Path: "totalSize"},
 		}, Lists: []cli_bookstore_annotated_v1_bookstore_proto_viewList{
 			{FullName: "bookstore.annotated.v1.Auction", Label: "auctions", Path: "auctions", Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{
-				{Label: "id", Path: "id"},
-				{Label: "lot.id", Path: "lot.id"},
-				{Label: "lot.book.id", Path: "lot.book.id"},
-				{Label: "lot.book.author", Path: "lot.book.author"},
-				{Label: "lot.book.title", Path: "lot.book.title"},
-				{Label: "lot.condition", Path: "lot.condition"},
-				{Label: "lot.reserve_price", Path: "lot.reservePrice"},
-				{Label: "lot.provenance", Path: "lot.provenance"},
-				{Label: "lot.flaws", Path: "lot.flaws"},
-				{Label: "lot.attributes", Path: "lot.attributes"},
-				{Label: "lot.consignor.name", Path: "lot.consignor.name"},
-				{Label: "lot.consignor.address.street", Path: "lot.consignor.address.street"},
-				{Label: "lot.consignor.address.city", Path: "lot.consignor.address.city"},
-				{Label: "lot.consignor.address.country", Path: "lot.consignor.address.country"},
-				{Label: "state", Path: "state"},
-				{Label: "high_bid", Path: "highBid"},
-				{Label: "high_bidder", Path: "highBidder"},
-				{Label: "ends_at", Path: "endsAt"},
+				{Label: "ID", Path: "id"},
+				{Label: "TITLE", Path: "lot.book.title"},
+				{Label: "AUTHOR", Path: "lot.book.author"},
+				{Label: "CONDITION", Path: "lot.condition"},
+				{Label: "HIGH BID", Path: "highBid"},
+				{Label: "BIDDER", Path: "highBidder"},
+				{Label: "ENDS", Path: "endsAt"},
 			}},
 		}},
 	}
@@ -1053,9 +1042,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 	cmd.PersistentFlags().StringP("output", "o", "", cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers, defaultOutput))
 	cmd.AddCommand(func() *cobra.Command {
 		var flagLot string
-		var flagLotId int64
 		var flagLotBook string
-		var flagLotBookId int64
 		var flagLotBookAuthor string
 		var flagLotBookTitle string
 		var flagLotCondition string
@@ -1071,6 +1058,13 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 			Use:  "create",
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				var missing []string
+				if !cmd.Flags().Changed("book.title") {
+					missing = append(missing, "--book.title")
+				}
+				if missing != nil {
+					return fmt.Errorf("missing required flags: %s", strings.Join(missing, ", "))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -1089,118 +1083,104 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 					}
 					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --lot", JSON: doc})
 				}
-				if cmd.Flags().Changed("lot.id") {
-					doc, err := sjson.SetBytes([]byte("{}"), "lot.id", flagLotId)
-					if err != nil {
-						return fmt.Errorf("flag --lot.id: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --lot.id", JSON: doc})
-				}
-				if cmd.Flags().Changed("lot.book") {
+				if cmd.Flags().Changed("book") {
 					if !json.Valid([]byte(flagLotBook)) {
-						return fmt.Errorf("flag --lot.book: %q is not valid JSON", flagLotBook)
+						return fmt.Errorf("flag --book: %q is not valid JSON", flagLotBook)
 					}
 					doc, err := sjson.SetRawBytes([]byte("{}"), "lot.book", []byte(flagLotBook))
 					if err != nil {
-						return fmt.Errorf("flag --lot.book: %w", err)
+						return fmt.Errorf("flag --book: %w", err)
 					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --lot.book", JSON: doc})
+					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --book", JSON: doc})
 				}
-				if cmd.Flags().Changed("lot.book.id") {
-					doc, err := sjson.SetBytes([]byte("{}"), "lot.book.id", flagLotBookId)
-					if err != nil {
-						return fmt.Errorf("flag --lot.book.id: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --lot.book.id", JSON: doc})
-				}
-				if cmd.Flags().Changed("lot.book.author") {
+				if cmd.Flags().Changed("book.author") {
 					doc, err := sjson.SetBytes([]byte("{}"), "lot.book.author", flagLotBookAuthor)
 					if err != nil {
-						return fmt.Errorf("flag --lot.book.author: %w", err)
+						return fmt.Errorf("flag --book.author: %w", err)
 					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --lot.book.author", JSON: doc})
+					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --book.author", JSON: doc})
 				}
-				if cmd.Flags().Changed("lot.book.title") {
+				if cmd.Flags().Changed("book.title") {
 					doc, err := sjson.SetBytes([]byte("{}"), "lot.book.title", flagLotBookTitle)
 					if err != nil {
-						return fmt.Errorf("flag --lot.book.title: %w", err)
+						return fmt.Errorf("flag --book.title: %w", err)
 					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --lot.book.title", JSON: doc})
+					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --book.title", JSON: doc})
 				}
-				if cmd.Flags().Changed("lot.condition") {
+				if cmd.Flags().Changed("condition") {
 					doc, err := sjson.SetBytes([]byte("{}"), "lot.condition", flagLotCondition)
 					if err != nil {
-						return fmt.Errorf("flag --lot.condition: %w", err)
+						return fmt.Errorf("flag --condition: %w", err)
 					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --lot.condition", JSON: doc})
+					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --condition", JSON: doc})
 				}
-				if cmd.Flags().Changed("lot.reserve-price") {
+				if cmd.Flags().Changed("reserve") {
 					doc, err := sjson.SetBytes([]byte("{}"), "lot.reserve_price", flagLotReservePrice)
 					if err != nil {
-						return fmt.Errorf("flag --lot.reserve-price: %w", err)
+						return fmt.Errorf("flag --reserve: %w", err)
 					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --lot.reserve-price", JSON: doc})
+					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --reserve", JSON: doc})
 				}
-				if cmd.Flags().Changed("lot.provenance") {
+				if cmd.Flags().Changed("provenance") {
 					doc, err := sjson.SetBytes([]byte("{}"), "lot.provenance", flagLotProvenance)
 					if err != nil {
-						return fmt.Errorf("flag --lot.provenance: %w", err)
+						return fmt.Errorf("flag --provenance: %w", err)
 					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --lot.provenance", JSON: doc})
+					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --provenance", JSON: doc})
 				}
-				if cmd.Flags().Changed("lot.flaws") {
+				if cmd.Flags().Changed("flaws") {
 					for _, v := range flagLotFlaws {
 						if !json.Valid([]byte(v)) {
-							return fmt.Errorf("flag --lot.flaws: %q is not valid JSON", v)
+							return fmt.Errorf("flag --flaws: %q is not valid JSON", v)
 						}
 					}
 					doc, err := sjson.SetRawBytes([]byte("{}"), "lot.flaws", []byte("["+strings.Join(flagLotFlaws, ",")+"]"))
 					if err != nil {
-						return fmt.Errorf("flag --lot.flaws: %w", err)
+						return fmt.Errorf("flag --flaws: %w", err)
 					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --lot.flaws", JSON: doc})
+					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --flaws", JSON: doc})
 				}
-				if cmd.Flags().Changed("lot.attributes") {
+				if cmd.Flags().Changed("attributes") {
 					m := map[string]string{}
 					for _, kv := range flagLotAttributes {
 						k, v, ok := strings.Cut(kv, "=")
 						if !ok {
-							return fmt.Errorf("flag --lot.attributes: %q is not key=value", kv)
+							return fmt.Errorf("flag --attributes: %q is not key=value", kv)
 						}
 						m[k] = v
 					}
 					doc, err := sjson.SetBytes([]byte("{}"), "lot.attributes", m)
 					if err != nil {
-						return fmt.Errorf("flag --lot.attributes: %w", err)
+						return fmt.Errorf("flag --attributes: %w", err)
 					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --lot.attributes", JSON: doc})
+					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --attributes", JSON: doc})
 				}
-				if cmd.Flags().Changed("lot.consignor") {
+				if cmd.Flags().Changed("consignor") {
 					if !json.Valid([]byte(flagLotConsignor)) {
-						return fmt.Errorf("flag --lot.consignor: %q is not valid JSON", flagLotConsignor)
+						return fmt.Errorf("flag --consignor: %q is not valid JSON", flagLotConsignor)
 					}
 					doc, err := sjson.SetRawBytes([]byte("{}"), "lot.consignor", []byte(flagLotConsignor))
 					if err != nil {
-						return fmt.Errorf("flag --lot.consignor: %w", err)
+						return fmt.Errorf("flag --consignor: %w", err)
 					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --lot.consignor", JSON: doc})
+					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --consignor", JSON: doc})
 				}
-				if cmd.Flags().Changed("lot.consignor.name") {
+				if cmd.Flags().Changed("consignor.name") {
 					doc, err := sjson.SetBytes([]byte("{}"), "lot.consignor.name", flagLotConsignorName)
 					if err != nil {
-						return fmt.Errorf("flag --lot.consignor.name: %w", err)
+						return fmt.Errorf("flag --consignor.name: %w", err)
 					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --lot.consignor.name", JSON: doc})
+					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --consignor.name", JSON: doc})
 				}
-				if cmd.Flags().Changed("lot.consignor.address") {
+				if cmd.Flags().Changed("consignor.address") {
 					if !json.Valid([]byte(flagLotConsignorAddress)) {
-						return fmt.Errorf("flag --lot.consignor.address: %q is not valid JSON", flagLotConsignorAddress)
+						return fmt.Errorf("flag --consignor.address: %q is not valid JSON", flagLotConsignorAddress)
 					}
 					doc, err := sjson.SetRawBytes([]byte("{}"), "lot.consignor.address", []byte(flagLotConsignorAddress))
 					if err != nil {
-						return fmt.Errorf("flag --lot.consignor.address: %w", err)
+						return fmt.Errorf("flag --consignor.address: %w", err)
 					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --lot.consignor.address", JSON: doc})
+					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --consignor.address", JSON: doc})
 				}
 				if cmd.Flags().Changed("starts-at") {
 					doc, err := sjson.SetBytes([]byte("{}"), "starts_at", flagStartsAt)
@@ -1221,19 +1201,17 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 			},
 		}
 		sub.Flags().StringVar(&flagLot, "lot", flagLot, "")
-		sub.Flags().Int64Var(&flagLotId, "lot.id", flagLotId, "")
-		sub.Flags().StringVar(&flagLotBook, "lot.book", flagLotBook, "")
-		sub.Flags().Int64Var(&flagLotBookId, "lot.book.id", flagLotBookId, "")
-		sub.Flags().StringVar(&flagLotBookAuthor, "lot.book.author", flagLotBookAuthor, "")
-		sub.Flags().StringVar(&flagLotBookTitle, "lot.book.title", flagLotBookTitle, "")
-		sub.Flags().StringVar(&flagLotCondition, "lot.condition", flagLotCondition, "")
-		sub.Flags().Float64Var(&flagLotReservePrice, "lot.reserve-price", flagLotReservePrice, "")
-		sub.Flags().StringArrayVar(&flagLotProvenance, "lot.provenance", flagLotProvenance, "")
-		sub.Flags().StringArrayVar(&flagLotFlaws, "lot.flaws", flagLotFlaws, "")
-		sub.Flags().StringArrayVar(&flagLotAttributes, "lot.attributes", flagLotAttributes, "")
-		sub.Flags().StringVar(&flagLotConsignor, "lot.consignor", flagLotConsignor, "")
-		sub.Flags().StringVar(&flagLotConsignorName, "lot.consignor.name", flagLotConsignorName, "")
-		sub.Flags().StringVar(&flagLotConsignorAddress, "lot.consignor.address", flagLotConsignorAddress, "")
+		sub.Flags().StringVar(&flagLotBook, "book", flagLotBook, "")
+		sub.Flags().StringVarP(&flagLotBookAuthor, "book.author", "a", flagLotBookAuthor, "")
+		sub.Flags().StringVarP(&flagLotBookTitle, "book.title", "t", flagLotBookTitle, "(required)")
+		sub.Flags().StringVar(&flagLotCondition, "condition", flagLotCondition, "")
+		sub.Flags().Float64Var(&flagLotReservePrice, "reserve", flagLotReservePrice, "")
+		sub.Flags().StringArrayVar(&flagLotProvenance, "provenance", flagLotProvenance, "")
+		sub.Flags().StringArrayVar(&flagLotFlaws, "flaws", flagLotFlaws, "")
+		sub.Flags().StringArrayVar(&flagLotAttributes, "attributes", flagLotAttributes, "")
+		sub.Flags().StringVar(&flagLotConsignor, "consignor", flagLotConsignor, "")
+		sub.Flags().StringVar(&flagLotConsignorName, "consignor.name", flagLotConsignorName, "")
+		sub.Flags().StringVar(&flagLotConsignorAddress, "consignor.address", flagLotConsignorAddress, "")
 		sub.Flags().StringVar(&flagStartsAt, "starts-at", flagStartsAt, "")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
@@ -1332,6 +1310,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 		sub.Flags().Int64Var(&flagAuction, "auction", flagAuction, "")
 		sub.Flags().StringVar(&flagAuthor, "author", flagAuthor, "")
 		sub.Flags().Int64Var(&flagLimit, "limit", flagLimit, "")
+		_ = sub.Flags().MarkHidden("limit")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		sub.MarkFlagsMutuallyExclusive("auction", "author")
 		return sub
@@ -1375,23 +1354,25 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 
 // InventoryServiceOptions configures the InventoryService commands.
 type InventoryServiceOptions struct {
-	// Printers adds -o formats: print pulls JSON records from next until
-	// io.EOF; a nil func removes the named format.
+	// Printers adds -o formats. A print function pulls JSON records from
+	// next until io.EOF. A nil function removes the named format.
 	Printers map[string]func(w io.Writer, next func() ([]byte, error)) error
-	// DefaultOutput is the format used when -o is empty.
+	// DefaultOutput is the format for an empty -o.
 	DefaultOutput string
-	// Decoders adds -f and -i input formats, content-tried after json and
-	// yaml in name order; a nil func removes the named format. Streaming
-	// stdin is JSON only.
+	// Decoders adds -f and -i input formats. The content test tries them
+	// after json and yaml, in name order. A nil function removes the named
+	// format. Stdin for streaming RPCs is JSON only.
 	Decoders map[string]func([]byte) ([]byte, error)
 	// Views maps a message's full proto name to its "Label:path" fields
-	// (gjson paths), replacing the message's derived fields wherever it
-	// renders; a malformed entry panics, a name never displayed is inert.
+	// (gjson paths). These fields replace the message's derived fields in
+	// all of its views. A malformed entry panics. A name that never displays
+	// has no effect.
 	Views map[string][]string
 }
 
-// NewInventoryServiceCommand returns the InventoryService command with one
-// subcommand per RPC. Later opts override earlier ones per entry.
+// NewInventoryServiceCommand returns the InventoryService command with
+// one subcommand for each RPC. Later opts override earlier opts for each
+// entry.
 func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...InventoryServiceOptions) *cobra.Command {
 	client := NewInventoryServiceClient(conn)
 
@@ -1426,7 +1407,8 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 	cli_bookstore_annotated_v1_bookstore_proto_checkDefaultOutput(printers, defaultOutput)
 	decoders := cli_bookstore_annotated_v1_bookstore_proto_decoders(decoderFns)
 
-	// The derived views; Options.Views entries override them.
+	// messageViews contains the derived views. Options.Views entries
+	// override them.
 	messageViews := map[string]cli_bookstore_annotated_v1_bookstore_proto_view{
 		"bookstore.annotated.v1.ImportSummary": {Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{
 			{Label: "created", Path: "created"},
@@ -1445,7 +1427,8 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 	}
 
 	cmd := &cobra.Command{
-		Use: "inventory",
+		Use:    "inventory",
+		Hidden: true,
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers, defaultOutput))
 	cmd.AddCommand(func() *cobra.Command {
@@ -1468,8 +1451,8 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 					}
 					return stream.Send(req)
 				}
-				// Send returns io.EOF when the server ended the stream early;
-				// the status comes from CloseAndRecv.
+				// Send returns io.EOF when the server ends the stream early.
+				// The status comes from CloseAndRecv.
 				if err := cli_bookstore_annotated_v1_bookstore_proto_pumpRequests(cmd.Context(), cmd.InOrStdin(), cmd.ErrOrStderr(), send); err != nil && !errors.Is(err, io.EOF) {
 					return err
 				}
@@ -1504,12 +1487,12 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 					}
 					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --shelf", JSON: doc})
 				}
-				if cmd.Flags().Changed("arg-filename") {
+				if cmd.Flags().Changed("report-file") {
 					doc, err := sjson.SetBytes([]byte("{}"), "filename", flagFilename)
 					if err != nil {
-						return fmt.Errorf("flag --arg-filename: %w", err)
+						return fmt.Errorf("flag --report-file: %w", err)
 					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --arg-filename", JSON: doc})
+					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --report-file", JSON: doc})
 				}
 				req := &ExportReportRequest{}
 				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
@@ -1523,7 +1506,7 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 			},
 		}
 		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
-		sub.Flags().StringVar(&flagFilename, "arg-filename", flagFilename, "")
+		sub.Flags().StringVar(&flagFilename, "report-file", flagFilename, "")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())

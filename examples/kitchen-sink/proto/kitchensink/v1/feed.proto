@@ -1,4 +1,4 @@
-// A service with only server-streaming RPCs: its generated file omits the
+// This service has only server-streaming RPCs. Its generated file omits the
 // single-response machinery.
 
 syntax = "proto3";
@@ -7,9 +7,9 @@ package kitchensink.v1;
 
 option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
 
-// FeedService streams fabricated events.
+// FeedService streams fake events.
 service FeedService {
-  // Streams the requested number of events, then ends the feed.
+  // Tail streams the requested number of events and then ends the feed.
   rpc Tail(TailRequest) returns (stream FeedEvent);
 }
 

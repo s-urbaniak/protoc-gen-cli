@@ -1,5 +1,5 @@
-// A service with only client-streaming RPCs: its generated file omits the
-// document-input machinery, and Absorb's request comes from another package.
+// This service has only client-streaming RPCs. Its generated file omits the
+// document-input machinery. Absorb's request comes from another package.
 
 syntax = "proto3";
 
@@ -11,9 +11,9 @@ option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/g
 
 // IngestService counts what it receives.
 service IngestService {
-  // Counts the streamed records.
+  // Ingest counts the streamed records.
   rpc Ingest(stream IngestRecord) returns (IngestSummary);
-  // Counts the streamed requests.
+  // Absorb counts the streamed requests.
   rpc Absorb(stream imported.v1.ImportedRequest) returns (IngestSummary);
 }
 

@@ -1,5 +1,5 @@
-// A service with only bidi RPCs: its generated file omits the document-input
-// and single-response machinery.
+// This service has only bidi RPCs. Its generated file omits the
+// document-input and single-response machinery.
 
 syntax = "proto3";
 
@@ -9,7 +9,7 @@ option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/g
 
 // RelayService echoes each note back as it arrives.
 service RelayService {
-  // Echoes each note as it arrives.
+  // Chat echoes each note as it arrives.
   rpc Chat(stream ChatNote) returns (stream ChatNote);
 }
 

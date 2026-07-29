@@ -1,0 +1,82 @@
+// This file exercises the (cli.v0.*) knob variants that the
+// bookstore-annotated story does not cover.
+
+syntax = "proto3";
+
+package kitchensink.v1;
+
+import "cli/v0/cli.proto";
+import "google/protobuf/struct.proto";
+
+option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
+
+// AnnotationsService's RPCs echo their requests.
+service AnnotationsService {
+  option (cli.v0.service).aliases = "ann";
+
+  rpc Echo(EchoRequest) returns (EchoRequest) {
+    option (cli.v0.command).aliases = "e";
+    option (cli.v0.command).aliases = "say";
+  }
+  rpc Knobs(KnobsRequest) returns (KnobsRequest) {}
+  rpc Curated(CuratedRequest) returns (CuratedRequest) {}
+  rpc Flat(FlatRequest) returns (FlatRequest) {}
+}
+
+message EchoRequest {
+  string text = 1;
+}
+
+message Widget {
+  Gadget gadget = 1;
+  string leaf = 2;
+}
+
+message Gadget {
+  Gizmo gizmo = 1;
+  string leaf = 2;
+}
+
+message Gizmo {
+  string leaf = 1;
+}
+
+message KnobsRequest {
+  string capital = 1 [(cli.v0.param).shorthand = "S"];
+  Widget shallow = 2 [(cli.v0.param).expand_depth = 2];
+  Widget whole = 3 [(cli.v0.param).expand_depth = 0];
+  // The next three options cannot apply. Generation warns and drops each
+  // option.
+  string lifted = 4 [(cli.v0.param).hoist = true];
+  string deepened = 5 [(cli.v0.param).expand_depth = 3];
+  Widget insisted = 6 [(cli.v0.param).required = true];
+  google.protobuf.Struct blob = 7 [(cli.v0.param).shorthand = "j"];
+}
+
+message CuratedRequest {
+  // The last path does not resolve. This is intentional. Generation warns
+  // and drops it.
+  option (cli.v0.view) = {
+    fields: [
+      {
+        label: "KEY"
+        path: "key"
+      },
+      {path: "widget.gadget.leaf"},
+      {
+        label: "GONE"
+        path: "no_such_field"
+      }
+    ]
+  };
+
+  string key = 1;
+  Widget widget = 2;
+}
+
+message FlatRequest {
+  option (cli.v0.view).expand_depth = 0;
+
+  Widget widget = 1;
+  string note = 2;
+}

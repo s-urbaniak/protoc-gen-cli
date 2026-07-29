@@ -29,15 +29,20 @@ option go_package = "github.com/braveokafor/proto-to-cli/examples/bookstore-anno
 // The API manages shelves and books resources. Shelves contain books.
 service BookstoreService {
   option (cli.v0.service).name = "catalog";
+  option (cli.v0.service).aliases = "books";
 
   // Returns a list of all shelves in the bookstore.
-  rpc ListShelves(google.protobuf.Empty) returns (ListShelvesResponse) {}
+  rpc ListShelves(google.protobuf.Empty) returns (ListShelvesResponse) {
+    option (cli.v0.command).aliases = "shelves";
+  }
   // Creates a new shelf in the bookstore.
   rpc CreateShelf(CreateShelfRequest) returns (Shelf) {}
   // Returns a specific bookstore shelf.
   rpc GetShelf(GetShelfRequest) returns (Shelf) {}
   // Deletes a shelf, including all books that are stored on the shelf.
-  rpc DeleteShelf(DeleteShelfRequest) returns (google.protobuf.Empty) {}
+  rpc DeleteShelf(DeleteShelfRequest) returns (google.protobuf.Empty) {
+    option (cli.v0.command).hidden = true;
+  }
   // Returns a list of books on a shelf.
   rpc ListBooks(ListBooksRequest) returns (ListBooksResponse) {
     option (cli.v0.command).name = "list";
@@ -53,6 +58,7 @@ service BookstoreService {
   // Deletes a book from a shelf.
   rpc DeleteBook(DeleteBookRequest) returns (google.protobuf.Empty) {
     option (cli.v0.command).name = "delete";
+    option (cli.v0.command).aliases = "rm";
   }
 }
 
@@ -67,11 +73,14 @@ message Shelf {
 // A book resource.
 message Book {
   // A unique book id.
-  int64 id = 1;
+  int64 id = 1 [(cli.v0.param).skip = true];
   // An author of the book.
-  string author = 2;
+  string author = 2 [(cli.v0.param).shorthand = "a"];
   // A book title.
-  string title = 3;
+  string title = 3 [
+    (cli.v0.param).shorthand = "t",
+    (cli.v0.param).required = true
+  ];
 }
 
 // Response to ListShelves call.
@@ -83,7 +92,7 @@ message ListShelvesResponse {
 // Request message for CreateShelf method.
 message CreateShelfRequest {
   // The shelf resource to create.
-  Shelf shelf = 1;
+  Shelf shelf = 1 [(cli.v0.param).expand_depth = 0];
 }
 
 // Request message for GetShelf method.
@@ -113,7 +122,7 @@ message ListBooksResponse {
 // Request message for CreateBook method.
 message CreateBookRequest {
   // The ID of the shelf on which to create a book.
-  int64 shelf = 1;
+  int64 shelf = 1 [(cli.v0.param).required = true];
   // A book resource to create on the shelf.
   Book book = 2;
 }
@@ -121,9 +130,9 @@ message CreateBookRequest {
 // Request message for GetBook method.
 message GetBookRequest {
   // The ID of the shelf from which to retrieve a book.
-  int64 shelf = 1;
+  int64 shelf = 1 [(cli.v0.param).required = true];
   // The ID of the book to retrieve.
-  int64 book = 2;
+  int64 book = 2 [(cli.v0.param).required = true];
 }
 
 // Request message for DeleteBook method.
@@ -202,10 +211,10 @@ message Flaw {
 
 // Lot is a book consigned for auction.
 message Lot {
-  int64 id = 1;
+  int64 id = 1 [(cli.v0.param).skip = true];
   Book book = 2;
   Condition condition = 3;
-  double reserve_price = 4;
+  double reserve_price = 4 [(cli.v0.param).name = "reserve"];
   // Chain of custody, oldest first.
   repeated string provenance = 5;
   repeated Flaw flaws = 6;
@@ -216,6 +225,39 @@ message Lot {
 
 // Auction is one lot under the hammer.
 message Auction {
+  option (cli.v0.view) = {
+    fields: [
+      {
+        label: "ID"
+        path: "id"
+      },
+      {
+        label: "TITLE"
+        path: "lot.book.title"
+      },
+      {
+        label: "AUTHOR"
+        path: "lot.book.author"
+      },
+      {
+        label: "CONDITION"
+        path: "lot.condition"
+      },
+      {
+        label: "HIGH BID"
+        path: "high_bid"
+      },
+      {
+        label: "BIDDER"
+        path: "high_bidder"
+      },
+      {
+        label: "ENDS"
+        path: "ends_at"
+      }
+    ]
+  };
+
   int64 id = 1;
   Lot lot = 2;
   AuctionState state = 3;
@@ -225,7 +267,7 @@ message Auction {
 }
 
 message CreateAuctionRequest {
-  Lot lot = 1;
+  Lot lot = 1 [(cli.v0.param).hoist = true];
   google.protobuf.Timestamp starts_at = 2;
 }
 
@@ -246,7 +288,7 @@ message WatchAuctionRequest {
     string author = 2;
   }
   // Cap on the number of updates streamed back.
-  int32 limit = 3;
+  int32 limit = 3 [(cli.v0.param).hidden = true];
 }
 
 message PlaceBidRequest {
@@ -265,6 +307,8 @@ message AuctionUpdate {
 
 // InventoryService is the back office's stock system.
 service InventoryService {
+  option (cli.v0.service).hidden = true;
+
   // ImportBooks ingests a book catalogue as a stream of records.
   rpc ImportBooks(stream ImportBooksRequest) returns (ImportSummary) {
     option (cli.v0.command).name = "import";
@@ -282,7 +326,7 @@ message ExportReportRequest {
   // The ID of the shelf to report on.
   int64 shelf = 1;
   // The file to write the report to.
-  string filename = 2;
+  string filename = 2 [(cli.v0.param).name = "report-file"];
 }
 
 // A stock report resource.

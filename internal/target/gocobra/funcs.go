@@ -99,6 +99,15 @@ func funcMap(model *ir.Model) template.FuncMap {
 			}
 			return groups
 		},
+		"requiredParams": func(cmd *ir.Command) []*ir.Param {
+			var req []*ir.Param
+			for _, f := range cmd.Params {
+				if f.Required {
+					req = append(req, f)
+				}
+			}
+			return req
+		},
 		"quoteJoin": func(names []string) string {
 			quoted := make([]string, len(names))
 			for i, n := range names {
@@ -117,9 +126,9 @@ func goVarName(f *ir.Param) string {
 	return name
 }
 
-// templateImports is the template's import block, name to path; goimports
-// drops the entries a file doesn't use, and request aliases must not take
-// these names.
+// templateImports is the template's import block, from name to path.
+// goimports drops the entries that a file does not use. Request aliases must
+// not take these names.
 var templateImports = map[string]string{
 	"bytes":     "bytes",
 	"context":   "context",

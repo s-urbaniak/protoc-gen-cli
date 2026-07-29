@@ -19,8 +19,8 @@
           "proto_name": "Chat",
           "go_name": "Chat",
           "name": "chat",
-          "short_help": "Echoes each note as it arrives.",
-          "long_help": "Echoes each note as it arrives.\n\nReads JSON requests from stdin, one after another.\n\nThe server may send multiple responses; each prints as it arrives.",
+          "short_help": "Chat echoes each note as it arrives.",
+          "long_help": "Chat echoes each note as it arrives.\n\nReads JSON requests from stdin, one after another.\n\nThe server may send multiple responses; each prints as it arrives.",
           "input": {
             "full_name": "kitchensink.v1.ChatNote",
             "proto_file": "kitchensink/v1/relay.proto",

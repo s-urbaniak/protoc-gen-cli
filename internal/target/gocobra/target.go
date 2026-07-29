@@ -1,5 +1,5 @@
 // Package gocobra is the Go + Cobra target for protoc-gen-cli. It emits one
-// self-contained <file>_cli.pb.go per proto file.
+// self-contained <file>_cli.pb.go for each proto file.
 package gocobra
 
 import (
@@ -32,7 +32,8 @@ func Generate(model *ir.Model, _ target.Options) ([]target.File, error) {
 
 	name := model.GeneratedFilenamePrefix + "_cli.pb.go"
 
-	// Formats and drops the imports a file's services don't reach.
+	// imports.Process formats the code and drops the imports that the
+	// services do not reach.
 	pruned, err := imports.Process(name, rendered, &imports.Options{
 		Comments:  true,
 		TabIndent: true,

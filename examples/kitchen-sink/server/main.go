@@ -1,4 +1,5 @@
-// Command kitchen-sink-server is a stub gRPC server for the kitchen-sink fixture
+// Command kitchen-sink-server is a stub gRPC server for the kitchen-sink
+// fixture.
 package main
 
 import (
@@ -43,6 +44,10 @@ type ingestServer struct {
 	kitchensinkv1.UnimplementedIngestServiceServer
 }
 
+type annotationsServer struct {
+	kitchensinkv1.UnimplementedAnnotationsServiceServer
+}
+
 func main() {
 	addr := flag.String("addr", ":50055", "listen address")
 	flag.Parse()
@@ -58,6 +63,7 @@ func main() {
 	kitchensinkv1.RegisterRelayServiceServer(srv, relayServer{})
 	kitchensinkv1.RegisterFeedServiceServer(srv, feedServer{})
 	kitchensinkv1.RegisterIngestServiceServer(srv, ingestServer{})
+	kitchensinkv1.RegisterAnnotationsServiceServer(srv, annotationsServer{})
 	secondv1.RegisterSecondServiceServer(srv, secondServer{})
 	log.Printf("kitchen-sink-server listening on %s", *addr)
 	if err := srv.Serve(lis); err != nil {
@@ -334,4 +340,32 @@ func (ingestServer) Absorb(stream kitchensinkv1.IngestService_AbsorbServer) erro
 		}
 		count++
 	}
+}
+
+func (annotationsServer) Echo(
+	_ context.Context,
+	req *kitchensinkv1.EchoRequest,
+) (*kitchensinkv1.EchoRequest, error) {
+	return req, nil
+}
+
+func (annotationsServer) Knobs(
+	_ context.Context,
+	req *kitchensinkv1.KnobsRequest,
+) (*kitchensinkv1.KnobsRequest, error) {
+	return req, nil
+}
+
+func (annotationsServer) Curated(
+	_ context.Context,
+	req *kitchensinkv1.CuratedRequest,
+) (*kitchensinkv1.CuratedRequest, error) {
+	return req, nil
+}
+
+func (annotationsServer) Flat(
+	_ context.Context,
+	req *kitchensinkv1.FlatRequest,
+) (*kitchensinkv1.FlatRequest, error) {
+	return req, nil
 }

@@ -226,7 +226,7 @@ func (auctionsServer) WatchAuction(
 	}
 }
 
-// Bid records the client's bids while rival paddles keep raising the price.
+// Bid records the client's bids while rival paddles increase the price.
 func (auctionsServer) Bid(stream bookstorev1.AuctionsService_BidServer) error {
 	g := gofakeit.New(0)
 

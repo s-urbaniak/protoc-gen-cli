@@ -1,5 +1,5 @@
-// Command kitchen-sink is the example CLI for the kitchen-sink fixture: a
-// hand-written root that mounts the generated command tree.
+// Command kitchen-sink is the example CLI for the kitchen-sink fixture. It is
+// a hand-written root that mounts the generated command tree.
 package main
 
 import (
@@ -82,6 +82,7 @@ func main() {
 		kitchensinkv1.NewRelayServiceCommand(conn),
 		kitchensinkv1.NewFeedServiceCommand(conn),
 		kitchensinkv1.NewIngestServiceCommand(conn),
+		kitchensinkv1.NewAnnotationsServiceCommand(conn),
 		secondv1.NewSecondServiceCommand(conn,
 			secondv1.SecondServiceOptions{DefaultOutput: "yaml", Printers: printers}),
 	)
