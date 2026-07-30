@@ -659,6 +659,9 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CollisionsRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				resp, err := client.Collisions(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -677,6 +680,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 		sub.Flags().StringVar(&flagReturn, "return", flagReturn, "")
 		sub.Flags().StringVar(&flagImport, "import", flagImport, "")
 		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -715,6 +719,9 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("imported.v1.ImportedRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				resp, err := client.Imported(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -724,6 +731,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 		}
 		sub.Flags().StringVar(&flagId, "id", flagId, "")
 		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -762,6 +770,9 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("second.v1.PingRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				resp, err := client.Second(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -771,6 +782,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 		}
 		sub.Flags().StringVar(&flagText, "text", flagText, "")
 		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -833,6 +845,9 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.ReservedRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				resp, err := client.Reserved(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -845,6 +860,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 		sub.Flags().StringVar(&flagHelp, "arg-help", flagHelp, "")
 		sub.Flags().StringVar(&flagOutput, "arg-output", flagOutput, "")
 		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -876,6 +892,9 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				resp, err := client.Empty(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -884,6 +903,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 			},
 		}
 		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -946,6 +966,9 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CasingRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				resp, err := client.HTTPCall(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -958,6 +981,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 		sub.Flags().StringVar(&flagWithJsonName, "with-json-name", flagWithJsonName, "")
 		sub.Flags().StringVar(&flagDotted, "dotted", flagDotted, "")
 		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -1020,6 +1044,9 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CasingRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				resp, err := client.LowerSnake(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -1032,6 +1059,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 		sub.Flags().StringVar(&flagWithJsonName, "with-json-name", flagWithJsonName, "")
 		sub.Flags().StringVar(&flagDotted, "dotted", flagDotted, "")
 		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -1173,6 +1201,9 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.Outer"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				resp, err := client.Borrow(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -1193,6 +1224,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 		sub.Flags().StringVar(&flagMiddleInnerDeepDeeperDeepest, "middle.inner.deep.deeper.deepest", flagMiddleInnerDeepDeeperDeepest, "")
 		sub.Flags().StringVar(&flagMiddleInnerDeepDeeperDeepestLeaf, "middle.inner.deep.deeper.deepest.leaf", flagMiddleInnerDeepDeeperDeepestLeaf, "")
 		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -1231,6 +1263,9 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.Envelope.Letter"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				resp, err := client.Nested(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -1240,6 +1275,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 		}
 		sub.Flags().StringVar(&flagBody, "body", flagBody, "")
 		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	return cmd

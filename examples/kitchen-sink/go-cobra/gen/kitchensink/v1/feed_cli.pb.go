@@ -547,6 +547,9 @@ func NewFeedServiceCommand(conn grpc.ClientConnInterface, opts ...FeedServiceOpt
 				if err := cli_kitchensink_v1_feed_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.TailRequest"), cli_kitchensink_v1_feed_proto_oneRecord(req))
+				}
 				stream, err := client.Tail(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -563,6 +566,7 @@ func NewFeedServiceCommand(conn grpc.ClientConnInterface, opts ...FeedServiceOpt
 		}
 		sub.Flags().Int64Var(&flagCount, "count", flagCount, "")
 		cli_kitchensink_v1_feed_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	return cmd

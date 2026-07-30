@@ -612,14 +612,16 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface, opts ...{{ $svc.
 					return print(cmd.OutOrStdout(), viewFor({{ printf "%q" .Input.FullName }}), {{ fileIdent }}_oneRecord(req))
 				}
 {{- with requiredParams . }}
-				var missing []string
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); !dryRun {
+					var missing []string
 {{- range . }}
-				if !cmd.Flags().Changed({{ printf "%q" .Name }}) {
-					missing = append(missing, "--{{ .Name }}")
-				}
+					if !cmd.Flags().Changed({{ printf "%q" .Name }}) {
+						missing = append(missing, "--{{ .Name }}")
+					}
 {{- end }}
-				if missing != nil {
-					return fmt.Errorf("missing required flags: %s", strings.Join(missing, ", "))
+					if missing != nil {
+						return fmt.Errorf("missing required flags: %s", strings.Join(missing, ", "))
+					}
 				}
 {{- end }}
 				print, err := outputPrinter(cmd)
@@ -677,6 +679,9 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface, opts ...{{ $svc.
 				if err := {{ fileIdent }}_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor({{ printf "%q" .Input.FullName }}), {{ fileIdent }}_oneRecord(req))
+				}
 {{- if .ServerStreaming }}
 				stream, err := client.{{ .GoName }}(cmd.Context(), req)
 				if err != nil {
@@ -708,6 +713,7 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface, opts ...{{ $svc.
 {{- end }}
 {{- if not .ClientStreaming }}
 		{{ fileIdent }}_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 {{- end }}
 {{- range oneofGroups . }}
 		sub.MarkFlagsMutuallyExclusive({{ quoteJoin . }})

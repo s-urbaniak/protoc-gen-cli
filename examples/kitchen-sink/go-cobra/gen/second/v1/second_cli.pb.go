@@ -545,6 +545,9 @@ func NewSecondServiceCommand(conn grpc.ClientConnInterface, opts ...SecondServic
 				if err := cli_second_v1_second_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("second.v1.PingRequest"), cli_second_v1_second_proto_oneRecord(req))
+				}
 				resp, err := client.Ping(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -554,6 +557,7 @@ func NewSecondServiceCommand(conn grpc.ClientConnInterface, opts ...SecondServic
 		}
 		sub.Flags().StringVar(&flagText, "text", flagText, "")
 		cli_second_v1_second_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	return cmd

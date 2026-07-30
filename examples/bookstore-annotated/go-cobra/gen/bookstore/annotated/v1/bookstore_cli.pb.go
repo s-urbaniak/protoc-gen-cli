@@ -617,6 +617,9 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				resp, err := client.ListShelves(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -625,6 +628,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 			},
 		}
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -668,6 +672,9 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				resp, err := client.CreateShelf(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -677,6 +684,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 		}
 		sub.Flags().StringVar(&flagShelf, "shelf", flagShelf, "The shelf resource to create.")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -717,6 +725,9 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.GetShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				resp, err := client.GetShelf(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -726,6 +737,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 		}
 		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf resource to retrieve.")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -767,6 +779,9 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.DeleteShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				resp, err := client.DeleteShelf(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -776,6 +791,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 		}
 		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf to delete.")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -816,6 +832,9 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListBooksRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				resp, err := client.ListBooks(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -825,6 +844,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 		}
 		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "ID of the shelf which books to list.")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -849,15 +869,17 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
-				var missing []string
-				if !cmd.Flags().Changed("shelf") {
-					missing = append(missing, "--shelf")
-				}
-				if !cmd.Flags().Changed("book.title") {
-					missing = append(missing, "--book.title")
-				}
-				if missing != nil {
-					return fmt.Errorf("missing required flags: %s", strings.Join(missing, ", "))
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); !dryRun {
+					var missing []string
+					if !cmd.Flags().Changed("shelf") {
+						missing = append(missing, "--shelf")
+					}
+					if !cmd.Flags().Changed("book.title") {
+						missing = append(missing, "--book.title")
+					}
+					if missing != nil {
+						return fmt.Errorf("missing required flags: %s", strings.Join(missing, ", "))
+					}
 				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
@@ -902,6 +924,9 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				resp, err := client.CreateBook(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -914,6 +939,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 		sub.Flags().StringVarP(&flagBookAuthor, "book.author", "a", flagBookAuthor, "An author of the book.")
 		sub.Flags().StringVarP(&flagBookTitle, "book.title", "t", flagBookTitle, "A book title. (required)")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -936,15 +962,17 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.GetBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
-				var missing []string
-				if !cmd.Flags().Changed("shelf") {
-					missing = append(missing, "--shelf")
-				}
-				if !cmd.Flags().Changed("book") {
-					missing = append(missing, "--book")
-				}
-				if missing != nil {
-					return fmt.Errorf("missing required flags: %s", strings.Join(missing, ", "))
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); !dryRun {
+					var missing []string
+					if !cmd.Flags().Changed("shelf") {
+						missing = append(missing, "--shelf")
+					}
+					if !cmd.Flags().Changed("book") {
+						missing = append(missing, "--book")
+					}
+					if missing != nil {
+						return fmt.Errorf("missing required flags: %s", strings.Join(missing, ", "))
+					}
 				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
@@ -972,6 +1000,9 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.GetBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				resp, err := client.GetBook(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -982,6 +1013,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf from which to retrieve a book. (required)")
 		sub.Flags().Int64Var(&flagBook, "book", flagBook, "The ID of the book to retrieve. (required)")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -1031,6 +1063,9 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.DeleteBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				resp, err := client.DeleteBook(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -1041,6 +1076,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf from which to delete a book.")
 		sub.Flags().Int64Var(&flagBook, "book", flagBook, "The ID of the book to delete.")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	return cmd
@@ -1179,12 +1215,14 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateAuctionRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
-				var missing []string
-				if !cmd.Flags().Changed("book.title") {
-					missing = append(missing, "--book.title")
-				}
-				if missing != nil {
-					return fmt.Errorf("missing required flags: %s", strings.Join(missing, ", "))
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); !dryRun {
+					var missing []string
+					if !cmd.Flags().Changed("book.title") {
+						missing = append(missing, "--book.title")
+					}
+					if missing != nil {
+						return fmt.Errorf("missing required flags: %s", strings.Join(missing, ", "))
+					}
 				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
@@ -1314,6 +1352,9 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateAuctionRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				resp, err := client.CreateAuction(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -1335,6 +1376,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 		sub.Flags().StringVar(&flagLotConsignorAddress, "consignor.address", flagLotConsignorAddress, "")
 		sub.Flags().StringVar(&flagStartsAt, "starts-at", flagStartsAt, "")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -1374,6 +1416,9 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListAuctionsRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				resp, err := client.ListAuctions(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -1383,6 +1428,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 		}
 		sub.Flags().StringVar(&flagState, "state", flagState, "(values: AUCTION_STATE_UNSPECIFIED | AUCTION_STATE_SCHEDULED | AUCTION_STATE_OPEN | AUCTION_STATE_HAMMERED | AUCTION_STATE_SETTLED)")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -1439,6 +1485,9 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.WatchAuctionRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				stream, err := client.WatchAuction(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -1458,6 +1507,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 		sub.Flags().Int64Var(&flagLimit, "limit", flagLimit, "Cap on the number of updates streamed back.")
 		_ = sub.Flags().MarkHidden("limit")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		sub.MarkFlagsMutuallyExclusive("auction", "author")
 		return sub
 	}())
@@ -1685,6 +1735,9 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ExportReportRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				resp, err := client.ExportReport(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -1695,6 +1748,7 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf to report on.")
 		sub.Flags().StringVar(&flagFilename, "report-file", flagFilename, "The file to write the report to.")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	return cmd

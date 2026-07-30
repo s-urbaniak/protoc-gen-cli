@@ -801,6 +801,9 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err := cli_kitchensink_v1_fields_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.ScalarsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				resp, err := client.Scalars(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -824,6 +827,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		sub.Flags().StringVar(&flagStringField, "string-field", flagStringField, "A display name; a Windows path like C:\\Users\\me works.")
 		sub.Flags().StringVar(&flagBytesField, "bytes-field", flagBytesField, "Raw bytes; the checksum tag looks like abc.")
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -1210,6 +1214,9 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err := cli_kitchensink_v1_fields_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.MessagesRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				resp, err := client.Messages(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -1254,6 +1261,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		sub.Flags().StringVar(&flagOddEven, "odd.even", flagOddEven, "")
 		sub.Flags().StringVar(&flagOddEvenOdd, "odd.even.odd", flagOddEvenOdd, "")
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -1346,6 +1354,9 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err := cli_kitchensink_v1_fields_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.RepeatedRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				resp, err := client.Repeated(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -1361,6 +1372,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		sub.Flags().StringArrayVar(&flagTimestamps, "timestamps", flagTimestamps, "")
 		sub.Flags().StringArrayVar(&flagOuters, "outers", flagOuters, "")
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -1551,6 +1563,9 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err := cli_kitchensink_v1_fields_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.MapsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				resp, err := client.Maps(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -1568,6 +1583,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		sub.Flags().StringArrayVar(&flagInt64Keys, "int64-keys", flagInt64Keys, "")
 		sub.Flags().StringArrayVar(&flagBoolKeys, "bool-keys", flagBoolKeys, "")
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -1698,6 +1714,9 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err := cli_kitchensink_v1_fields_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.WrappersRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				resp, err := client.Wrappers(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -1717,6 +1736,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		sub.Flags().StringArrayVar(&flagRepeatedStrings, "repeated-strings", flagRepeatedStrings, "")
 		sub.Flags().StringArrayVar(&flagBoolMap, "bool-map", flagBoolMap, "")
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -1803,6 +1823,9 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err := cli_kitchensink_v1_fields_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.WellKnownRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				resp, err := client.WellKnown(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -1816,6 +1839,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		sub.Flags().StringVar(&flagAny, "any", flagAny, "")
 		sub.Flags().StringVar(&flagEmpty, "empty", flagEmpty, "")
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -1903,6 +1927,9 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err := cli_kitchensink_v1_fields_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.EnumsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				resp, err := client.Enums(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -1917,6 +1944,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		sub.Flags().StringVar(&flagAliased, "aliased", flagAliased, "(values: ALIASED_UNSPECIFIED | ALIASED_A | ALIASED_ALPHA | ALIASED_B)")
 		sub.Flags().StringVar(&flagNested, "nested", flagNested, "(values: NESTED_UNSPECIFIED | NESTED_ONE)")
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -2111,6 +2139,9 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err := cli_kitchensink_v1_fields_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.OneofsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				resp, err := client.Oneofs(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -2137,6 +2168,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		sub.Flags().StringVar(&flagWhen, "when", flagWhen, "")
 		sub.Flags().StringVar(&flagOnly, "only", flagOnly, "")
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		sub.MarkFlagsMutuallyExclusive("text", "count", "pick")
 		sub.MarkFlagsMutuallyExclusive("outer", "enabled", "when")
 		return sub
@@ -2194,6 +2226,9 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err := cli_kitchensink_v1_fields_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.OptionalsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				resp, err := client.Optionals(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -2205,6 +2240,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		sub.Flags().Int64Var(&flagAge, "age", flagAge, "")
 		sub.Flags().StringVar(&flagPick, "pick", flagPick, "(values: CHOICE_UNSPECIFIED | CHOICE_FIRST | CHOICE_SECOND)")
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -2262,6 +2298,9 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err := cli_kitchensink_v1_fields_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CollectionsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				resp, err := client.Collections(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -2272,6 +2311,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		sub.Flags().StringArrayVar(&flagOuters, "outers", flagOuters, "")
 		sub.Flags().StringArrayVar(&flagMiddles, "middles", flagMiddles, "")
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	return cmd

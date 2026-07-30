@@ -569,6 +569,9 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 				if err := cli_kitchensink_v1_annotations_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.EchoRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
+				}
 				resp, err := client.Echo(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -578,6 +581,7 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 		}
 		sub.Flags().StringVar(&flagText, "text", flagText, "")
 		cli_kitchensink_v1_annotations_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -760,6 +764,9 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 				if err := cli_kitchensink_v1_annotations_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.KnobsRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
+				}
 				resp, err := client.Knobs(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -784,6 +791,7 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 		sub.Flags().StringVar(&flagInsistedLeaf, "insisted.leaf", flagInsistedLeaf, "")
 		sub.Flags().StringVarP(&flagBlob, "blob", "j", flagBlob, "")
 		cli_kitchensink_v1_annotations_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -879,6 +887,9 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 				if err := cli_kitchensink_v1_annotations_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CuratedRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
+				}
 				resp, err := client.Curated(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -894,6 +905,7 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 		sub.Flags().StringVar(&flagWidgetGadgetLeaf, "widget.gadget.leaf", flagWidgetGadgetLeaf, "")
 		sub.Flags().StringVar(&flagWidgetLeaf, "widget.leaf", flagWidgetLeaf, "")
 		cli_kitchensink_v1_annotations_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -989,6 +1001,9 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 				if err := cli_kitchensink_v1_annotations_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.FlatRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
+				}
 				resp, err := client.Flat(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -1004,6 +1019,7 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 		sub.Flags().StringVar(&flagWidgetLeaf, "widget.leaf", flagWidgetLeaf, "")
 		sub.Flags().StringVar(&flagNote, "note", flagNote, "")
 		cli_kitchensink_v1_annotations_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	return cmd

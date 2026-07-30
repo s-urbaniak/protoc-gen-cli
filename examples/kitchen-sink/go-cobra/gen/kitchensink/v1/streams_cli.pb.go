@@ -610,6 +610,9 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 				if err := cli_kitchensink_v1_streams_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.StreamsRequest"), cli_kitchensink_v1_streams_proto_oneRecord(req))
+				}
 				resp, err := client.Unary(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -620,6 +623,7 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 		sub.Flags().StringVar(&flagText, "text", flagText, "")
 		sub.Flags().Int64Var(&flagCount, "count", flagCount, "")
 		cli_kitchensink_v1_streams_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -668,6 +672,9 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 				if err := cli_kitchensink_v1_streams_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.StreamsRequest"), cli_kitchensink_v1_streams_proto_oneRecord(req))
+				}
 				stream, err := client.ServerStream(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -685,6 +692,7 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 		sub.Flags().StringVar(&flagText, "text", flagText, "")
 		sub.Flags().Int64Var(&flagCount, "count", flagCount, "")
 		cli_kitchensink_v1_streams_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -811,6 +819,9 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 				if err := cli_kitchensink_v1_streams_proto_buildRequest(req, frags); err != nil {
 					return err
 				}
+				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
+					return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_kitchensink_v1_streams_proto_oneRecord(req))
+				}
 				stream, err := client.EmptyStream(cmd.Context(), req)
 				if err != nil {
 					return err
@@ -826,6 +837,7 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 			},
 		}
 		cli_kitchensink_v1_streams_proto_addInputFlags(sub.Flags(), decoders)
+		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
 	}())
 	return cmd
