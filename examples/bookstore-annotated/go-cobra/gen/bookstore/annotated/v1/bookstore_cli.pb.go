@@ -580,15 +580,31 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 
 	cmd := &cobra.Command{
 		Use:     "catalog",
+		Short:   "A simple Bookstore API.",
+		Long:    "A simple Bookstore API.\n\nThe API manages shelves and books resources. Shelves contain books.",
 		Aliases: []string{"books"},
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers, defaultOutput))
+	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.AddCommand(func() *cobra.Command {
 		sub := &cobra.Command{
 			Use:     "list-shelves",
+			Short:   "Returns a list of all shelves in the bookstore.",
+			Long:    "Returns a list of all shelves in the bookstore.\n\nA generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:\n\n    service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }",
 			Aliases: []string{"shelves"},
 			Args:    cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &emptypb.Empty{}
+					if err := protojson.Unmarshal([]byte("{}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -614,9 +630,22 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 	cmd.AddCommand(func() *cobra.Command {
 		var flagShelf string
 		sub := &cobra.Command{
-			Use:  "create-shelf",
-			Args: cobra.NoArgs,
+			Use:   "create-shelf",
+			Short: "Creates a new shelf in the bookstore.",
+			Long:  "Creates a new shelf in the bookstore.\n\nRequest message for CreateShelf method.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &CreateShelfRequest{}
+					if err := protojson.Unmarshal([]byte("{\"shelf\":{\"id\":\"9172393864939720632\",\"theme\":\"Celebrate wins tied to the group.\"}}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -646,16 +675,29 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.Shelf"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().StringVar(&flagShelf, "shelf", flagShelf, "")
+		sub.Flags().StringVar(&flagShelf, "shelf", flagShelf, "The shelf resource to create.")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
 		var flagShelf int64
 		sub := &cobra.Command{
-			Use:  "get-shelf",
-			Args: cobra.NoArgs,
+			Use:   "get-shelf",
+			Short: "Returns a specific bookstore shelf.",
+			Long:  "Returns a specific bookstore shelf.\n\nRequest message for GetShelf method.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &GetShelfRequest{}
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.GetShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -682,7 +724,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.Shelf"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
+		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf resource to retrieve.")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())
@@ -690,9 +732,22 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 		var flagShelf int64
 		sub := &cobra.Command{
 			Use:    "delete-shelf",
+			Short:  "Deletes a shelf, including all books that are stored on the shelf.",
+			Long:   "Deletes a shelf, including all books that are stored on the shelf.\n\nRequest message for DeleteShelf method.",
 			Hidden: true,
 			Args:   cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &DeleteShelfRequest{}
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.DeleteShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -719,16 +774,29 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
+		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf to delete.")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
 		var flagShelf int64
 		sub := &cobra.Command{
-			Use:  "list",
-			Args: cobra.NoArgs,
+			Use:   "list",
+			Short: "Returns a list of books on a shelf.",
+			Long:  "Returns a list of books on a shelf.\n\nRequest message for ListBooks method.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &ListBooksRequest{}
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListBooksRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -755,7 +823,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListBooksResponse"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
+		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "ID of the shelf which books to list.")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())
@@ -765,9 +833,22 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 		var flagBookAuthor string
 		var flagBookTitle string
 		sub := &cobra.Command{
-			Use:  "add",
-			Args: cobra.NoArgs,
+			Use:   "add",
+			Short: "Creates a new book.",
+			Long:  "Creates a new book.\n\nRequest message for CreateBook method.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &CreateBookRequest{}
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\",\"book\":{\"id\":\"1890700816702069259\",\"author\":\"Launch the world midweek for clarity.\",\"title\":\"Usher\"}}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				var missing []string
 				if !cmd.Flags().Changed("shelf") {
 					missing = append(missing, "--shelf")
@@ -828,10 +909,10 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.Book"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "(required)")
-		sub.Flags().StringVar(&flagBook, "book", flagBook, "")
-		sub.Flags().StringVarP(&flagBookAuthor, "book.author", "a", flagBookAuthor, "")
-		sub.Flags().StringVarP(&flagBookTitle, "book.title", "t", flagBookTitle, "(required)")
+		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf on which to create a book. (required)")
+		sub.Flags().StringVar(&flagBook, "book", flagBook, "A book resource to create on the shelf.")
+		sub.Flags().StringVarP(&flagBookAuthor, "book.author", "a", flagBookAuthor, "An author of the book.")
+		sub.Flags().StringVarP(&flagBookTitle, "book.title", "t", flagBookTitle, "A book title. (required)")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())
@@ -839,9 +920,22 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 		var flagShelf int64
 		var flagBook int64
 		sub := &cobra.Command{
-			Use:  "get",
-			Args: cobra.NoArgs,
+			Use:   "get",
+			Short: "Returns a specific book.",
+			Long:  "Returns a specific book.\n\nRequest message for GetBook method.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &GetBookRequest{}
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\",\"book\":\"1890700816702069259\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.GetBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				var missing []string
 				if !cmd.Flags().Changed("shelf") {
 					missing = append(missing, "--shelf")
@@ -885,8 +979,8 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.Book"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "(required)")
-		sub.Flags().Int64Var(&flagBook, "book", flagBook, "(required)")
+		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf from which to retrieve a book. (required)")
+		sub.Flags().Int64Var(&flagBook, "book", flagBook, "The ID of the book to retrieve. (required)")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())
@@ -895,9 +989,22 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 		var flagBook int64
 		sub := &cobra.Command{
 			Use:     "delete",
+			Short:   "Deletes a book from a shelf.",
+			Long:    "Deletes a book from a shelf.\n\nRequest message for DeleteBook method.",
 			Aliases: []string{"rm"},
 			Args:    cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &DeleteBookRequest{}
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\",\"book\":\"1890700816702069259\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.DeleteBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -931,8 +1038,8 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
-		sub.Flags().Int64Var(&flagBook, "book", flagBook, "")
+		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf from which to delete a book.")
+		sub.Flags().Int64Var(&flagBook, "book", flagBook, "The ID of the book to delete.")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())
@@ -1037,9 +1144,11 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 	}
 
 	cmd := &cobra.Command{
-		Use: "auctions",
+		Use:   "auctions",
+		Short: "AuctionsService sells the store's rare books under the hammer.",
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers, defaultOutput))
+	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.AddCommand(func() *cobra.Command {
 		var flagLot string
 		var flagLotBook string
@@ -1055,9 +1164,21 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 		var flagLotConsignorAddress string
 		var flagStartsAt string
 		sub := &cobra.Command{
-			Use:  "create",
-			Args: cobra.NoArgs,
+			Use:   "create",
+			Short: "CreateAuction consigns a lot and schedules its auction.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &CreateAuctionRequest{}
+					if err := protojson.Unmarshal([]byte("{\"lot\":{\"id\":\"9172393864939720632\",\"book\":{\"id\":\"1890700816702069259\",\"author\":\"Launch the world midweek for clarity.\",\"title\":\"Usher\"},\"condition\":\"CONDITION_FAIR\",\"reservePrice\":0.7852299356682814,\"provenance\":[\"Theirs life has ready for fiction.\",\"The colorful hand being unexpectedly fondly.\"],\"flaws\":[{\"kind\":\"The friendship does be uptight enough.\",\"detail\":\"Continuously measure the company and answer the outliers.\"},{\"kind\":\"The solitude must be fancy far.\",\"detail\":\"Defaults at Genability did shape day.\"},{\"kind\":\"Review the fact every 4 weeks.\",\"detail\":\"Publish a changelog entry for the child.\"}],\"attributes\":{\"include\":\"Hers problem did ready for horror.\",\"what\":\"Mornings in St. Paul favor company.\",\"year\":\"Carefully switch the elephant patiently.\"},\"consignor\":{\"name\":\"Janice\",\"address\":{\"street\":\"713 Lake Mountainsburgh\",\"city\":\"Albuquerque\",\"country\":{\"code\":\"Weekends reserve time for Embroidery and child.\",\"name\":\"Isabelle\"}}}},\"startsAt\":\"1908-08-21T20:24:56.928378544Z\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateAuctionRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				var missing []string
 				if !cmd.Flags().Changed("book.title") {
 					missing = append(missing, "--book.title")
@@ -1202,13 +1323,13 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 		}
 		sub.Flags().StringVar(&flagLot, "lot", flagLot, "")
 		sub.Flags().StringVar(&flagLotBook, "book", flagLotBook, "")
-		sub.Flags().StringVarP(&flagLotBookAuthor, "book.author", "a", flagLotBookAuthor, "")
-		sub.Flags().StringVarP(&flagLotBookTitle, "book.title", "t", flagLotBookTitle, "(required)")
-		sub.Flags().StringVar(&flagLotCondition, "condition", flagLotCondition, "")
+		sub.Flags().StringVarP(&flagLotBookAuthor, "book.author", "a", flagLotBookAuthor, "An author of the book.")
+		sub.Flags().StringVarP(&flagLotBookTitle, "book.title", "t", flagLotBookTitle, "A book title. (required)")
+		sub.Flags().StringVar(&flagLotCondition, "condition", flagLotCondition, "(values: CONDITION_UNSPECIFIED | CONDITION_FINE | CONDITION_VERY_GOOD | CONDITION_GOOD | CONDITION_FAIR | CONDITION_POOR)")
 		sub.Flags().Float64Var(&flagLotReservePrice, "reserve", flagLotReservePrice, "")
-		sub.Flags().StringArrayVar(&flagLotProvenance, "provenance", flagLotProvenance, "")
+		sub.Flags().StringArrayVar(&flagLotProvenance, "provenance", flagLotProvenance, "Chain of custody, oldest first.")
 		sub.Flags().StringArrayVar(&flagLotFlaws, "flaws", flagLotFlaws, "")
-		sub.Flags().StringArrayVar(&flagLotAttributes, "attributes", flagLotAttributes, "")
+		sub.Flags().StringArrayVar(&flagLotAttributes, "attributes", flagLotAttributes, "Collector attributes, e.g.")
 		sub.Flags().StringVar(&flagLotConsignor, "consignor", flagLotConsignor, "")
 		sub.Flags().StringVar(&flagLotConsignorName, "consignor.name", flagLotConsignorName, "")
 		sub.Flags().StringVar(&flagLotConsignorAddress, "consignor.address", flagLotConsignorAddress, "")
@@ -1219,9 +1340,21 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 	cmd.AddCommand(func() *cobra.Command {
 		var flagState string
 		sub := &cobra.Command{
-			Use:  "list",
-			Args: cobra.NoArgs,
+			Use:   "list",
+			Short: "ListAuctions lists auctions, optionally filtered by state.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &ListAuctionsRequest{}
+					if err := protojson.Unmarshal([]byte("{\"state\":\"AUCTION_STATE_SETTLED\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListAuctionsRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -1248,7 +1381,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListAuctionsResponse"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().StringVar(&flagState, "state", flagState, "")
+		sub.Flags().StringVar(&flagState, "state", flagState, "(values: AUCTION_STATE_UNSPECIFIED | AUCTION_STATE_SCHEDULED | AUCTION_STATE_OPEN | AUCTION_STATE_HAMMERED | AUCTION_STATE_SETTLED)")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())
@@ -1257,9 +1390,22 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 		var flagAuthor string
 		var flagLimit int64
 		sub := &cobra.Command{
-			Use:  "watch",
-			Args: cobra.NoArgs,
+			Use:   "watch",
+			Short: "WatchAuction streams bidding updates for the selected auctions as a live feed until the client cancels.",
+			Long:  "WatchAuction streams bidding updates for the selected auctions as a live\nfeed until the client cancels.\n\nWatchAuctionRequest selects auctions by exactly one of auction or author.\n\nThe server may send multiple responses; each prints as it arrives.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &WatchAuctionRequest{}
+					if err := protojson.Unmarshal([]byte("{\"auction\":\"1890700816702069259\",\"limit\":1854751411}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.WatchAuctionRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -1309,7 +1455,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 		}
 		sub.Flags().Int64Var(&flagAuction, "auction", flagAuction, "")
 		sub.Flags().StringVar(&flagAuthor, "author", flagAuthor, "")
-		sub.Flags().Int64Var(&flagLimit, "limit", flagLimit, "")
+		sub.Flags().Int64Var(&flagLimit, "limit", flagLimit, "Cap on the number of updates streamed back.")
 		_ = sub.Flags().MarkHidden("limit")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		sub.MarkFlagsMutuallyExclusive("auction", "author")
@@ -1317,9 +1463,22 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 	}())
 	cmd.AddCommand(func() *cobra.Command {
 		sub := &cobra.Command{
-			Use:  "bid",
-			Args: cobra.NoArgs,
+			Use:   "bid",
+			Short: "Bid places bids and streams back every update on the bid's auction.",
+			Long:  "Bid places bids and streams back every update on the bid's auction.\n\nReads JSON requests from stdin, one after another.\n\nThe server may send multiple responses; each prints as it arrives.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &PlaceBidRequest{}
+					if err := protojson.Unmarshal([]byte("{\"auction\":\"9172393864939720632\",\"amount\":0.9099579380225021}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.PlaceBidRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -1428,14 +1587,29 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 
 	cmd := &cobra.Command{
 		Use:    "inventory",
+		Short:  "InventoryService is the back office's stock system.",
 		Hidden: true,
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers, defaultOutput))
+	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.AddCommand(func() *cobra.Command {
 		sub := &cobra.Command{
-			Use:  "import",
-			Args: cobra.NoArgs,
+			Use:   "import",
+			Short: "ImportBooks ingests a book catalogue as a stream of records.",
+			Long:  "ImportBooks ingests a book catalogue as a stream of records.\n\nImportBooksRequest is one record of a catalogue import.\n\nReads JSON requests from stdin, one after another.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &ImportBooksRequest{}
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\",\"book\":{\"id\":\"1890700816702069259\",\"author\":\"Launch the world midweek for clarity.\",\"title\":\"Usher\"}}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ImportBooksRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -1469,9 +1643,22 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 		var flagShelf int64
 		var flagFilename string
 		sub := &cobra.Command{
-			Use:  "export",
-			Args: cobra.NoArgs,
+			Use:   "export",
+			Short: "ExportReport renders a shelf's stock report and writes it to a file on the server.",
+			Long:  "ExportReport renders a shelf's stock report and writes it to a file on\nthe server.\n\nRequest message for ExportReport method.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &ExportReportRequest{}
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\",\"filename\":\"Antonio\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ExportReportRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -1505,8 +1692,8 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.Report"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "")
-		sub.Flags().StringVar(&flagFilename, "report-file", flagFilename, "")
+		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf to report on.")
+		sub.Flags().StringVar(&flagFilename, "report-file", flagFilename, "The file to write the report to.")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())

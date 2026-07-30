@@ -560,16 +560,30 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 	}
 
 	cmd := &cobra.Command{
-		Use: "streams",
+		Use:   "streams",
+		Short: "StreamsService echoes text back.",
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_streams_proto_outputHelp(printers, defaultOutput))
+	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.AddCommand(func() *cobra.Command {
 		var flagText string
 		var flagCount int64
 		sub := &cobra.Command{
-			Use:  "unary",
-			Args: cobra.NoArgs,
+			Use:   "unary",
+			Short: "Unary echoes the text once.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &StreamsRequest{}
+					if err := protojson.Unmarshal([]byte("{\"text\":\"Protect the number under uninterested load.\",\"count\":612869861}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.StreamsRequest"), cli_kitchensink_v1_streams_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -612,9 +626,22 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 		var flagText string
 		var flagCount int64
 		sub := &cobra.Command{
-			Use:  "server-stream",
-			Args: cobra.NoArgs,
+			Use:   "server-stream",
+			Short: "ServerStream echoes the text the requested number of times.",
+			Long:  "ServerStream echoes the text the requested number of times.\n\nThe server may send multiple responses; each prints as it arrives.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &StreamsRequest{}
+					if err := protojson.Unmarshal([]byte("{\"text\":\"Protect the number under uninterested load.\",\"count\":612869861}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.StreamsRequest"), cli_kitchensink_v1_streams_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -662,9 +689,22 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 	}())
 	cmd.AddCommand(func() *cobra.Command {
 		sub := &cobra.Command{
-			Use:  "client-stream",
-			Args: cobra.NoArgs,
+			Use:   "client-stream",
+			Short: "ClientStream counts the streamed requests.",
+			Long:  "ClientStream counts the streamed requests.\n\nReads JSON requests from stdin, one after another.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &StreamsRequest{}
+					if err := protojson.Unmarshal([]byte("{\"text\":\"Protect the number under uninterested load.\",\"count\":612869861}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.StreamsRequest"), cli_kitchensink_v1_streams_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -696,9 +736,22 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 	}())
 	cmd.AddCommand(func() *cobra.Command {
 		sub := &cobra.Command{
-			Use:  "bidi-stream",
-			Args: cobra.NoArgs,
+			Use:   "bidi-stream",
+			Short: "BidiStream echoes each request as it arrives.",
+			Long:  "BidiStream echoes each request as it arrives.\n\nReads JSON requests from stdin, one after another.\n\nThe server may send multiple responses; each prints as it arrives.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &StreamsRequest{}
+					if err := protojson.Unmarshal([]byte("{\"text\":\"Protect the number under uninterested load.\",\"count\":612869861}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.StreamsRequest"), cli_kitchensink_v1_streams_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -730,9 +783,22 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 	}())
 	cmd.AddCommand(func() *cobra.Command {
 		sub := &cobra.Command{
-			Use:  "empty-stream",
-			Args: cobra.NoArgs,
+			Use:   "empty-stream",
+			Short: "EmptyStream streams a fixed batch of responses.",
+			Long:  "EmptyStream streams a fixed batch of responses.\n\nA generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:\n\n    service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe server may send multiple responses; each prints as it arrives.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &emptypb.Empty{}
+					if err := protojson.Unmarshal([]byte("{}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_kitchensink_v1_streams_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err

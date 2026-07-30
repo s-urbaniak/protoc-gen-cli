@@ -129,6 +129,8 @@ func buildParams(md protoreflect.MessageDescriptor, opts Options) []*ir.Param {
 				required = false
 			}
 
+			comment := fd.ParentFile().SourceLocations().ByDescriptor(fd).LeadingComments
+			short, _ := helpFrom(cleanComment(comment))
 			params = append(params,
 				&ir.Param{
 					ProtoPath:  path,
@@ -136,6 +138,7 @@ func buildParams(md protoreflect.MessageDescriptor, opts Options) []*ir.Param {
 					Shorthand:  po.GetShorthand(),
 					Hidden:     po.GetHidden(),
 					Required:   required,
+					ShortHelp:  short,
 					Bind:       bind,
 					Repeated:   fd.IsList(),
 					Map:        fd.IsMap(),

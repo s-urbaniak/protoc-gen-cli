@@ -50,7 +50,8 @@
                 ]
               }
             ]
-          }
+          },
+          "example_json": "{}"
         },
         {
           "proto_name": "CreateShelf",
@@ -71,16 +72,19 @@
             {
               "proto_path": "shelf",
               "name": "shelf",
+              "short_help": "The shelf resource to create.",
               "bind": "json"
             },
             {
               "proto_path": "shelf.id",
               "name": "shelf.id",
+              "short_help": "A unique shelf id.",
               "bind": "int"
             },
             {
               "proto_path": "shelf.theme",
               "name": "shelf.theme",
+              "short_help": "A theme of the shelf (fiction, poetry, etc).",
               "bind": "string"
             }
           ],
@@ -96,7 +100,8 @@
                 "path": "theme"
               }
             ]
-          }
+          },
+          "example_json": "{\"shelf\":{\"id\":\"9172393864939720632\",\"theme\":\"Celebrate wins tied to the group.\"}}"
         },
         {
           "proto_name": "GetShelf",
@@ -117,6 +122,7 @@
             {
               "proto_path": "shelf",
               "name": "shelf",
+              "short_help": "The ID of the shelf resource to retrieve.",
               "bind": "int"
             }
           ],
@@ -132,7 +138,8 @@
                 "path": "theme"
               }
             ]
-          }
+          },
+          "example_json": "{\"shelf\":\"9172393864939720632\"}"
         },
         {
           "proto_name": "DeleteShelf",
@@ -153,12 +160,14 @@
             {
               "proto_path": "shelf",
               "name": "shelf",
+              "short_help": "The ID of the shelf to delete.",
               "bind": "int"
             }
           ],
           "view": {
             "full_name": "google.protobuf.Empty"
-          }
+          },
+          "example_json": "{\"shelf\":\"9172393864939720632\"}"
         },
         {
           "proto_name": "ListBooks",
@@ -179,6 +188,7 @@
             {
               "proto_path": "shelf",
               "name": "shelf",
+              "short_help": "ID of the shelf which books to list.",
               "bind": "int"
             }
           ],
@@ -205,7 +215,8 @@
                 ]
               }
             ]
-          }
+          },
+          "example_json": "{\"shelf\":\"9172393864939720632\"}"
         },
         {
           "proto_name": "CreateBook",
@@ -226,26 +237,31 @@
             {
               "proto_path": "shelf",
               "name": "shelf",
+              "short_help": "The ID of the shelf on which to create a book.",
               "bind": "int"
             },
             {
               "proto_path": "book",
               "name": "book",
+              "short_help": "A book resource to create on the shelf.",
               "bind": "json"
             },
             {
               "proto_path": "book.id",
               "name": "book.id",
+              "short_help": "A unique book id.",
               "bind": "int"
             },
             {
               "proto_path": "book.author",
               "name": "book.author",
+              "short_help": "An author of the book.",
               "bind": "string"
             },
             {
               "proto_path": "book.title",
               "name": "book.title",
+              "short_help": "A book title.",
               "bind": "string"
             }
           ],
@@ -265,7 +281,8 @@
                 "path": "title"
               }
             ]
-          }
+          },
+          "example_json": "{\"shelf\":\"9172393864939720632\",\"book\":{\"id\":\"1890700816702069259\",\"author\":\"Launch the world midweek for clarity.\",\"title\":\"Usher\"}}"
         },
         {
           "proto_name": "GetBook",
@@ -286,11 +303,13 @@
             {
               "proto_path": "shelf",
               "name": "shelf",
+              "short_help": "The ID of the shelf from which to retrieve a book.",
               "bind": "int"
             },
             {
               "proto_path": "book",
               "name": "book",
+              "short_help": "The ID of the book to retrieve.",
               "bind": "int"
             }
           ],
@@ -310,7 +329,8 @@
                 "path": "title"
               }
             ]
-          }
+          },
+          "example_json": "{\"shelf\":\"9172393864939720632\",\"book\":\"1890700816702069259\"}"
         },
         {
           "proto_name": "DeleteBook",
@@ -331,17 +351,20 @@
             {
               "proto_path": "shelf",
               "name": "shelf",
+              "short_help": "The ID of the shelf from which to delete a book.",
               "bind": "int"
             },
             {
               "proto_path": "book",
               "name": "book",
+              "short_help": "The ID of the book to delete.",
               "bind": "int"
             }
           ],
           "view": {
             "full_name": "google.protobuf.Empty"
-          }
+          },
+          "example_json": "{\"shelf\":\"9172393864939720632\",\"book\":\"1890700816702069259\"}"
         }
       ]
     },
@@ -384,16 +407,19 @@
             {
               "proto_path": "lot.book.id",
               "name": "lot.book.id",
+              "short_help": "A unique book id.",
               "bind": "int"
             },
             {
               "proto_path": "lot.book.author",
               "name": "lot.book.author",
+              "short_help": "An author of the book.",
               "bind": "string"
             },
             {
               "proto_path": "lot.book.title",
               "name": "lot.book.title",
+              "short_help": "A book title.",
               "bind": "string"
             },
             {
@@ -417,6 +443,7 @@
             {
               "proto_path": "lot.provenance",
               "name": "lot.provenance",
+              "short_help": "Chain of custody, oldest first.",
               "bind": "string",
               "repeated": true
             },
@@ -429,6 +456,7 @@
             {
               "proto_path": "lot.attributes",
               "name": "lot.attributes",
+              "short_help": "Collector attributes, e.g.",
               "bind": "string",
               "map": true
             },
@@ -529,7 +557,8 @@
                 "path": "endsAt"
               }
             ]
-          }
+          },
+          "example_json": "{\"lot\":{\"id\":\"9172393864939720632\",\"book\":{\"id\":\"1890700816702069259\",\"author\":\"Launch the world midweek for clarity.\",\"title\":\"Usher\"},\"condition\":\"CONDITION_FAIR\",\"reservePrice\":0.7852299356682814,\"provenance\":[\"Theirs life has ready for fiction.\",\"The colorful hand being unexpectedly fondly.\"],\"flaws\":[{\"kind\":\"The friendship does be uptight enough.\",\"detail\":\"Continuously measure the company and answer the outliers.\"},{\"kind\":\"The solitude must be fancy far.\",\"detail\":\"Defaults at Genability did shape day.\"},{\"kind\":\"Review the fact every 4 weeks.\",\"detail\":\"Publish a changelog entry for the child.\"}],\"attributes\":{\"include\":\"Hers problem did ready for horror.\",\"what\":\"Mornings in St. Paul favor company.\",\"year\":\"Carefully switch the elephant patiently.\"},\"consignor\":{\"name\":\"Janice\",\"address\":{\"street\":\"713 Lake Mountainsburgh\",\"city\":\"Albuquerque\",\"country\":{\"code\":\"Weekends reserve time for Embroidery and child.\",\"name\":\"Isabelle\"}}}},\"startsAt\":\"1908-08-21T20:24:56.928378544Z\"}"
         },
         {
           "proto_name": "ListAuctions",
@@ -652,7 +681,8 @@
                 ]
               }
             ]
-          }
+          },
+          "example_json": "{\"state\":\"AUCTION_STATE_SETTLED\"}"
         },
         {
           "proto_name": "WatchAuction",
@@ -686,6 +716,7 @@
             {
               "proto_path": "limit",
               "name": "limit",
+              "short_help": "Cap on the number of updates streamed back.",
               "bind": "int"
             }
           ],
@@ -713,7 +744,8 @@
                 "path": "at"
               }
             ]
-          }
+          },
+          "example_json": "{\"auction\":\"1890700816702069259\",\"limit\":1854751411}"
         },
         {
           "proto_name": "Bid",
@@ -756,7 +788,8 @@
                 "path": "at"
               }
             ]
-          }
+          },
+          "example_json": "{\"auction\":\"9172393864939720632\",\"amount\":0.9099579380225021}"
         }
       ]
     },
@@ -790,7 +823,8 @@
                 "path": "created"
               }
             ]
-          }
+          },
+          "example_json": "{\"shelf\":\"9172393864939720632\",\"book\":{\"id\":\"1890700816702069259\",\"author\":\"Launch the world midweek for clarity.\",\"title\":\"Usher\"}}"
         },
         {
           "proto_name": "ExportReport",
@@ -811,11 +845,13 @@
             {
               "proto_path": "shelf",
               "name": "shelf",
+              "short_help": "The ID of the shelf to report on.",
               "bind": "int"
             },
             {
               "proto_path": "filename",
               "name": "arg-filename",
+              "short_help": "The file to write the report to.",
               "bind": "string"
             }
           ],
@@ -831,7 +867,8 @@
                 "path": "books"
               }
             ]
-          }
+          },
+          "example_json": "{\"shelf\":\"9172393864939720632\",\"filename\":\"Antonio\"}"
         }
       ]
     }

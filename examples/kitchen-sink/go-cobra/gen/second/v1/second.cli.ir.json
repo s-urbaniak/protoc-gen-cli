@@ -44,7 +44,8 @@
                 "path": "text"
               }
             ]
-          }
+          },
+          "example_json": "{\"text\":\"Protect the number under uninterested load.\"}"
         }
       ]
     }

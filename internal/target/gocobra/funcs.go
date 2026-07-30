@@ -115,6 +115,7 @@ func funcMap(model *ir.Model) template.FuncMap {
 			}
 			return strings.Join(quoted, ", ")
 		},
+		"flagUsage": flagUsage,
 	}
 }
 
@@ -124,6 +125,28 @@ func goVarName(f *ir.Param) string {
 		name += strcase.UpperCamelCase(seg)
 	}
 	return name
+}
+
+func flagUsage(f *ir.Param) string {
+	// pflag reads a back-quoted word as the value name.
+	desc := strings.ReplaceAll(f.ShortHelp, "`", "")
+
+	var hints []string
+	if f.Required {
+		hints = append(hints, "required")
+	}
+	if len(f.EnumValues) > 0 {
+		hints = append(hints, "values: "+strings.Join(f.EnumValues, " | "))
+	}
+	if len(hints) == 0 {
+		return desc
+	}
+
+	marker := "(" + strings.Join(hints, "; ") + ")"
+	if desc == "" {
+		return marker
+	}
+	return desc + " " + marker
 }
 
 // templateImports is the template's import block, from name to path.

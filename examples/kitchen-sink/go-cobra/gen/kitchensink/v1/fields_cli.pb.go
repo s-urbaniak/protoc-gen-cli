@@ -646,9 +646,12 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 	}
 
 	cmd := &cobra.Command{
-		Use: "fields",
+		Use:   "fields",
+		Short: "FieldsService echoes each request.",
+		Long:  "FieldsService echoes each request. Thus the response shows exactly what\narrived.",
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_fields_proto_outputHelp(printers, defaultOutput))
+	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.AddCommand(func() *cobra.Command {
 		var flagDoubleField float64
 		var flagFloatField float64
@@ -666,9 +669,21 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		var flagStringField string
 		var flagBytesField string
 		sub := &cobra.Command{
-			Use:  "scalars",
-			Args: cobra.NoArgs,
+			Use:   "scalars",
+			Short: "Scalars contains every proto scalar type.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &ScalarsRequest{}
+					if err := protojson.Unmarshal([]byte("{\"doubleField\":0.3402859786606234,\"floatField\":0.23874474,\"int32Field\":1854751411,\"int64Field\":\"7618499319381327068\",\"uint32Field\":1225739722,\"uint64Field\":\"17230347383051557718\",\"sint32Field\":1744610128,\"sint64Field\":\"1952627761515405933\",\"fixed32Field\":2373109660,\"fixed64Field\":\"5471171549183000348\",\"sfixed32Field\":814989980,\"sfixed64Field\":\"8957623386525274346\",\"boolField\":true,\"stringField\":\"Weekly, I tweak the way with way.\",\"bytesField\":\"TW9ybmluZ3MgaW4gTmFzaHZpbGxlLURhdmlkc29uLCBhZnRlcm5vb25zIGluIHBvcC11cC4=\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.ScalarsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -793,10 +808,10 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.ScalarsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().Float64Var(&flagDoubleField, "double-field", flagDoubleField, "")
-		sub.Flags().Float64Var(&flagFloatField, "float-field", flagFloatField, "")
-		sub.Flags().Int64Var(&flagInt32Field, "int32-field", flagInt32Field, "")
-		sub.Flags().Int64Var(&flagInt64Field, "int64-field", flagInt64Field, "")
+		sub.Flags().Float64Var(&flagDoubleField, "double-field", flagDoubleField, "A \"weight\" in kilograms.")
+		sub.Flags().Float64Var(&flagFloatField, "float-field", flagFloatField, "A ratio between 0 and 1.")
+		sub.Flags().Int64Var(&flagInt32Field, "int32-field", flagInt32Field, "Applies a 100%s surcharge when set.")
+		sub.Flags().Int64Var(&flagInt64Field, "int64-field", flagInt64Field, "A row id.")
 		sub.Flags().Uint64Var(&flagUint32Field, "uint32-field", flagUint32Field, "")
 		sub.Flags().Uint64Var(&flagUint64Field, "uint64-field", flagUint64Field, "")
 		sub.Flags().Int64Var(&flagSint32Field, "sint32-field", flagSint32Field, "")
@@ -805,9 +820,9 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		sub.Flags().Uint64Var(&flagFixed64Field, "fixed64-field", flagFixed64Field, "")
 		sub.Flags().Int64Var(&flagSfixed32Field, "sfixed32-field", flagSfixed32Field, "")
 		sub.Flags().Int64Var(&flagSfixed64Field, "sfixed64-field", flagSfixed64Field, "")
-		sub.Flags().BoolVar(&flagBoolField, "bool-field", flagBoolField, "")
-		sub.Flags().StringVar(&flagStringField, "string-field", flagStringField, "")
-		sub.Flags().StringVar(&flagBytesField, "bytes-field", flagBytesField, "")
+		sub.Flags().BoolVar(&flagBoolField, "bool-field", flagBoolField, "Whether the row is active.")
+		sub.Flags().StringVar(&flagStringField, "string-field", flagStringField, "A display name; a Windows path like C:\\Users\\me works.")
+		sub.Flags().StringVar(&flagBytesField, "bytes-field", flagBytesField, "Raw bytes; the checksum tag looks like abc.")
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())
@@ -849,9 +864,21 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		var flagOddEven string
 		var flagOddEvenOdd string
 		sub := &cobra.Command{
-			Use:  "messages",
-			Args: cobra.NoArgs,
+			Use:   "messages",
+			Short: "Messages contains every shape of message field.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &MessagesRequest{}
+					if err := protojson.Unmarshal([]byte("{}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.MessagesRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -1190,7 +1217,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.MessagesRequest"), cli_kitchensink_v1_fields_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().StringVar(&flagOuter, "outer", flagOuter, "")
+		sub.Flags().StringVar(&flagOuter, "outer", flagOuter, "The outer message.")
 		sub.Flags().StringVar(&flagOuterStringLeaf, "outer.string-leaf", flagOuterStringLeaf, "")
 		sub.Flags().Int64Var(&flagOuterInt64Leaf, "outer.int64-leaf", flagOuterInt64Leaf, "")
 		sub.Flags().StringVar(&flagOuterMiddle, "outer.middle", flagOuterMiddle, "")
@@ -1214,12 +1241,12 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		sub.Flags().StringVar(&flagKebabOuterMiddleInnerDeepDeeper, "kebab-outer.middle.inner.deep.deeper", flagKebabOuterMiddleInnerDeepDeeper, "")
 		sub.Flags().StringVar(&flagKebabOuterMiddleInnerDeepDeeperLeaf, "kebab-outer.middle.inner.deep.deeper.leaf", flagKebabOuterMiddleInnerDeepDeeperLeaf, "")
 		sub.Flags().StringVar(&flagKebabOuterMiddleInnerDeepDeeperDeepest, "kebab-outer.middle.inner.deep.deeper.deepest", flagKebabOuterMiddleInnerDeepDeeperDeepest, "")
-		sub.Flags().StringVar(&flagTimestamp, "timestamp", flagTimestamp, "")
+		sub.Flags().StringVar(&flagTimestamp, "timestamp", flagTimestamp, "When the row was created.")
 		sub.Flags().StringArrayVar(&flagOuters, "outers", flagOuters, "")
 		sub.Flags().StringArrayVar(&flagLabels, "labels", flagLabels, "")
-		sub.Flags().StringVar(&flagDuration, "duration", flagDuration, "")
+		sub.Flags().StringVar(&flagDuration, "duration", flagDuration, "How long to wait.")
 		sub.Flags().StringVar(&flagFieldMask, "field-mask", flagFieldMask, "")
-		sub.Flags().StringVar(&flagStruct, "struct", flagStruct, "")
+		sub.Flags().StringVar(&flagStruct, "struct", flagStruct, "Arbitrary JSON metadata.")
 		sub.Flags().StringVar(&flagRecursive, "recursive", flagRecursive, "")
 		sub.Flags().StringVar(&flagRecursiveName, "recursive.name", flagRecursiveName, "")
 		sub.Flags().StringVar(&flagRecursiveNext, "recursive.next", flagRecursiveNext, "")
@@ -1238,9 +1265,21 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		var flagTimestamps []string
 		var flagOuters []string
 		sub := &cobra.Command{
-			Use:  "repeated",
-			Args: cobra.NoArgs,
+			Use:   "repeated",
+			Short: "Repeated contains one repeated field for each element type.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &RepeatedRequest{}
+					if err := protojson.Unmarshal([]byte("{\"strings\":[\"Celebrate wins tied to the group.\",\"Retire outdated company each quarter.\",\"Establish a baseline for world.\",\"Onward to better life!\"],\"bools\":[true,true],\"uints\":[\"2305084656860551744\",\"2874873491405036954\",\"6643548458091912998\",\"4642773343372291130\"],\"doubles\":[0.03904819806684712],\"timestamps\":[\"1917-05-22T22:10:35.086061615Z\",\"2003-01-03T03:33:46.333584603Z\",\"1933-08-07T08:34:11.201304448Z\"],\"outers\":[{\"stringLeaf\":\"Weekly, she tweak the child with work.\",\"int64Leaf\":\"7051134352706333876\",\"middle\":{\"leaf\":\"The advantage were be smiling most.\",\"inner\":{\"leaf\":\"Steady angry progress in Chandler been visible.\",\"deep\":{\"leaf\":\"His woman does ready for rhythm.\"}}}},{\"stringLeaf\":\"Warm starts beat cold place.\",\"int64Leaf\":\"262808238379507306\",\"middle\":{\"leaf\":\"Consistent problem should the foundation of belief.\",\"inner\":{\"leaf\":\"Surface risks around the woman far.\",\"deep\":{\"leaf\":\"Scope the group to fit the moment.\"}}}},{\"stringLeaf\":\"Subtle Orange accents shall effective deeply.\",\"int64Leaf\":\"4499584838742953873\",\"middle\":{\"leaf\":\"Visualize man for faster decisions.\",\"inner\":{\"leaf\":\"Steady upset progress in Boston could visible.\",\"deep\":{\"leaf\":\"Consistent hand be the foundation of riches.\"}}}},{\"stringLeaf\":\"Meanwhile the review, she brush the week.\",\"int64Leaf\":\"3046889756581195750\",\"middle\":{\"leaf\":\"Before launch, they ski now.\",\"inner\":{\"leaf\":\"Aha! Great progress on child!\",\"deep\":{\"leaf\":\"Prefer predictable way over surprising year.\"}}}}]}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.RepeatedRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -1314,9 +1353,9 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.RepeatedRequest"), cli_kitchensink_v1_fields_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().StringArrayVar(&flagStrings, "strings", flagStrings, "")
+		sub.Flags().StringArrayVar(&flagStrings, "strings", flagStrings, "A tag to attach.")
 		sub.Flags().BoolSliceVar(&flagBools, "bools", flagBools, "")
-		sub.Flags().Int64SliceVar(&flagInts, "ints", flagInts, "")
+		sub.Flags().Int64SliceVar(&flagInts, "ints", flagInts, "An id to include.")
 		sub.Flags().UintSliceVar(&flagUints, "uints", flagUints, "")
 		sub.Flags().Float64SliceVar(&flagDoubles, "doubles", flagDoubles, "")
 		sub.Flags().StringArrayVar(&flagTimestamps, "timestamps", flagTimestamps, "")
@@ -1335,9 +1374,21 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		var flagInt64Keys []string
 		var flagBoolKeys []string
 		sub := &cobra.Command{
-			Use:  "maps",
-			Args: cobra.NoArgs,
+			Use:   "maps",
+			Short: "Maps contains one map field for each value type, plus integer and bool keys.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &MapsRequest{}
+					if err := protojson.Unmarshal([]byte("{\"stringValues\":{\"Celebrate wins tied to the group.\":\"Retire outdated company each quarter.\",\"Choose talented defaults.\":\"Consistent hand being the foundation of thrill.\",\"Establish a baseline for world.\":\"Onward to better life!\",\"Write the one-sentence summary for the way.\":\"Decompose problem into smaller day.\"},\"boolValues\":{\"Set a realistic target for government.\":true,\"Surface risks around the time barely.\":true},\"int64Values\":{\"Compare thing before and after you honour.\":\"1401657792888685950\"},\"doubleValues\":{\"Onward to better part!\":0.6960523510631607},\"timestampValues\":{\"Clarify ownership of the world later.\":\"1947-10-18T13:22:37.952346579Z\",\"Compare group before and after you encourage.\":\"1917-11-21T19:32:06.202165772Z\",\"Deliberately petrify the way.\":\"2019-09-04T07:48:32.272673051Z\",\"Scope the group to fit the moment.\":\"1949-03-23T14:09:14.484701900Z\"},\"outerValues\":{\"Aha! Great progress on child!\":{\"stringLeaf\":\"Prefer predictable way over surprising year.\",\"int64Leaf\":\"9058234864823221502\",\"middle\":{\"leaf\":\"Short feedback loops wait government boldly.\",\"inner\":{\"leaf\":\"Compose time from simple parts.\",\"deep\":{\"leaf\":\"Choose elated defaults.\"}}}},\"The black number will unexpectedly eagerly.\":{\"stringLeaf\":\"Write the one-sentence summary for the world.\",\"int64Leaf\":\"1002874920726959468\",\"middle\":{\"leaf\":\"In the first place, document the life and grab the rest.\",\"inner\":{\"leaf\":\"Clarify ownership of the place soon.\",\"deep\":{\"leaf\":\"Attribute gains to part where possible.\"}}}},\"What ski quickly edify the fact.\":{\"stringLeaf\":\"Consistent hand be the foundation of riches.\",\"int64Leaf\":\"7249697207759864471\",\"middle\":{\"leaf\":\"Align place with user intent.\",\"inner\":{\"leaf\":\"Instrument the week for observability.\",\"deep\":{\"leaf\":\"Before launch, they ski now.\"}}}}},\"int64Keys\":{\"3779139473584860971\":\"Balance easy-clean with eye.\",\"5602244425874985894\":\"Share the decision record for the case.\"},\"boolKeys\":{\"true\":\"Many preen when the life spikes.\"}}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.MapsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -1507,7 +1558,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.MapsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().StringArrayVar(&flagStringValues, "string-values", flagStringValues, "")
+		sub.Flags().StringArrayVar(&flagStringValues, "string-values", flagStringValues, "A label, given as key=value.")
 		sub.Flags().StringArrayVar(&flagBoolValues, "bool-values", flagBoolValues, "")
 		sub.Flags().StringArrayVar(&flagInt64Values, "int64-values", flagInt64Values, "")
 		sub.Flags().StringArrayVar(&flagUint64Values, "uint64-values", flagUint64Values, "")
@@ -1532,9 +1583,21 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		var flagRepeatedStrings []string
 		var flagBoolMap []string
 		sub := &cobra.Command{
-			Use:  "wrappers",
-			Args: cobra.NoArgs,
+			Use:   "wrappers",
+			Short: "Wrappers contains the nine wrapper types plus repeated and map compositions.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &WrappersRequest{}
+					if err := protojson.Unmarshal([]byte("{\"doubleValue\":0.3402859786606234,\"floatValue\":0.23874474,\"int64Value\":\"6708821275868298668\",\"uint64Value\":\"16841871356236102876\",\"int32Value\":612869861,\"uint32Value\":4011752871,\"boolValue\":true,\"stringValue\":\"Protect the woman under enthusiastic load.\",\"bytesValue\":\"QmFjayBhbGxleSArMSwgc2lkZS1kb29yIHBvdXRpbmUu\",\"repeatedStrings\":[\"Publish a changelog entry for the way.\",\"What turn quickly pierce the government.\"]}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.WrappersRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -1663,9 +1726,21 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		var flagAny string
 		var flagEmpty string
 		sub := &cobra.Command{
-			Use:  "well-known",
-			Args: cobra.NoArgs,
+			Use:   "well-known",
+			Short: "WellKnown contains the document-form well-known types.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &WellKnownRequest{}
+					if err := protojson.Unmarshal([]byte("{\"struct\":{\"Celebrate wins tied to the group.\":true,\"Onward to better life!\":0.6354844697597436,\"Surface risks around the year much.\":true,\"The colorful hand being unexpectedly fondly.\":\"The friendship does be uptight enough.\"},\"value\":\"Surface risks around the time barely.\",\"listValue\":[],\"empty\":{}}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.WellKnownRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -1751,9 +1826,21 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		var flagAliased string
 		var flagNested string
 		sub := &cobra.Command{
-			Use:  "enums",
-			Args: cobra.NoArgs,
+			Use:   "enums",
+			Short: "Enums contains an enum in every shape, plus aliases and a nested enum.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &EnumsRequest{}
+					if err := protojson.Unmarshal([]byte("{\"choices\":[\"CHOICE_SECOND\",\"CHOICE_UNSPECIFIED\",\"CHOICE_SECOND\",\"CHOICE_SECOND\"],\"optionalChoice\":\"CHOICE_SECOND\",\"aliased\":\"ALIASED_B\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.EnumsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -1823,12 +1910,12 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.EnumsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(resp))
 			},
 		}
-		sub.Flags().StringVar(&flagChoice, "choice", flagChoice, "")
-		sub.Flags().StringArrayVar(&flagChoices, "choices", flagChoices, "")
-		sub.Flags().StringVar(&flagOptionalChoice, "optional-choice", flagOptionalChoice, "")
-		sub.Flags().StringArrayVar(&flagChoiceMap, "choice-map", flagChoiceMap, "")
-		sub.Flags().StringVar(&flagAliased, "aliased", flagAliased, "")
-		sub.Flags().StringVar(&flagNested, "nested", flagNested, "")
+		sub.Flags().StringVar(&flagChoice, "choice", flagChoice, "Which option to pick. (values: CHOICE_UNSPECIFIED | CHOICE_FIRST | CHOICE_SECOND)")
+		sub.Flags().StringArrayVar(&flagChoices, "choices", flagChoices, "(values: CHOICE_UNSPECIFIED | CHOICE_FIRST | CHOICE_SECOND)")
+		sub.Flags().StringVar(&flagOptionalChoice, "optional-choice", flagOptionalChoice, "(values: CHOICE_UNSPECIFIED | CHOICE_FIRST | CHOICE_SECOND)")
+		sub.Flags().StringArrayVar(&flagChoiceMap, "choice-map", flagChoiceMap, "(values: CHOICE_UNSPECIFIED | CHOICE_FIRST | CHOICE_SECOND)")
+		sub.Flags().StringVar(&flagAliased, "aliased", flagAliased, "(values: ALIASED_UNSPECIFIED | ALIASED_A | ALIASED_ALPHA | ALIASED_B)")
+		sub.Flags().StringVar(&flagNested, "nested", flagNested, "(values: NESTED_UNSPECIFIED | NESTED_ONE)")
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())
@@ -1852,9 +1939,22 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		var flagWhen string
 		var flagOnly string
 		sub := &cobra.Command{
-			Use:  "oneofs",
-			Args: cobra.NoArgs,
+			Use:   "oneofs",
+			Short: "Oneofs contains a scalar-and-enum oneof, a message-and-scalar oneof, and a single-member oneof.",
+			Long:  "Oneofs contains a scalar-and-enum oneof, a message-and-scalar oneof, and a\nsingle-member oneof.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &OneofsRequest{}
+					if err := protojson.Unmarshal([]byte("{\"pick\":\"CHOICE_UNSPECIFIED\",\"when\":\"2015-04-29T19:06:33.296592803Z\",\"only\":\"Onward to better life!\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.OneofsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -2020,7 +2120,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		}
 		sub.Flags().StringVar(&flagText, "text", flagText, "")
 		sub.Flags().Int64Var(&flagCount, "count", flagCount, "")
-		sub.Flags().StringVar(&flagPick, "pick", flagPick, "")
+		sub.Flags().StringVar(&flagPick, "pick", flagPick, "(values: CHOICE_UNSPECIFIED | CHOICE_FIRST | CHOICE_SECOND)")
 		sub.Flags().StringVar(&flagOuter, "outer", flagOuter, "")
 		sub.Flags().StringVar(&flagOuterStringLeaf, "outer.string-leaf", flagOuterStringLeaf, "")
 		sub.Flags().Int64Var(&flagOuterInt64Leaf, "outer.int64-leaf", flagOuterInt64Leaf, "")
@@ -2046,9 +2146,21 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		var flagAge int64
 		var flagPick string
 		sub := &cobra.Command{
-			Use:  "optionals",
-			Args: cobra.NoArgs,
+			Use:   "optionals",
+			Short: "Optionals contains proto3 optional fields.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &OptionalsRequest{}
+					if err := protojson.Unmarshal([]byte("{\"name\":\"Zachary\",\"age\":220106544,\"pick\":\"CHOICE_SECOND\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.OptionalsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -2091,7 +2203,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		}
 		sub.Flags().StringVar(&flagName, "name", flagName, "")
 		sub.Flags().Int64Var(&flagAge, "age", flagAge, "")
-		sub.Flags().StringVar(&flagPick, "pick", flagPick, "")
+		sub.Flags().StringVar(&flagPick, "pick", flagPick, "(values: CHOICE_UNSPECIFIED | CHOICE_FIRST | CHOICE_SECOND)")
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
 		return sub
 	}())
@@ -2099,9 +2211,21 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		var flagOuters []string
 		var flagMiddles []string
 		sub := &cobra.Command{
-			Use:  "collections",
-			Args: cobra.NoArgs,
+			Use:   "collections",
+			Short: "Collections contains two message lists.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &CollectionsRequest{}
+					if err := protojson.Unmarshal([]byte("{\"outers\":[{\"stringLeaf\":\"Celebrate wins tied to the group.\",\"int64Leaf\":\"5264512023569697221\",\"middle\":{\"leaf\":\"Surface risks around the year much.\",\"inner\":{\"leaf\":\"Theirs life has ready for fiction.\",\"deep\":{\"leaf\":\"The colorful hand being unexpectedly fondly.\"}}}},{\"stringLeaf\":\"Write the one-sentence summary for the way.\",\"int64Leaf\":\"6457507951039411854\",\"middle\":{\"leaf\":\"Retire outdated day each quarter.\",\"inner\":{\"leaf\":\"Continuously measure the company and answer the outliers.\",\"deep\":{\"leaf\":\"The solitude must be fancy far.\"}}}},{\"stringLeaf\":\"Defaults at Genability did shape day.\",\"int64Leaf\":\"3713411651082243323\",\"middle\":{\"leaf\":\"Onward to better part!\",\"inner\":{\"leaf\":\"Publish a changelog entry for the child.\",\"deep\":{\"leaf\":\"Evenings in Denver invite quieter way.\"}}}},{\"stringLeaf\":\"Design for failure and graceful company.\",\"int64Leaf\":\"828722873427776146\",\"middle\":{\"leaf\":\"Steady angry progress in Chandler been visible.\",\"inner\":{\"leaf\":\"His woman does ready for rhythm.\",\"deep\":{\"leaf\":\"Warm starts beat cold place.\"}}}}]}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CollectionsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err

@@ -546,9 +546,11 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 	}
 
 	cmd := &cobra.Command{
-		Use: "names",
+		Use:   "names",
+		Short: "NamesService's RPCs echo their requests.",
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_names_proto_outputHelp(printers, defaultOutput))
+	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.AddCommand(func() *cobra.Command {
 		var flagReq string
 		var flagErr string
@@ -564,6 +566,17 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 			Use:  "collisions",
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &CollisionsRequest{}
+					if err := protojson.Unmarshal([]byte("{\"req\":\"Protect the number under uninterested load.\",\"err\":\"Retire outdated company each quarter.\",\"cmd\":\"Establish a baseline for world.\",\"resp\":\"Onward to better life!\",\"out\":\"Choose talented defaults.\",\"frags\":\"Consistent hand being the foundation of thrill.\",\"type\":\"Write the one-sentence summary for the way.\",\"func\":\"Decompose problem into smaller day.\",\"return\":\"Continuously measure the company and answer the outliers.\",\"import\":\"The solitude must be fancy far.\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CollisionsRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -672,6 +685,17 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 			Use:  "imported",
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &v1.ImportedRequest{}
+					if err := protojson.Unmarshal([]byte("{\"id\":\"b84fb46b-9fe3-4aff-8b5a-111c601e3d1a\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("imported.v1.ImportedRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -708,6 +732,17 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 			Use:  "second",
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &v12.PingRequest{}
+					if err := protojson.Unmarshal([]byte("{\"text\":\"Protect the number under uninterested load.\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("second.v1.PingRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -747,6 +782,17 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 			Use:  "reserved",
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &ReservedRequest{}
+					if err := protojson.Unmarshal([]byte("{\"filename\":\"Zachary\",\"input\":\"Celebrate wins tied to the group.\",\"help\":\"Retire outdated company each quarter.\",\"output\":\"Establish a baseline for world.\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.ReservedRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -804,8 +850,20 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 	cmd.AddCommand(func() *cobra.Command {
 		sub := &cobra.Command{
 			Use:  "empty",
+			Long: "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:\n\n    service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }",
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &emptypb.Empty{}
+					if err := protojson.Unmarshal([]byte("{}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -837,6 +895,17 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 			Use:  "http-call",
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &CasingRequest{}
+					if err := protojson.Unmarshal([]byte("{\"HTTPHeader\":\"Protect the number under uninterested load.\",\"camelField\":\"Retire outdated company each quarter.\",\"customName\":\"Aracely\",\"weird.name\":\"Onto the fact, align expectations.\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CasingRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -900,6 +969,17 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 			Use:  "lower-snake",
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &CasingRequest{}
+					if err := protojson.Unmarshal([]byte("{\"HTTPHeader\":\"Protect the number under uninterested load.\",\"camelField\":\"Retire outdated company each quarter.\",\"customName\":\"Aracely\",\"weird.name\":\"Onto the fact, align expectations.\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CasingRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -971,6 +1051,17 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 			Use:  "borrow",
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &Outer{}
+					if err := protojson.Unmarshal([]byte("{\"stringLeaf\":\"Protect the number under uninterested load.\",\"int64Leaf\":\"5264512023569697221\",\"middle\":{\"leaf\":\"Surface risks around the year much.\",\"inner\":{\"leaf\":\"Theirs life has ready for fiction.\",\"deep\":{\"leaf\":\"The colorful hand being unexpectedly fondly.\",\"deeper\":{\"leaf\":\"Write the one-sentence summary for the way.\"}}}}}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.Outer"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -1110,6 +1201,17 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 			Use:  "nested",
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &Envelope_Letter{}
+					if err := protojson.Unmarshal([]byte("{\"body\":\"Protect the number under uninterested load. Up to the company, we chase a smaller woman.\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.Envelope.Letter"), cli_kitchensink_v1_names_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err

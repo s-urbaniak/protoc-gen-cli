@@ -527,9 +527,11 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 
 	cmd := &cobra.Command{
 		Use:     "annotations",
+		Short:   "AnnotationsService's RPCs echo their requests.",
 		Aliases: []string{"ann"},
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_annotations_proto_outputHelp(printers, defaultOutput))
+	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.AddCommand(func() *cobra.Command {
 		var flagText string
 		sub := &cobra.Command{
@@ -537,6 +539,17 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 			Aliases: []string{"e", "say"},
 			Args:    cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &EchoRequest{}
+					if err := protojson.Unmarshal([]byte("{\"text\":\"Protect the number under uninterested load.\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.EchoRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -588,6 +601,17 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 			Use:  "knobs",
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &KnobsRequest{}
+					if err := protojson.Unmarshal([]byte("{\"capital\":\"Protect the number under uninterested load.\",\"shallow\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Retire outdated company each quarter.\"},\"leaf\":\"Establish a baseline for world.\"},\"leaf\":\"Onward to better life!\"},\"whole\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Choose talented defaults.\"},\"leaf\":\"Consistent hand being the foundation of thrill.\"},\"leaf\":\"Write the one-sentence summary for the way.\"},\"lifted\":\"Decompose problem into smaller day.\",\"deepened\":\"Continuously measure the company and answer the outliers.\",\"insisted\":{\"gadget\":{\"gizmo\":{\"leaf\":\"The solitude must be fancy far.\"},\"leaf\":\"Defaults at Genability did shape day.\"},\"leaf\":\"Review the fact every 4 weeks.\"},\"blob\":{\"Carefully switch the elephant patiently.\":0.7040337720573909,\"Reduce cognitive load in the work.\":{\"some\":\"Establish a baseline for year.\"}}}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.KnobsRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -750,7 +774,7 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 		sub.Flags().StringVar(&flagShallowGadgetLeaf, "shallow.gadget.leaf", flagShallowGadgetLeaf, "")
 		sub.Flags().StringVar(&flagShallowLeaf, "shallow.leaf", flagShallowLeaf, "")
 		sub.Flags().StringVar(&flagWhole, "whole", flagWhole, "")
-		sub.Flags().StringVar(&flagLifted, "lifted", flagLifted, "")
+		sub.Flags().StringVar(&flagLifted, "lifted", flagLifted, "The next three options cannot apply.")
 		sub.Flags().StringVar(&flagDeepened, "deepened", flagDeepened, "")
 		sub.Flags().StringVar(&flagInsisted, "insisted", flagInsisted, "")
 		sub.Flags().StringVar(&flagInsistedGadget, "insisted.gadget", flagInsistedGadget, "")
@@ -774,6 +798,17 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 			Use:  "curated",
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &CuratedRequest{}
+					if err := protojson.Unmarshal([]byte("{\"key\":\"Protect the number under uninterested load.\",\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Retire outdated company each quarter.\"},\"leaf\":\"Establish a baseline for world.\"},\"leaf\":\"Onward to better life!\"}}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CuratedRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -873,6 +908,17 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 			Use:  "flat",
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &FlatRequest{}
+					if err := protojson.Unmarshal([]byte("{\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Protect the number under uninterested load.\"},\"leaf\":\"Retire outdated company each quarter.\"},\"leaf\":\"Establish a baseline for world.\"},\"note\":\"Onward to better life!\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.FlatRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err

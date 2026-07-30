@@ -290,6 +290,18 @@ func cli_kitchensink_v1_relay_proto_outputHelp(printers map[string]func(io.Write
 	return help + "Default: pretty JSON on a terminal, compact when piped."
 }
 
+// oneRecord yields m once and then io.EOF.
+func cli_kitchensink_v1_relay_proto_oneRecord(m proto.Message) func() ([]byte, error) {
+	done := false
+	return func() ([]byte, error) {
+		if done {
+			return nil, io.EOF
+		}
+		done = true
+		return cli_kitchensink_v1_relay_proto_marshalJSON(m)
+	}
+}
+
 // pumpRequests decodes JSON requests from in, one after another, and sends
 // each request.
 func cli_kitchensink_v1_relay_proto_pumpRequests(ctx context.Context, in io.Reader, errW io.Writer, send func(n int, raw json.RawMessage) error) error {
@@ -402,14 +414,29 @@ func NewRelayServiceCommand(conn grpc.ClientConnInterface, opts ...RelayServiceO
 	}
 
 	cmd := &cobra.Command{
-		Use: "relay",
+		Use:   "relay",
+		Short: "RelayService echoes each note back as it arrives.",
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_relay_proto_outputHelp(printers, defaultOutput))
+	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.AddCommand(func() *cobra.Command {
 		sub := &cobra.Command{
-			Use:  "chat",
-			Args: cobra.NoArgs,
+			Use:   "chat",
+			Short: "Chat echoes each note as it arrives.",
+			Long:  "Chat echoes each note as it arrives.\n\nReads JSON requests from stdin, one after another.\n\nThe server may send multiple responses; each prints as it arrives.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &ChatNote{}
+					if err := protojson.Unmarshal([]byte("{\"text\":\"Protect the number under uninterested load.\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.ChatNote"), cli_kitchensink_v1_relay_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err

@@ -386,14 +386,29 @@ func NewIngestServiceCommand(conn grpc.ClientConnInterface, opts ...IngestServic
 	}
 
 	cmd := &cobra.Command{
-		Use: "ingest",
+		Use:   "ingest",
+		Short: "IngestService counts what it receives.",
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_ingest_proto_outputHelp(printers, defaultOutput))
+	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.AddCommand(func() *cobra.Command {
 		sub := &cobra.Command{
-			Use:  "ingest",
-			Args: cobra.NoArgs,
+			Use:   "ingest",
+			Short: "Ingest counts the streamed records.",
+			Long:  "Ingest counts the streamed records.\n\nReads JSON requests from stdin, one after another.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &IngestRecord{}
+					if err := protojson.Unmarshal([]byte("{\"text\":\"Protect the number under uninterested load.\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.IngestRecord"), cli_kitchensink_v1_ingest_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
@@ -425,9 +440,22 @@ func NewIngestServiceCommand(conn grpc.ClientConnInterface, opts ...IngestServic
 	}())
 	cmd.AddCommand(func() *cobra.Command {
 		sub := &cobra.Command{
-			Use:  "absorb",
-			Args: cobra.NoArgs,
+			Use:   "absorb",
+			Short: "Absorb counts the streamed requests.",
+			Long:  "Absorb counts the streamed requests.\n\nReads JSON requests from stdin, one after another.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &v1.ImportedRequest{}
+					if err := protojson.Unmarshal([]byte("{\"id\":\"b84fb46b-9fe3-4aff-8b5a-111c601e3d1a\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("imported.v1.ImportedRequest"), cli_kitchensink_v1_ingest_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err

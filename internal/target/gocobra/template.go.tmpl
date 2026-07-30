@@ -319,7 +319,6 @@ func {{ fileIdent }}_outputHelp(printers map[string]func(io.Writer, {{ fileIdent
 	}
 	return help + "Default: pretty JSON on a terminal, compact when piped."
 }
-{{- if anySingleResponse }}
 
 // oneRecord yields m once and then io.EOF.
 func {{ fileIdent }}_oneRecord(m proto.Message) func() ([]byte, error) {
@@ -332,7 +331,6 @@ func {{ fileIdent }}_oneRecord(m proto.Message) func() ([]byte, error) {
 		return {{ fileIdent }}_marshalJSON(m)
 	}
 }
-{{- end }}
 {{- if anyRequestDocs }}
 
 // loadInputs returns the request fragments for the -f and -i values.
@@ -566,6 +564,12 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface, opts ...{{ $svc.
 
 	cmd := &cobra.Command{
 		Use: {{ printf "%q" $svc.Name }},
+{{- if $svc.ShortHelp }}
+		Short: {{ printf "%q" $svc.ShortHelp }},
+{{- end }}
+{{- if $svc.LongHelp }}
+		Long: {{ printf "%q" $svc.LongHelp }},
+{{- end }}
 {{- if $svc.Aliases }}
 		Aliases: []string{ {{ quoteJoin $svc.Aliases }} },
 {{- end }}
@@ -574,6 +578,7 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface, opts ...{{ $svc.
 {{- end }}
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", {{ fileIdent }}_outputHelp(printers, defaultOutput))
+	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 {{- range $svc.Commands }}
 	cmd.AddCommand(func() *cobra.Command {
 {{- range .Params }}
@@ -581,6 +586,12 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface, opts ...{{ $svc.
 {{- end }}
 		sub := &cobra.Command{
 			Use:  {{ printf "%q" .Name }},
+{{- if .ShortHelp }}
+			Short: {{ printf "%q" .ShortHelp }},
+{{- end }}
+{{- if .LongHelp }}
+			Long: {{ printf "%q" .LongHelp }},
+{{- end }}
 {{- if .Aliases }}
 			Aliases: []string{ {{ quoteJoin .Aliases }} },
 {{- end }}
@@ -589,6 +600,17 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface, opts ...{{ $svc.
 {{- end }}
 			Args: cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &{{ goRequestType . }}{}
+					if err := protojson.Unmarshal([]byte({{ printf "%q" .ExampleJSON }}), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor({{ printf "%q" .Input.FullName }}), {{ fileIdent }}_oneRecord(req))
+				}
 {{- with requiredParams . }}
 				var missing []string
 {{- range . }}
@@ -679,7 +701,7 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface, opts ...{{ $svc.
 			},
 		}
 {{- range .Params }}
-		sub.Flags().{{ (goBinding .).Setter }}Var{{ if .Shorthand }}P{{ end }}(&{{ goVarName . }}, {{ printf "%q" .Name }}, {{ if .Shorthand }}{{ printf "%q" .Shorthand }}, {{ end }}{{ goVarName . }}, {{ if .Required }}"(required)"{{ else }}""{{ end }})
+		sub.Flags().{{ (goBinding .).Setter }}Var{{ if .Shorthand }}P{{ end }}(&{{ goVarName . }}, {{ printf "%q" .Name }}, {{ if .Shorthand }}{{ printf "%q" .Shorthand }}, {{ end }}{{ goVarName . }}, {{ printf "%q" (flagUsage .) }})
 {{- if .Hidden }}
 		_ = sub.Flags().MarkHidden({{ printf "%q" .Name }})
 {{- end }}

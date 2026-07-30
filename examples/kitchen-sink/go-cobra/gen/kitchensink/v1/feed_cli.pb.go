@@ -332,6 +332,18 @@ func cli_kitchensink_v1_feed_proto_outputHelp(printers map[string]func(io.Writer
 	return help + "Default: pretty JSON on a terminal, compact when piped."
 }
 
+// oneRecord yields m once and then io.EOF.
+func cli_kitchensink_v1_feed_proto_oneRecord(m proto.Message) func() ([]byte, error) {
+	done := false
+	return func() ([]byte, error) {
+		if done {
+			return nil, io.EOF
+		}
+		done = true
+		return cli_kitchensink_v1_feed_proto_marshalJSON(m)
+	}
+}
+
 // loadInputs returns the request fragments for the -f and -i values.
 // The fragments come in merge order: first the -f documents in argument
 // order, then the -i values. A "-" filename reads stdin. Content selects
@@ -492,15 +504,30 @@ func NewFeedServiceCommand(conn grpc.ClientConnInterface, opts ...FeedServiceOpt
 	}
 
 	cmd := &cobra.Command{
-		Use: "feed",
+		Use:   "feed",
+		Short: "FeedService streams fake events.",
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_feed_proto_outputHelp(printers, defaultOutput))
+	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.AddCommand(func() *cobra.Command {
 		var flagCount int64
 		sub := &cobra.Command{
-			Use:  "tail",
-			Args: cobra.NoArgs,
+			Use:   "tail",
+			Short: "Tail streams the requested number of events and then ends the feed.",
+			Long:  "Tail streams the requested number of events and then ends the feed.\n\nThe server may send multiple responses; each prints as it arrives.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &TailRequest{}
+					if err := protojson.Unmarshal([]byte("{\"count\":2141549007}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.TailRequest"), cli_kitchensink_v1_feed_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err

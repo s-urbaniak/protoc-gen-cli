@@ -60,6 +60,8 @@ type Command struct {
 	// before the params of its sub-fields.
 	Params []*Param `json:"params,omitempty"`
 	View   *View    `json:"view,omitempty"`
+	// ExampleJSON is a sample request, as protojson.
+	ExampleJSON string `json:"example_json,omitempty"`
 }
 
 // A Request identifies an RPC's request message.
@@ -78,7 +80,8 @@ type Param struct {
 	Name      string `json:"name,omitempty"`
 	Shorthand string `json:"shorthand,omitempty"`
 	// Hidden removes the param from the lists. The param continues to parse.
-	Hidden bool `json:"hidden,omitempty"`
+	Hidden    bool   `json:"hidden,omitempty"`
+	ShortHelp string `json:"short_help,omitempty"`
 	// Required means that the user must type the param. Whole-request input
 	// is not sufficient.
 	Required bool `json:"required,omitempty"`

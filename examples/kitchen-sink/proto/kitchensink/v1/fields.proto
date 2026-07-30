@@ -41,9 +41,13 @@ service FieldsService {
 }
 
 message ScalarsRequest {
+  // A "weight" in kilograms.
   double double_field = 1;
+  // A ratio between 0 and 1.
   float float_field = 2;
+  // Applies a 100%s surcharge when set.
   int32 int32_field = 3;
+  // A row id.
   int64 int64_field = 4;
   uint32 uint32_field = 5;
   uint64 uint64_field = 6;
@@ -53,27 +57,36 @@ message ScalarsRequest {
   fixed64 fixed64_field = 10;
   sfixed32 sfixed32_field = 11;
   sfixed64 sfixed64_field = 12;
+  // Whether the row is active.
   bool bool_field = 13;
+  // A display name; a Windows path like C:\Users\me works.
   string string_field = 14;
+  // Raw bytes; the checksum tag looks like `abc`.
   bytes bytes_field = 15;
 }
 
 message MessagesRequest {
+  // The outer message.
   Outer outer = 1;
   Outer kebab_outer = 2;
+  // When the row was created.
   google.protobuf.Timestamp timestamp = 3;
   repeated Outer outers = 4;
   map<string, string> labels = 5;
+  // How long to wait.
   google.protobuf.Duration duration = 6;
   google.protobuf.FieldMask field_mask = 7;
+  // Arbitrary JSON metadata.
   google.protobuf.Struct struct = 8;
   Recursive recursive = 9;
   Odd odd = 10;
 }
 
 message RepeatedRequest {
+  // A tag to attach. Repeat the flag for more.
   repeated string strings = 1;
   repeated bool bools = 2;
+  // An id to include.
   repeated int64 ints = 3;
   repeated uint64 uints = 4;
   repeated double doubles = 5;
@@ -82,6 +95,7 @@ message RepeatedRequest {
 }
 
 message MapsRequest {
+  // A label, given as key=value.
   map<string, string> string_values = 1;
   map<string, bool> bool_values = 2;
   map<string, int64> int64_values = 3;
@@ -134,6 +148,7 @@ message EnumsRequest {
     NESTED_UNSPECIFIED = 0;
     NESTED_ONE = 1;
   }
+  // Which option to pick.
   Choice choice = 1;
   repeated Choice choices = 2;
   optional Choice optional_choice = 3;

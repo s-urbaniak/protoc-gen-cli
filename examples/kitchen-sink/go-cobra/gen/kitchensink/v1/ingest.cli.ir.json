@@ -39,7 +39,8 @@
                 "path": "received"
               }
             ]
-          }
+          },
+          "example_json": "{\"text\":\"Protect the number under uninterested load.\"}"
         },
         {
           "proto_name": "Absorb",
@@ -65,7 +66,8 @@
                 "path": "received"
               }
             ]
-          }
+          },
+          "example_json": "{\"id\":\"b84fb46b-9fe3-4aff-8b5a-111c601e3d1a\"}"
         }
       ]
     }

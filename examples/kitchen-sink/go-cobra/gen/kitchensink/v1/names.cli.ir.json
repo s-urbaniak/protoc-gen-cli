@@ -124,7 +124,8 @@
                 "path": "import"
               }
             ]
-          }
+          },
+          "example_json": "{\"req\":\"Protect the number under uninterested load.\",\"err\":\"Retire outdated company each quarter.\",\"cmd\":\"Establish a baseline for world.\",\"resp\":\"Onward to better life!\",\"out\":\"Choose talented defaults.\",\"frags\":\"Consistent hand being the foundation of thrill.\",\"type\":\"Write the one-sentence summary for the way.\",\"func\":\"Decompose problem into smaller day.\",\"return\":\"Continuously measure the company and answer the outliers.\",\"import\":\"The solitude must be fancy far.\"}"
         },
         {
           "proto_name": "Imported",
@@ -154,7 +155,8 @@
                 "path": "id"
               }
             ]
-          }
+          },
+          "example_json": "{\"id\":\"b84fb46b-9fe3-4aff-8b5a-111c601e3d1a\"}"
         },
         {
           "proto_name": "Second",
@@ -184,7 +186,8 @@
                 "path": "text"
               }
             ]
-          }
+          },
+          "example_json": "{\"text\":\"Protect the number under uninterested load.\"}"
         },
         {
           "proto_name": "Reserved",
@@ -241,7 +244,8 @@
                 "path": "output"
               }
             ]
-          }
+          },
+          "example_json": "{\"filename\":\"Zachary\",\"input\":\"Celebrate wins tied to the group.\",\"help\":\"Retire outdated company each quarter.\",\"output\":\"Establish a baseline for world.\"}"
         },
         {
           "proto_name": "Empty",
@@ -259,7 +263,8 @@
           "output": "google.protobuf.Empty",
           "view": {
             "full_name": "google.protobuf.Empty"
-          }
+          },
+          "example_json": "{}"
         },
         {
           "proto_name": "HTTPCall",
@@ -316,7 +321,8 @@
                 "path": "weird\\.name"
               }
             ]
-          }
+          },
+          "example_json": "{\"HTTPHeader\":\"Protect the number under uninterested load.\",\"camelField\":\"Retire outdated company each quarter.\",\"customName\":\"Aracely\",\"weird.name\":\"Onto the fact, align expectations.\"}"
         },
         {
           "proto_name": "lower_snake",
@@ -373,7 +379,8 @@
                 "path": "weird\\.name"
               }
             ]
-          }
+          },
+          "example_json": "{\"HTTPHeader\":\"Protect the number under uninterested load.\",\"camelField\":\"Retire outdated company each quarter.\",\"customName\":\"Aracely\",\"weird.name\":\"Onto the fact, align expectations.\"}"
         },
         {
           "proto_name": "Borrow",
@@ -482,7 +489,8 @@
                 "path": "middle.inner.deep.deeper.deepest.leaf"
               }
             ]
-          }
+          },
+          "example_json": "{\"stringLeaf\":\"Protect the number under uninterested load.\",\"int64Leaf\":\"5264512023569697221\",\"middle\":{\"leaf\":\"Surface risks around the year much.\",\"inner\":{\"leaf\":\"Theirs life has ready for fiction.\",\"deep\":{\"leaf\":\"The colorful hand being unexpectedly fondly.\",\"deeper\":{\"leaf\":\"Write the one-sentence summary for the way.\"}}}}}"
         },
         {
           "proto_name": "Nested",
@@ -512,7 +520,8 @@
                 "path": "body"
               }
             ]
-          }
+          },
+          "example_json": "{\"body\":\"Protect the number under uninterested load. Up to the company, we chase a smaller woman.\"}"
         }
       ]
     }

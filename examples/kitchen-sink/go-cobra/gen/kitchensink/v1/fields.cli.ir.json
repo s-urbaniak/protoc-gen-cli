@@ -34,21 +34,25 @@
             {
               "proto_path": "double_field",
               "name": "double-field",
+              "short_help": "A \"weight\" in kilograms.",
               "bind": "float"
             },
             {
               "proto_path": "float_field",
               "name": "float-field",
+              "short_help": "A ratio between 0 and 1.",
               "bind": "float"
             },
             {
               "proto_path": "int32_field",
               "name": "int32-field",
+              "short_help": "Applies a 100%s surcharge when set.",
               "bind": "int"
             },
             {
               "proto_path": "int64_field",
               "name": "int64-field",
+              "short_help": "A row id.",
               "bind": "int"
             },
             {
@@ -94,16 +98,19 @@
             {
               "proto_path": "bool_field",
               "name": "bool-field",
+              "short_help": "Whether the row is active.",
               "bind": "bool"
             },
             {
               "proto_path": "string_field",
               "name": "string-field",
+              "short_help": "A display name; a Windows path like C:\\Users\\me works.",
               "bind": "string"
             },
             {
               "proto_path": "bytes_field",
               "name": "bytes-field",
+              "short_help": "Raw bytes; the checksum tag looks like `abc`.",
               "bind": "string"
             }
           ],
@@ -171,7 +178,8 @@
                 "path": "bytesField"
               }
             ]
-          }
+          },
+          "example_json": "{\"doubleField\":0.3402859786606234,\"floatField\":0.23874474,\"int32Field\":1854751411,\"int64Field\":\"7618499319381327068\",\"uint32Field\":1225739722,\"uint64Field\":\"17230347383051557718\",\"sint32Field\":1744610128,\"sint64Field\":\"1952627761515405933\",\"fixed32Field\":2373109660,\"fixed64Field\":\"5471171549183000348\",\"sfixed32Field\":814989980,\"sfixed64Field\":\"8957623386525274346\",\"boolField\":true,\"stringField\":\"Weekly, I tweak the way with way.\",\"bytesField\":\"TW9ybmluZ3MgaW4gTmFzaHZpbGxlLURhdmlkc29uLCBhZnRlcm5vb25zIGluIHBvcC11cC4=\"}"
         },
         {
           "proto_name": "Messages",
@@ -191,6 +199,7 @@
             {
               "proto_path": "outer",
               "name": "outer",
+              "short_help": "The outer message.",
               "bind": "json"
             },
             {
@@ -311,6 +320,7 @@
             {
               "proto_path": "timestamp",
               "name": "timestamp",
+              "short_help": "When the row was created.",
               "bind": "string"
             },
             {
@@ -328,6 +338,7 @@
             {
               "proto_path": "duration",
               "name": "duration",
+              "short_help": "How long to wait.",
               "bind": "string"
             },
             {
@@ -338,6 +349,7 @@
             {
               "proto_path": "struct",
               "name": "struct",
+              "short_help": "Arbitrary JSON metadata.",
               "bind": "json"
             },
             {
@@ -500,7 +512,8 @@
                 ]
               }
             ]
-          }
+          },
+          "example_json": "{}"
         },
         {
           "proto_name": "Repeated",
@@ -520,6 +533,7 @@
             {
               "proto_path": "strings",
               "name": "strings",
+              "short_help": "A tag to attach.",
               "bind": "string",
               "repeated": true
             },
@@ -532,6 +546,7 @@
             {
               "proto_path": "ints",
               "name": "ints",
+              "short_help": "An id to include.",
               "bind": "int",
               "repeated": true
             },
@@ -625,7 +640,8 @@
                 ]
               }
             ]
-          }
+          },
+          "example_json": "{\"strings\":[\"Celebrate wins tied to the group.\",\"Retire outdated company each quarter.\",\"Establish a baseline for world.\",\"Onward to better life!\"],\"bools\":[true,true],\"uints\":[\"2305084656860551744\",\"2874873491405036954\",\"6643548458091912998\",\"4642773343372291130\"],\"doubles\":[0.03904819806684712],\"timestamps\":[\"1917-05-22T22:10:35.086061615Z\",\"2003-01-03T03:33:46.333584603Z\",\"1933-08-07T08:34:11.201304448Z\"],\"outers\":[{\"stringLeaf\":\"Weekly, she tweak the child with work.\",\"int64Leaf\":\"7051134352706333876\",\"middle\":{\"leaf\":\"The advantage were be smiling most.\",\"inner\":{\"leaf\":\"Steady angry progress in Chandler been visible.\",\"deep\":{\"leaf\":\"His woman does ready for rhythm.\"}}}},{\"stringLeaf\":\"Warm starts beat cold place.\",\"int64Leaf\":\"262808238379507306\",\"middle\":{\"leaf\":\"Consistent problem should the foundation of belief.\",\"inner\":{\"leaf\":\"Surface risks around the woman far.\",\"deep\":{\"leaf\":\"Scope the group to fit the moment.\"}}}},{\"stringLeaf\":\"Subtle Orange accents shall effective deeply.\",\"int64Leaf\":\"4499584838742953873\",\"middle\":{\"leaf\":\"Visualize man for faster decisions.\",\"inner\":{\"leaf\":\"Steady upset progress in Boston could visible.\",\"deep\":{\"leaf\":\"Consistent hand be the foundation of riches.\"}}}},{\"stringLeaf\":\"Meanwhile the review, she brush the week.\",\"int64Leaf\":\"3046889756581195750\",\"middle\":{\"leaf\":\"Before launch, they ski now.\",\"inner\":{\"leaf\":\"Aha! Great progress on child!\",\"deep\":{\"leaf\":\"Prefer predictable way over surprising year.\"}}}}]}"
         },
         {
           "proto_name": "Maps",
@@ -645,6 +661,7 @@
             {
               "proto_path": "string_values",
               "name": "string-values",
+              "short_help": "A label, given as key=value.",
               "bind": "string",
               "map": true
             },
@@ -737,7 +754,8 @@
                 "path": "boolKeys"
               }
             ]
-          }
+          },
+          "example_json": "{\"stringValues\":{\"Celebrate wins tied to the group.\":\"Retire outdated company each quarter.\",\"Choose talented defaults.\":\"Consistent hand being the foundation of thrill.\",\"Establish a baseline for world.\":\"Onward to better life!\",\"Write the one-sentence summary for the way.\":\"Decompose problem into smaller day.\"},\"boolValues\":{\"Set a realistic target for government.\":true,\"Surface risks around the time barely.\":true},\"int64Values\":{\"Compare thing before and after you honour.\":\"1401657792888685950\"},\"doubleValues\":{\"Onward to better part!\":0.6960523510631607},\"timestampValues\":{\"Clarify ownership of the world later.\":\"1947-10-18T13:22:37.952346579Z\",\"Compare group before and after you encourage.\":\"1917-11-21T19:32:06.202165772Z\",\"Deliberately petrify the way.\":\"2019-09-04T07:48:32.272673051Z\",\"Scope the group to fit the moment.\":\"1949-03-23T14:09:14.484701900Z\"},\"outerValues\":{\"Aha! Great progress on child!\":{\"stringLeaf\":\"Prefer predictable way over surprising year.\",\"int64Leaf\":\"9058234864823221502\",\"middle\":{\"leaf\":\"Short feedback loops wait government boldly.\",\"inner\":{\"leaf\":\"Compose time from simple parts.\",\"deep\":{\"leaf\":\"Choose elated defaults.\"}}}},\"The black number will unexpectedly eagerly.\":{\"stringLeaf\":\"Write the one-sentence summary for the world.\",\"int64Leaf\":\"1002874920726959468\",\"middle\":{\"leaf\":\"In the first place, document the life and grab the rest.\",\"inner\":{\"leaf\":\"Clarify ownership of the place soon.\",\"deep\":{\"leaf\":\"Attribute gains to part where possible.\"}}}},\"What ski quickly edify the fact.\":{\"stringLeaf\":\"Consistent hand be the foundation of riches.\",\"int64Leaf\":\"7249697207759864471\",\"middle\":{\"leaf\":\"Align place with user intent.\",\"inner\":{\"leaf\":\"Instrument the week for observability.\",\"deep\":{\"leaf\":\"Before launch, they ski now.\"}}}}},\"int64Keys\":{\"3779139473584860971\":\"Balance easy-clean with eye.\",\"5602244425874985894\":\"Share the decision record for the case.\"},\"boolKeys\":{\"true\":\"Many preen when the life spikes.\"}}"
         },
         {
           "proto_name": "Wrappers",
@@ -860,7 +878,8 @@
                 "path": "boolMap"
               }
             ]
-          }
+          },
+          "example_json": "{\"doubleValue\":0.3402859786606234,\"floatValue\":0.23874474,\"int64Value\":\"6708821275868298668\",\"uint64Value\":\"16841871356236102876\",\"int32Value\":612869861,\"uint32Value\":4011752871,\"boolValue\":true,\"stringValue\":\"Protect the woman under enthusiastic load.\",\"bytesValue\":\"QmFjayBhbGxleSArMSwgc2lkZS1kb29yIHBvdXRpbmUu\",\"repeatedStrings\":[\"Publish a changelog entry for the way.\",\"What turn quickly pierce the government.\"]}"
         },
         {
           "proto_name": "WellKnown",
@@ -927,7 +946,8 @@
                 "path": "empty"
               }
             ]
-          }
+          },
+          "example_json": "{\"struct\":{\"Celebrate wins tied to the group.\":true,\"Onward to better life!\":0.6354844697597436,\"Surface risks around the year much.\":true,\"The colorful hand being unexpectedly fondly.\":\"The friendship does be uptight enough.\"},\"value\":\"Surface risks around the time barely.\",\"listValue\":[],\"empty\":{}}"
         },
         {
           "proto_name": "Enums",
@@ -947,6 +967,7 @@
             {
               "proto_path": "choice",
               "name": "choice",
+              "short_help": "Which option to pick.",
               "bind": "string",
               "enum_values": [
                 "CHOICE_UNSPECIFIED",
@@ -1035,7 +1056,8 @@
                 "path": "nested"
               }
             ]
-          }
+          },
+          "example_json": "{\"choices\":[\"CHOICE_SECOND\",\"CHOICE_UNSPECIFIED\",\"CHOICE_SECOND\",\"CHOICE_SECOND\"],\"optionalChoice\":\"CHOICE_SECOND\",\"aliased\":\"ALIASED_B\"}"
         },
         {
           "proto_name": "Oneofs",
@@ -1212,7 +1234,8 @@
                 "path": "only"
               }
             ]
-          }
+          },
+          "example_json": "{\"pick\":\"CHOICE_UNSPECIFIED\",\"when\":\"2015-04-29T19:06:33.296592803Z\",\"only\":\"Onward to better life!\"}"
         },
         {
           "proto_name": "Optionals",
@@ -1266,7 +1289,8 @@
                 "path": "pick"
               }
             ]
-          }
+          },
+          "example_json": "{\"name\":\"Zachary\",\"age\":220106544,\"pick\":\"CHOICE_SECOND\"}"
         },
         {
           "proto_name": "Collections",
@@ -1362,7 +1386,8 @@
                 ]
               }
             ]
-          }
+          },
+          "example_json": "{\"outers\":[{\"stringLeaf\":\"Celebrate wins tied to the group.\",\"int64Leaf\":\"5264512023569697221\",\"middle\":{\"leaf\":\"Surface risks around the year much.\",\"inner\":{\"leaf\":\"Theirs life has ready for fiction.\",\"deep\":{\"leaf\":\"The colorful hand being unexpectedly fondly.\"}}}},{\"stringLeaf\":\"Write the one-sentence summary for the way.\",\"int64Leaf\":\"6457507951039411854\",\"middle\":{\"leaf\":\"Retire outdated day each quarter.\",\"inner\":{\"leaf\":\"Continuously measure the company and answer the outliers.\",\"deep\":{\"leaf\":\"The solitude must be fancy far.\"}}}},{\"stringLeaf\":\"Defaults at Genability did shape day.\",\"int64Leaf\":\"3713411651082243323\",\"middle\":{\"leaf\":\"Onward to better part!\",\"inner\":{\"leaf\":\"Publish a changelog entry for the child.\",\"deep\":{\"leaf\":\"Evenings in Denver invite quieter way.\"}}}},{\"stringLeaf\":\"Design for failure and graceful company.\",\"int64Leaf\":\"828722873427776146\",\"middle\":{\"leaf\":\"Steady angry progress in Chandler been visible.\",\"inner\":{\"leaf\":\"His woman does ready for rhythm.\",\"deep\":{\"leaf\":\"Warm starts beat cold place.\"}}}}]}"
         }
       ]
     }

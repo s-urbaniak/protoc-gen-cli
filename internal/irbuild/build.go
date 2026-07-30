@@ -2,15 +2,22 @@
 package irbuild
 
 import (
+	"bytes"
 	"cmp"
+	"encoding/json"
+	"fmt"
 	"go/doc"
 	"slices"
 	"strings"
 
 	"github.com/braveokafor/proto-to-cli/internal/ir"
+	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stoewer/go-strcase"
+	"github.com/sudorandom/fauxrpc"
 	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/dynamicpb"
 )
 
 // Options configures the IR builder.
@@ -120,6 +127,7 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 				cmd.Params = buildParams(m.Input.Desc, opts)
 			}
 			cmd.View = buildView(m.Output.Desc, opts)
+			cmd.ExampleJSON = exampleRequest(m.Input.Desc, opts.Warn)
 
 			service.Commands = append(service.Commands, cmd)
 		}
@@ -153,6 +161,27 @@ func cleanComment(s string) string {
 		lines[i] = strings.TrimRight(strings.TrimPrefix(l, " "), " \t")
 	}
 	return strings.TrimSpace(strings.Join(lines, "\n"))
+}
+
+func exampleRequest(md protoreflect.MessageDescriptor, warn func(string)) string {
+	msg := dynamicpb.NewMessage(md)
+	gen := fauxrpc.GenOptions{
+		Faker: gofakeit.New(1),
+	} // A zero seed reseeds gofakeit from crypto/rand, which would change the example on each run.
+	if err := fauxrpc.SetDataOnMessage(msg, gen); err != nil {
+		warn(fmt.Sprintf("message %s: no example request; --example prints {}", md.FullName()))
+		return "{}"
+	}
+	raw, err := protojson.Marshal(msg)
+	if err != nil {
+		warn(fmt.Sprintf("message %s: no example request; --example prints {}", md.FullName()))
+		return "{}"
+	}
+	var buf bytes.Buffer
+	if err := json.Compact(&buf, raw); err != nil {
+		return string(raw)
+	}
+	return buf.String()
 }
 
 // isExpandable tells if the sub-fields of fd expand into their own entries.

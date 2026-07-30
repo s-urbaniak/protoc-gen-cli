@@ -178,22 +178,29 @@ func (EnumsRequest_Nested) EnumDescriptor() ([]byte, []int) {
 }
 
 type ScalarsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	DoubleField   float64                `protobuf:"fixed64,1,opt,name=double_field,json=doubleField,proto3" json:"double_field,omitempty"`
-	FloatField    float32                `protobuf:"fixed32,2,opt,name=float_field,json=floatField,proto3" json:"float_field,omitempty"`
-	Int32Field    int32                  `protobuf:"varint,3,opt,name=int32_field,json=int32Field,proto3" json:"int32_field,omitempty"`
-	Int64Field    int64                  `protobuf:"varint,4,opt,name=int64_field,json=int64Field,proto3" json:"int64_field,omitempty"`
-	Uint32Field   uint32                 `protobuf:"varint,5,opt,name=uint32_field,json=uint32Field,proto3" json:"uint32_field,omitempty"`
-	Uint64Field   uint64                 `protobuf:"varint,6,opt,name=uint64_field,json=uint64Field,proto3" json:"uint64_field,omitempty"`
-	Sint32Field   int32                  `protobuf:"zigzag32,7,opt,name=sint32_field,json=sint32Field,proto3" json:"sint32_field,omitempty"`
-	Sint64Field   int64                  `protobuf:"zigzag64,8,opt,name=sint64_field,json=sint64Field,proto3" json:"sint64_field,omitempty"`
-	Fixed32Field  uint32                 `protobuf:"fixed32,9,opt,name=fixed32_field,json=fixed32Field,proto3" json:"fixed32_field,omitempty"`
-	Fixed64Field  uint64                 `protobuf:"fixed64,10,opt,name=fixed64_field,json=fixed64Field,proto3" json:"fixed64_field,omitempty"`
-	Sfixed32Field int32                  `protobuf:"fixed32,11,opt,name=sfixed32_field,json=sfixed32Field,proto3" json:"sfixed32_field,omitempty"`
-	Sfixed64Field int64                  `protobuf:"fixed64,12,opt,name=sfixed64_field,json=sfixed64Field,proto3" json:"sfixed64_field,omitempty"`
-	BoolField     bool                   `protobuf:"varint,13,opt,name=bool_field,json=boolField,proto3" json:"bool_field,omitempty"`
-	StringField   string                 `protobuf:"bytes,14,opt,name=string_field,json=stringField,proto3" json:"string_field,omitempty"`
-	BytesField    []byte                 `protobuf:"bytes,15,opt,name=bytes_field,json=bytesField,proto3" json:"bytes_field,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// A "weight" in kilograms.
+	DoubleField float64 `protobuf:"fixed64,1,opt,name=double_field,json=doubleField,proto3" json:"double_field,omitempty"`
+	// A ratio between 0 and 1.
+	FloatField float32 `protobuf:"fixed32,2,opt,name=float_field,json=floatField,proto3" json:"float_field,omitempty"`
+	// Applies a 100%s surcharge when set.
+	Int32Field int32 `protobuf:"varint,3,opt,name=int32_field,json=int32Field,proto3" json:"int32_field,omitempty"`
+	// A row id.
+	Int64Field    int64  `protobuf:"varint,4,opt,name=int64_field,json=int64Field,proto3" json:"int64_field,omitempty"`
+	Uint32Field   uint32 `protobuf:"varint,5,opt,name=uint32_field,json=uint32Field,proto3" json:"uint32_field,omitempty"`
+	Uint64Field   uint64 `protobuf:"varint,6,opt,name=uint64_field,json=uint64Field,proto3" json:"uint64_field,omitempty"`
+	Sint32Field   int32  `protobuf:"zigzag32,7,opt,name=sint32_field,json=sint32Field,proto3" json:"sint32_field,omitempty"`
+	Sint64Field   int64  `protobuf:"zigzag64,8,opt,name=sint64_field,json=sint64Field,proto3" json:"sint64_field,omitempty"`
+	Fixed32Field  uint32 `protobuf:"fixed32,9,opt,name=fixed32_field,json=fixed32Field,proto3" json:"fixed32_field,omitempty"`
+	Fixed64Field  uint64 `protobuf:"fixed64,10,opt,name=fixed64_field,json=fixed64Field,proto3" json:"fixed64_field,omitempty"`
+	Sfixed32Field int32  `protobuf:"fixed32,11,opt,name=sfixed32_field,json=sfixed32Field,proto3" json:"sfixed32_field,omitempty"`
+	Sfixed64Field int64  `protobuf:"fixed64,12,opt,name=sfixed64_field,json=sfixed64Field,proto3" json:"sfixed64_field,omitempty"`
+	// Whether the row is active.
+	BoolField bool `protobuf:"varint,13,opt,name=bool_field,json=boolField,proto3" json:"bool_field,omitempty"`
+	// A display name; a Windows path like C:\Users\me works.
+	StringField string `protobuf:"bytes,14,opt,name=string_field,json=stringField,proto3" json:"string_field,omitempty"`
+	// Raw bytes; the checksum tag looks like `abc`.
+	BytesField    []byte `protobuf:"bytes,15,opt,name=bytes_field,json=bytesField,proto3" json:"bytes_field,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -334,17 +341,21 @@ func (x *ScalarsRequest) GetBytesField() []byte {
 }
 
 type MessagesRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Outer         *Outer                 `protobuf:"bytes,1,opt,name=outer,proto3" json:"outer,omitempty"`
-	KebabOuter    *Outer                 `protobuf:"bytes,2,opt,name=kebab_outer,json=kebabOuter,proto3" json:"kebab_outer,omitempty"`
-	Timestamp     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	Outers        []*Outer               `protobuf:"bytes,4,rep,name=outers,proto3" json:"outers,omitempty"`
-	Labels        map[string]string      `protobuf:"bytes,5,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Duration      *durationpb.Duration   `protobuf:"bytes,6,opt,name=duration,proto3" json:"duration,omitempty"`
-	FieldMask     *fieldmaskpb.FieldMask `protobuf:"bytes,7,opt,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
-	Struct        *structpb.Struct       `protobuf:"bytes,8,opt,name=struct,proto3" json:"struct,omitempty"`
-	Recursive     *Recursive             `protobuf:"bytes,9,opt,name=recursive,proto3" json:"recursive,omitempty"`
-	Odd           *Odd                   `protobuf:"bytes,10,opt,name=odd,proto3" json:"odd,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The outer message.
+	Outer      *Outer `protobuf:"bytes,1,opt,name=outer,proto3" json:"outer,omitempty"`
+	KebabOuter *Outer `protobuf:"bytes,2,opt,name=kebab_outer,json=kebabOuter,proto3" json:"kebab_outer,omitempty"`
+	// When the row was created.
+	Timestamp *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Outers    []*Outer               `protobuf:"bytes,4,rep,name=outers,proto3" json:"outers,omitempty"`
+	Labels    map[string]string      `protobuf:"bytes,5,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// How long to wait.
+	Duration  *durationpb.Duration   `protobuf:"bytes,6,opt,name=duration,proto3" json:"duration,omitempty"`
+	FieldMask *fieldmaskpb.FieldMask `protobuf:"bytes,7,opt,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
+	// Arbitrary JSON metadata.
+	Struct        *structpb.Struct `protobuf:"bytes,8,opt,name=struct,proto3" json:"struct,omitempty"`
+	Recursive     *Recursive       `protobuf:"bytes,9,opt,name=recursive,proto3" json:"recursive,omitempty"`
+	Odd           *Odd             `protobuf:"bytes,10,opt,name=odd,proto3" json:"odd,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -450,9 +461,11 @@ func (x *MessagesRequest) GetOdd() *Odd {
 }
 
 type RepeatedRequest struct {
-	state         protoimpl.MessageState   `protogen:"open.v1"`
-	Strings       []string                 `protobuf:"bytes,1,rep,name=strings,proto3" json:"strings,omitempty"`
-	Bools         []bool                   `protobuf:"varint,2,rep,packed,name=bools,proto3" json:"bools,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// A tag to attach. Repeat the flag for more.
+	Strings []string `protobuf:"bytes,1,rep,name=strings,proto3" json:"strings,omitempty"`
+	Bools   []bool   `protobuf:"varint,2,rep,packed,name=bools,proto3" json:"bools,omitempty"`
+	// An id to include.
 	Ints          []int64                  `protobuf:"varint,3,rep,packed,name=ints,proto3" json:"ints,omitempty"`
 	Uints         []uint64                 `protobuf:"varint,4,rep,packed,name=uints,proto3" json:"uints,omitempty"`
 	Doubles       []float64                `protobuf:"fixed64,5,rep,packed,name=doubles,proto3" json:"doubles,omitempty"`
@@ -542,7 +555,8 @@ func (x *RepeatedRequest) GetOuters() []*Outer {
 }
 
 type MapsRequest struct {
-	state           protoimpl.MessageState            `protogen:"open.v1"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// A label, given as key=value.
 	StringValues    map[string]string                 `protobuf:"bytes,1,rep,name=string_values,json=stringValues,proto3" json:"string_values,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	BoolValues      map[string]bool                   `protobuf:"bytes,2,rep,name=bool_values,json=boolValues,proto3" json:"bool_values,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
 	Int64Values     map[string]int64                  `protobuf:"bytes,3,rep,name=int64_values,json=int64Values,proto3" json:"int64_values,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
@@ -850,13 +864,14 @@ func (x *WellKnownRequest) GetEmpty() *emptypb.Empty {
 }
 
 type EnumsRequest struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	Choice         Choice                 `protobuf:"varint,1,opt,name=choice,proto3,enum=kitchensink.v1.Choice" json:"choice,omitempty"`
-	Choices        []Choice               `protobuf:"varint,2,rep,packed,name=choices,proto3,enum=kitchensink.v1.Choice" json:"choices,omitempty"`
-	OptionalChoice *Choice                `protobuf:"varint,3,opt,name=optional_choice,json=optionalChoice,proto3,enum=kitchensink.v1.Choice,oneof" json:"optional_choice,omitempty"`
-	ChoiceMap      map[string]Choice      `protobuf:"bytes,4,rep,name=choice_map,json=choiceMap,proto3" json:"choice_map,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value,enum=kitchensink.v1.Choice"`
-	Aliased        Aliased                `protobuf:"varint,5,opt,name=aliased,proto3,enum=kitchensink.v1.Aliased" json:"aliased,omitempty"`
-	Nested         EnumsRequest_Nested    `protobuf:"varint,6,opt,name=nested,proto3,enum=kitchensink.v1.EnumsRequest_Nested" json:"nested,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Which option to pick.
+	Choice         Choice              `protobuf:"varint,1,opt,name=choice,proto3,enum=kitchensink.v1.Choice" json:"choice,omitempty"`
+	Choices        []Choice            `protobuf:"varint,2,rep,packed,name=choices,proto3,enum=kitchensink.v1.Choice" json:"choices,omitempty"`
+	OptionalChoice *Choice             `protobuf:"varint,3,opt,name=optional_choice,json=optionalChoice,proto3,enum=kitchensink.v1.Choice,oneof" json:"optional_choice,omitempty"`
+	ChoiceMap      map[string]Choice   `protobuf:"bytes,4,rep,name=choice_map,json=choiceMap,proto3" json:"choice_map,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value,enum=kitchensink.v1.Choice"`
+	Aliased        Aliased             `protobuf:"varint,5,opt,name=aliased,proto3,enum=kitchensink.v1.Aliased" json:"aliased,omitempty"`
+	Nested         EnumsRequest_Nested `protobuf:"varint,6,opt,name=nested,proto3,enum=kitchensink.v1.EnumsRequest_Nested" json:"nested,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }

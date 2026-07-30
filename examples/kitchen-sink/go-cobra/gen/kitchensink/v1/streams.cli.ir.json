@@ -53,7 +53,8 @@
                 "path": "index"
               }
             ]
-          }
+          },
+          "example_json": "{\"text\":\"Protect the number under uninterested load.\",\"count\":612869861}"
         },
         {
           "proto_name": "ServerStream",
@@ -95,7 +96,8 @@
                 "path": "index"
               }
             ]
-          }
+          },
+          "example_json": "{\"text\":\"Protect the number under uninterested load.\",\"count\":612869861}"
         },
         {
           "proto_name": "ClientStream",
@@ -125,7 +127,8 @@
                 "path": "index"
               }
             ]
-          }
+          },
+          "example_json": "{\"text\":\"Protect the number under uninterested load.\",\"count\":612869861}"
         },
         {
           "proto_name": "BidiStream",
@@ -156,7 +159,8 @@
                 "path": "index"
               }
             ]
-          }
+          },
+          "example_json": "{\"text\":\"Protect the number under uninterested load.\",\"count\":612869861}"
         },
         {
           "proto_name": "EmptyStream",
@@ -186,7 +190,8 @@
                 "path": "index"
               }
             ]
-          }
+          },
+          "example_json": "{}"
         }
       ]
     }

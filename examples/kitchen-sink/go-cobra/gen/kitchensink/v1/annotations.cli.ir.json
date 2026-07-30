@@ -50,7 +50,8 @@
                 "path": "text"
               }
             ]
-          }
+          },
+          "example_json": "{\"text\":\"Protect the number under uninterested load.\"}"
         },
         {
           "proto_name": "Knobs",
@@ -105,6 +106,7 @@
             {
               "proto_path": "lifted",
               "name": "lifted",
+              "short_help": "The next three options cannot apply.",
               "bind": "string"
             },
             {
@@ -205,7 +207,8 @@
                 "path": "blob"
               }
             ]
-          }
+          },
+          "example_json": "{\"capital\":\"Protect the number under uninterested load.\",\"shallow\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Retire outdated company each quarter.\"},\"leaf\":\"Establish a baseline for world.\"},\"leaf\":\"Onward to better life!\"},\"whole\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Choose talented defaults.\"},\"leaf\":\"Consistent hand being the foundation of thrill.\"},\"leaf\":\"Write the one-sentence summary for the way.\"},\"lifted\":\"Decompose problem into smaller day.\",\"deepened\":\"Continuously measure the company and answer the outliers.\",\"insisted\":{\"gadget\":{\"gizmo\":{\"leaf\":\"The solitude must be fancy far.\"},\"leaf\":\"Defaults at Genability did shape day.\"},\"leaf\":\"Review the fact every 4 weeks.\"},\"blob\":{\"Carefully switch the elephant patiently.\":0.7040337720573909,\"Reduce cognitive load in the work.\":{\"some\":\"Establish a baseline for year.\"}}}"
         },
         {
           "proto_name": "Curated",
@@ -269,7 +272,8 @@
                 "path": "widget.gadget.leaf"
               }
             ]
-          }
+          },
+          "example_json": "{\"key\":\"Protect the number under uninterested load.\",\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Retire outdated company each quarter.\"},\"leaf\":\"Establish a baseline for world.\"},\"leaf\":\"Onward to better life!\"}}"
         },
         {
           "proto_name": "Flat",
@@ -333,7 +337,8 @@
                 "path": "note"
               }
             ]
-          }
+          },
+          "example_json": "{\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Protect the number under uninterested load.\"},\"leaf\":\"Retire outdated company each quarter.\"},\"leaf\":\"Establish a baseline for world.\"},\"note\":\"Onward to better life!\"}"
         }
       ]
     }

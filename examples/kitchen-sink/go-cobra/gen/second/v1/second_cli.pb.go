@@ -503,15 +503,29 @@ func NewSecondServiceCommand(conn grpc.ClientConnInterface, opts ...SecondServic
 	}
 
 	cmd := &cobra.Command{
-		Use: "second",
+		Use:   "second",
+		Short: "SecondService echoes text back.",
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_second_v1_second_proto_outputHelp(printers, defaultOutput))
+	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.AddCommand(func() *cobra.Command {
 		var flagText string
 		sub := &cobra.Command{
-			Use:  "ping",
-			Args: cobra.NoArgs,
+			Use:   "ping",
+			Short: "Ping echoes its text.",
+			Args:  cobra.NoArgs,
 			RunE: func(cmd *cobra.Command, _ []string) error {
+				if example, _ := cmd.Flags().GetBool("example"); example {
+					print, err := outputPrinter(cmd)
+					if err != nil {
+						return err
+					}
+					req := &PingRequest{}
+					if err := protojson.Unmarshal([]byte("{\"text\":\"Protect the number under uninterested load.\"}"), req); err != nil {
+						return err
+					}
+					return print(cmd.OutOrStdout(), viewFor("second.v1.PingRequest"), cli_second_v1_second_proto_oneRecord(req))
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
