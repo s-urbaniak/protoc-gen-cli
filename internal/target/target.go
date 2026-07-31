@@ -13,7 +13,11 @@ import "github.com/braveokafor/proto-to-cli/internal/ir"
 type Target func(model *ir.Model, opts Options) ([]File, error)
 
 // Options contains the per-invocation settings that every target receives.
-type Options struct{}
+type Options struct {
+	// TemplateOverride renders with this file instead of the target's
+	// built-in template. Empty uses the built-in.
+	TemplateOverride string
+}
 
 // A File is one file to emit.
 type File struct {
