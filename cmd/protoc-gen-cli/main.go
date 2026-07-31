@@ -28,6 +28,7 @@ type Config struct {
 	DumpIR              bool   // DumpIR also emits each file's IR beside it as <file>.cli.ir.json.
 	RequestExpandDepth  int    // At zero, only the request's own fields get params.
 	ResponseExpandDepth int    // At zero, only the response's own fields become view fields.
+	TemplatePath        string // Empty uses the built-in template.
 
 	// main sets these.
 	Version string                   // Version goes into the generated-file headers.
@@ -53,6 +54,8 @@ func main() {
 		"how many message levels down fields still get dotted flags")
 	flags.IntVar(&cfg.ResponseExpandDepth, "response-expand-depth", 1,
 		"how many message levels down response fields still become view fields")
+	flags.StringVar(&cfg.TemplatePath, "template", "",
+		"render with this template file instead of the built-in one")
 
 	opts := &protogen.Options{
 		ParamFunc: flags.Set,
@@ -129,7 +132,7 @@ func run(plug *protogen.Plugin, cfg *Config) error {
 			}
 		}
 
-		files, err := tgt(m, target.Options{})
+		files, err := tgt(m, target.Options{TemplateOverride: cfg.TemplatePath})
 		if err != nil {
 			return fmt.Errorf("%s: %w", protoPath, err)
 		}

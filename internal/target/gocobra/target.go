@@ -15,7 +15,7 @@ import (
 var templateFS embed.FS
 
 // Generate returns one <file>_cli.pb.go for a proto file with services.
-func Generate(model *ir.Model, _ target.Options) ([]target.File, error) {
+func Generate(model *ir.Model, opts target.Options) ([]target.File, error) {
 	if len(model.Services) == 0 {
 		return nil, nil
 	}
@@ -23,6 +23,7 @@ func Generate(model *ir.Model, _ target.Options) ([]target.File, error) {
 	rendered, err := target.RenderTemplate(
 		templateFS,
 		"template.go.tmpl",
+		opts.TemplateOverride,
 		funcMap(model),
 		model,
 	)
