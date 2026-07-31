@@ -3,8 +3,11 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"log"
 	"os"
+	"os/signal"
 
 	bookstoreannotatedv1 "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1"
 	"github.com/spf13/cobra"
@@ -30,7 +33,13 @@ func main() {
 	root.AddCommand(bookstoreannotatedv1.NewAuctionsServiceCommand(conn))
 	root.AddCommand(bookstoreannotatedv1.NewInventoryServiceCommand(conn))
 
-	if err := root.Execute(); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+	if err := root.ExecuteContext(ctx); err != nil {
+		var coded interface{ ExitCode() int }
+		if errors.As(err, &coded) {
+			os.Exit(coded.ExitCode())
+		}
 		os.Exit(1)
 	}
 }

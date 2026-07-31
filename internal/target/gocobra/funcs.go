@@ -79,25 +79,9 @@ func funcMap(model *ir.Model) template.FuncMap {
 		},
 		"isJSONBind":   func(f *ir.Param) bool { return f.Bind == ir.BindJSON },
 		"isStringBind": func(f *ir.Param) bool { return f.Bind == ir.BindString },
-		"oneofGroups": func(cmd *ir.Command) [][]string {
-			var order []string
-			members := map[string][]string{}
-			for _, f := range cmd.Params {
-				if f.Oneof == "" {
-					continue
-				}
-				if _, seen := members[f.Oneof]; !seen {
-					order = append(order, f.Oneof)
-				}
-				members[f.Oneof] = append(members[f.Oneof], f.Name)
-			}
-			var groups [][]string
-			for _, oneof := range order {
-				if len(members[oneof]) >= 2 {
-					groups = append(groups, members[oneof])
-				}
-			}
-			return groups
+		"oneofGroups":  oneofGroups,
+		"anyOneofGroups": func() bool {
+			return anyCommand(func(c *ir.Command) bool { return len(oneofGroups(c)) > 0 })
 		},
 		"requiredParams": func(cmd *ir.Command) []*ir.Param {
 			var req []*ir.Param
@@ -117,6 +101,27 @@ func funcMap(model *ir.Model) template.FuncMap {
 		},
 		"flagUsage": flagUsage,
 	}
+}
+
+func oneofGroups(cmd *ir.Command) [][]string {
+	var order []string
+	members := map[string][]string{}
+	for _, f := range cmd.Params {
+		if f.Oneof == "" {
+			continue
+		}
+		if _, seen := members[f.Oneof]; !seen {
+			order = append(order, f.Oneof)
+		}
+		members[f.Oneof] = append(members[f.Oneof], f.Name)
+	}
+	var groups [][]string
+	for _, oneof := range order {
+		if len(members[oneof]) >= 2 {
+			groups = append(groups, members[oneof])
+		}
+	}
+	return groups
 }
 
 func goVarName(f *ir.Param) string {
@@ -170,6 +175,7 @@ var templateImports = map[string]string{
 	"sjson":     "github.com/tidwall/sjson",
 	"term":      "golang.org/x/term",
 	"grpc":      "google.golang.org/grpc",
+	"status":    "google.golang.org/grpc/status",
 	"protojson": "google.golang.org/protobuf/encoding/protojson",
 	"proto":     "google.golang.org/protobuf/proto",
 	"yaml":      "sigs.k8s.io/yaml",

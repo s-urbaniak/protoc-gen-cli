@@ -22,6 +22,7 @@ import (
 	sjson "github.com/tidwall/sjson"
 	term "golang.org/x/term"
 	grpc "google.golang.org/grpc"
+	status "google.golang.org/grpc/status"
 	protojson "google.golang.org/protobuf/encoding/protojson"
 	proto "google.golang.org/protobuf/proto"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -346,6 +347,62 @@ func cli_bookstore_annotated_v1_bookstore_proto_oneRecord(m proto.Message) func(
 	}
 }
 
+// callContext returns the call context, with a --timeout deadline when set.
+func cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd *cobra.Command) (context.Context, context.CancelFunc) {
+	if d, _ := cmd.Flags().GetDuration("timeout"); d > 0 {
+		return context.WithTimeout(cmd.Context(), d)
+	}
+	return context.WithCancel(cmd.Context())
+}
+
+// An exitError is an error with a process exit code. Error removes the gRPC
+// "rpc error: ..." wrapper.
+type cli_bookstore_annotated_v1_bookstore_proto_exitError struct {
+	code int
+	err  error
+}
+
+func (e cli_bookstore_annotated_v1_bookstore_proto_exitError) Error() string {
+	if msg := status.Convert(e.err).Message(); msg != "" {
+		return msg
+	}
+	return e.err.Error()
+}
+func (e cli_bookstore_annotated_v1_bookstore_proto_exitError) Unwrap() error { return e.err }
+func (e cli_bookstore_annotated_v1_bookstore_proto_exitError) ExitCode() int { return e.code }
+
+func cli_bookstore_annotated_v1_bookstore_proto_usage(err error) error {
+	return cli_bookstore_annotated_v1_bookstore_proto_exitError{2, err}
+}
+
+// callErr maps a failed call to an exit code from its context.
+func cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+	switch ctx.Err() {
+	case context.DeadlineExceeded:
+		return cli_bookstore_annotated_v1_bookstore_proto_exitError{124, err}
+	case context.Canceled:
+		return cli_bookstore_annotated_v1_bookstore_proto_exitError{130, err}
+	}
+	return cli_bookstore_annotated_v1_bookstore_proto_exitError{1, err}
+}
+
+// exclusiveFlags returns a usage error when the caller sets more than one flag.
+func cli_bookstore_annotated_v1_bookstore_proto_exclusiveFlags(fs *pflag.FlagSet, names ...string) error {
+	var set []string
+	for _, n := range names {
+		if fs.Changed(n) {
+			set = append(set, "--"+n)
+		}
+	}
+	if len(set) > 1 {
+		return cli_bookstore_annotated_v1_bookstore_proto_usage(fmt.Errorf("%s are mutually exclusive", strings.Join(set, ", ")))
+	}
+	return nil
+}
+
 // loadInputs returns the request fragments for the -f and -i values.
 // The fragments come in merge order: first the -f documents in argument
 // order, then the -i values. A "-" filename reads stdin. Content selects
@@ -586,6 +643,8 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers, defaultOutput))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
+	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_bookstore_annotated_v1_bookstore_proto_usage(err) })
 	cmd.AddCommand(func() *cobra.Command {
 		sub := &cobra.Command{
 			Use:     "list-shelves",
@@ -593,7 +652,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 			Long:    "Returns a list of all shelves in the bookstore.\n\nA generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:\n\n    service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }",
 			Aliases: []string{"shelves"},
 			Args:    cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -609,6 +668,11 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
 				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -620,7 +684,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
-				resp, err := client.ListShelves(cmd.Context(), req)
+				resp, err := client.ListShelves(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -638,7 +702,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 			Short: "Creates a new shelf in the bookstore.",
 			Long:  "Creates a new shelf in the bookstore.\n\nRequest message for CreateShelf method.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -654,6 +718,11 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
 				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -675,7 +744,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
-				resp, err := client.CreateShelf(cmd.Context(), req)
+				resp, err := client.CreateShelf(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -694,7 +763,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 			Short: "Returns a specific bookstore shelf.",
 			Long:  "Returns a specific bookstore shelf.\n\nRequest message for GetShelf method.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -710,6 +779,11 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
 				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -728,7 +802,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.GetShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
-				resp, err := client.GetShelf(cmd.Context(), req)
+				resp, err := client.GetShelf(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -748,7 +822,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 			Long:   "Deletes a shelf, including all books that are stored on the shelf.\n\nRequest message for DeleteShelf method.",
 			Hidden: true,
 			Args:   cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -764,6 +838,11 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
 				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -782,7 +861,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.DeleteShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
-				resp, err := client.DeleteShelf(cmd.Context(), req)
+				resp, err := client.DeleteShelf(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -801,7 +880,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 			Short: "Returns a list of books on a shelf.",
 			Long:  "Returns a list of books on a shelf.\n\nRequest message for ListBooks method.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -817,6 +896,11 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
 				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -835,7 +919,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListBooksRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
-				resp, err := client.ListBooks(cmd.Context(), req)
+				resp, err := client.ListBooks(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -857,7 +941,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 			Short: "Creates a new book.",
 			Long:  "Creates a new book.\n\nRequest message for CreateBook method.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -878,13 +962,18 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 						missing = append(missing, "--book.title")
 					}
 					if missing != nil {
-						return fmt.Errorf("missing required flags: %s", strings.Join(missing, ", "))
+						return cli_bookstore_annotated_v1_bookstore_proto_usage(fmt.Errorf("missing required flags: %s", strings.Join(missing, ", ")))
 					}
 				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
 				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -927,7 +1016,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
-				resp, err := client.CreateBook(cmd.Context(), req)
+				resp, err := client.CreateBook(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -950,7 +1039,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 			Short: "Returns a specific book.",
 			Long:  "Returns a specific book.\n\nRequest message for GetBook method.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -971,13 +1060,18 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 						missing = append(missing, "--book")
 					}
 					if missing != nil {
-						return fmt.Errorf("missing required flags: %s", strings.Join(missing, ", "))
+						return cli_bookstore_annotated_v1_bookstore_proto_usage(fmt.Errorf("missing required flags: %s", strings.Join(missing, ", ")))
 					}
 				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
 				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -1003,7 +1097,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.GetBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
-				resp, err := client.GetBook(cmd.Context(), req)
+				resp, err := client.GetBook(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -1025,7 +1119,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 			Long:    "Deletes a book from a shelf.\n\nRequest message for DeleteBook method.",
 			Aliases: []string{"rm"},
 			Args:    cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -1041,6 +1135,11 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
 				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -1066,7 +1165,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.DeleteBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
-				resp, err := client.DeleteBook(cmd.Context(), req)
+				resp, err := client.DeleteBook(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -1185,6 +1284,8 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers, defaultOutput))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
+	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_bookstore_annotated_v1_bookstore_proto_usage(err) })
 	cmd.AddCommand(func() *cobra.Command {
 		var flagLot string
 		var flagLotBook string
@@ -1203,7 +1304,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 			Use:   "create",
 			Short: "CreateAuction consigns a lot and schedules its auction.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -1221,13 +1322,18 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 						missing = append(missing, "--book.title")
 					}
 					if missing != nil {
-						return fmt.Errorf("missing required flags: %s", strings.Join(missing, ", "))
+						return cli_bookstore_annotated_v1_bookstore_proto_usage(fmt.Errorf("missing required flags: %s", strings.Join(missing, ", ")))
 					}
 				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
 				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -1355,7 +1461,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateAuctionRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
-				resp, err := client.CreateAuction(cmd.Context(), req)
+				resp, err := client.CreateAuction(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -1385,7 +1491,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 			Use:   "list",
 			Short: "ListAuctions lists auctions, optionally filtered by state.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -1401,6 +1507,11 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
 				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -1419,7 +1530,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListAuctionsRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
-				resp, err := client.ListAuctions(cmd.Context(), req)
+				resp, err := client.ListAuctions(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -1440,7 +1551,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 			Short: "WatchAuction streams bidding updates for the selected auctions as a live feed until the client cancels.",
 			Long:  "WatchAuction streams bidding updates for the selected auctions as a live\nfeed until the client cancels.\n\nWatchAuctionRequest selects auctions by exactly one of auction or author.\n\nThe server may send multiple responses; each prints as it arrives.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -1452,10 +1563,18 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.WatchAuctionRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
+				if err := cli_bookstore_annotated_v1_bookstore_proto_exclusiveFlags(cmd.Flags(), "auction", "author"); err != nil {
+					return err
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
 				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -1488,7 +1607,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.WatchAuctionRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
-				stream, err := client.WatchAuction(cmd.Context(), req)
+				stream, err := client.WatchAuction(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -1508,7 +1627,6 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 		_ = sub.Flags().MarkHidden("limit")
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		sub.MarkFlagsMutuallyExclusive("auction", "author")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -1517,7 +1635,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 			Short: "Bid places bids and streams back every update on the bid's auction.",
 			Long:  "Bid places bids and streams back every update on the bid's auction.\n\nReads JSON requests from stdin, one after another.\n\nThe server may send multiple responses; each prints as it arrives.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -1533,8 +1651,11 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 				if err != nil {
 					return err
 				}
-				ctx, cancel := context.WithCancel(cmd.Context())
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
 				defer cancel()
+				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
 				stream, err := client.Bid(ctx)
 				if err != nil {
 					return err
@@ -1642,13 +1763,15 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers, defaultOutput))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
+	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_bookstore_annotated_v1_bookstore_proto_usage(err) })
 	cmd.AddCommand(func() *cobra.Command {
 		sub := &cobra.Command{
 			Use:   "import",
 			Short: "ImportBooks ingests a book catalogue as a stream of records.",
 			Long:  "ImportBooks ingests a book catalogue as a stream of records.\n\nImportBooksRequest is one record of a catalogue import.\n\nReads JSON requests from stdin, one after another.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -1664,7 +1787,12 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 				if err != nil {
 					return err
 				}
-				stream, err := client.ImportBooks(cmd.Context())
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
+				stream, err := client.ImportBooks(ctx)
 				if err != nil {
 					return err
 				}
@@ -1677,7 +1805,7 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 				}
 				// Send returns io.EOF when the server ends the stream early.
 				// The status comes from CloseAndRecv.
-				if err := cli_bookstore_annotated_v1_bookstore_proto_pumpRequests(cmd.Context(), cmd.InOrStdin(), cmd.ErrOrStderr(), send); err != nil && !errors.Is(err, io.EOF) {
+				if err := cli_bookstore_annotated_v1_bookstore_proto_pumpRequests(ctx, cmd.InOrStdin(), cmd.ErrOrStderr(), send); err != nil && !errors.Is(err, io.EOF) {
 					return err
 				}
 				resp, err := stream.CloseAndRecv()
@@ -1697,7 +1825,7 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 			Short: "ExportReport renders a shelf's stock report and writes it to a file on the server.",
 			Long:  "ExportReport renders a shelf's stock report and writes it to a file on\nthe server.\n\nRequest message for ExportReport method.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -1713,6 +1841,11 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
 				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -1738,7 +1871,7 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ExportReportRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
 				}
-				resp, err := client.ExportReport(cmd.Context(), req)
+				resp, err := client.ExportReport(ctx, req)
 				if err != nil {
 					return err
 				}

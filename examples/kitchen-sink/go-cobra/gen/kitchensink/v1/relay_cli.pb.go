@@ -20,6 +20,7 @@ import (
 	gjson "github.com/tidwall/gjson"
 	term "golang.org/x/term"
 	grpc "google.golang.org/grpc"
+	status "google.golang.org/grpc/status"
 	protojson "google.golang.org/protobuf/encoding/protojson"
 	proto "google.golang.org/protobuf/proto"
 	yaml "sigs.k8s.io/yaml"
@@ -302,6 +303,48 @@ func cli_kitchensink_v1_relay_proto_oneRecord(m proto.Message) func() ([]byte, e
 	}
 }
 
+// callContext returns the call context, with a --timeout deadline when set.
+func cli_kitchensink_v1_relay_proto_callContext(cmd *cobra.Command) (context.Context, context.CancelFunc) {
+	if d, _ := cmd.Flags().GetDuration("timeout"); d > 0 {
+		return context.WithTimeout(cmd.Context(), d)
+	}
+	return context.WithCancel(cmd.Context())
+}
+
+// An exitError is an error with a process exit code. Error removes the gRPC
+// "rpc error: ..." wrapper.
+type cli_kitchensink_v1_relay_proto_exitError struct {
+	code int
+	err  error
+}
+
+func (e cli_kitchensink_v1_relay_proto_exitError) Error() string {
+	if msg := status.Convert(e.err).Message(); msg != "" {
+		return msg
+	}
+	return e.err.Error()
+}
+func (e cli_kitchensink_v1_relay_proto_exitError) Unwrap() error { return e.err }
+func (e cli_kitchensink_v1_relay_proto_exitError) ExitCode() int { return e.code }
+
+func cli_kitchensink_v1_relay_proto_usage(err error) error {
+	return cli_kitchensink_v1_relay_proto_exitError{2, err}
+}
+
+// callErr maps a failed call to an exit code from its context.
+func cli_kitchensink_v1_relay_proto_callErr(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+	switch ctx.Err() {
+	case context.DeadlineExceeded:
+		return cli_kitchensink_v1_relay_proto_exitError{124, err}
+	case context.Canceled:
+		return cli_kitchensink_v1_relay_proto_exitError{130, err}
+	}
+	return cli_kitchensink_v1_relay_proto_exitError{1, err}
+}
+
 // pumpRequests decodes JSON requests from in, one after another, and sends
 // each request.
 func cli_kitchensink_v1_relay_proto_pumpRequests(ctx context.Context, in io.Reader, errW io.Writer, send func(n int, raw json.RawMessage) error) error {
@@ -419,13 +462,15 @@ func NewRelayServiceCommand(conn grpc.ClientConnInterface, opts ...RelayServiceO
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_relay_proto_outputHelp(printers, defaultOutput))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
+	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_kitchensink_v1_relay_proto_usage(err) })
 	cmd.AddCommand(func() *cobra.Command {
 		sub := &cobra.Command{
 			Use:   "chat",
 			Short: "Chat echoes each note as it arrives.",
 			Long:  "Chat echoes each note as it arrives.\n\nReads JSON requests from stdin, one after another.\n\nThe server may send multiple responses; each prints as it arrives.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -441,8 +486,11 @@ func NewRelayServiceCommand(conn grpc.ClientConnInterface, opts ...RelayServiceO
 				if err != nil {
 					return err
 				}
-				ctx, cancel := context.WithCancel(cmd.Context())
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_relay_proto_callContext(cmd)
 				defer cancel()
+				defer func() { err = cli_kitchensink_v1_relay_proto_callErr(ctx, err) }()
 				stream, err := client.Chat(ctx)
 				if err != nil {
 					return err

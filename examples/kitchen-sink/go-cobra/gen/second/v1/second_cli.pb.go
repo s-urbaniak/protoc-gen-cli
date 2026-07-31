@@ -5,6 +5,7 @@ package v1
 
 import (
 	bytes "bytes"
+	context "context"
 	json "encoding/json"
 	errors "errors"
 	fmt "fmt"
@@ -21,6 +22,7 @@ import (
 	sjson "github.com/tidwall/sjson"
 	term "golang.org/x/term"
 	grpc "google.golang.org/grpc"
+	status "google.golang.org/grpc/status"
 	protojson "google.golang.org/protobuf/encoding/protojson"
 	proto "google.golang.org/protobuf/proto"
 	yaml "sigs.k8s.io/yaml"
@@ -344,6 +346,48 @@ func cli_second_v1_second_proto_oneRecord(m proto.Message) func() ([]byte, error
 	}
 }
 
+// callContext returns the call context, with a --timeout deadline when set.
+func cli_second_v1_second_proto_callContext(cmd *cobra.Command) (context.Context, context.CancelFunc) {
+	if d, _ := cmd.Flags().GetDuration("timeout"); d > 0 {
+		return context.WithTimeout(cmd.Context(), d)
+	}
+	return context.WithCancel(cmd.Context())
+}
+
+// An exitError is an error with a process exit code. Error removes the gRPC
+// "rpc error: ..." wrapper.
+type cli_second_v1_second_proto_exitError struct {
+	code int
+	err  error
+}
+
+func (e cli_second_v1_second_proto_exitError) Error() string {
+	if msg := status.Convert(e.err).Message(); msg != "" {
+		return msg
+	}
+	return e.err.Error()
+}
+func (e cli_second_v1_second_proto_exitError) Unwrap() error { return e.err }
+func (e cli_second_v1_second_proto_exitError) ExitCode() int { return e.code }
+
+func cli_second_v1_second_proto_usage(err error) error {
+	return cli_second_v1_second_proto_exitError{2, err}
+}
+
+// callErr maps a failed call to an exit code from its context.
+func cli_second_v1_second_proto_callErr(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+	switch ctx.Err() {
+	case context.DeadlineExceeded:
+		return cli_second_v1_second_proto_exitError{124, err}
+	case context.Canceled:
+		return cli_second_v1_second_proto_exitError{130, err}
+	}
+	return cli_second_v1_second_proto_exitError{1, err}
+}
+
 // loadInputs returns the request fragments for the -f and -i values.
 // The fragments come in merge order: first the -f documents in argument
 // order, then the -i values. A "-" filename reads stdin. Content selects
@@ -508,13 +552,15 @@ func NewSecondServiceCommand(conn grpc.ClientConnInterface, opts ...SecondServic
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_second_v1_second_proto_outputHelp(printers, defaultOutput))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
+	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_second_v1_second_proto_usage(err) })
 	cmd.AddCommand(func() *cobra.Command {
 		var flagText string
 		sub := &cobra.Command{
 			Use:   "ping",
 			Short: "Ping echoes its text.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -530,6 +576,11 @@ func NewSecondServiceCommand(conn grpc.ClientConnInterface, opts ...SecondServic
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_second_v1_second_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_second_v1_second_proto_callErr(ctx, err) }()
 				frags, err := cli_second_v1_second_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -548,7 +599,7 @@ func NewSecondServiceCommand(conn grpc.ClientConnInterface, opts ...SecondServic
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("second.v1.PingRequest"), cli_second_v1_second_proto_oneRecord(req))
 				}
-				resp, err := client.Ping(cmd.Context(), req)
+				resp, err := client.Ping(ctx, req)
 				if err != nil {
 					return err
 				}

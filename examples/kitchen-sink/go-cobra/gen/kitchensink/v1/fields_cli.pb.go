@@ -5,6 +5,7 @@ package kitchensinkv1
 
 import (
 	bytes "bytes"
+	context "context"
 	json "encoding/json"
 	errors "errors"
 	fmt "fmt"
@@ -21,6 +22,7 @@ import (
 	sjson "github.com/tidwall/sjson"
 	term "golang.org/x/term"
 	grpc "google.golang.org/grpc"
+	status "google.golang.org/grpc/status"
 	protojson "google.golang.org/protobuf/encoding/protojson"
 	proto "google.golang.org/protobuf/proto"
 	yaml "sigs.k8s.io/yaml"
@@ -344,6 +346,62 @@ func cli_kitchensink_v1_fields_proto_oneRecord(m proto.Message) func() ([]byte, 
 	}
 }
 
+// callContext returns the call context, with a --timeout deadline when set.
+func cli_kitchensink_v1_fields_proto_callContext(cmd *cobra.Command) (context.Context, context.CancelFunc) {
+	if d, _ := cmd.Flags().GetDuration("timeout"); d > 0 {
+		return context.WithTimeout(cmd.Context(), d)
+	}
+	return context.WithCancel(cmd.Context())
+}
+
+// An exitError is an error with a process exit code. Error removes the gRPC
+// "rpc error: ..." wrapper.
+type cli_kitchensink_v1_fields_proto_exitError struct {
+	code int
+	err  error
+}
+
+func (e cli_kitchensink_v1_fields_proto_exitError) Error() string {
+	if msg := status.Convert(e.err).Message(); msg != "" {
+		return msg
+	}
+	return e.err.Error()
+}
+func (e cli_kitchensink_v1_fields_proto_exitError) Unwrap() error { return e.err }
+func (e cli_kitchensink_v1_fields_proto_exitError) ExitCode() int { return e.code }
+
+func cli_kitchensink_v1_fields_proto_usage(err error) error {
+	return cli_kitchensink_v1_fields_proto_exitError{2, err}
+}
+
+// callErr maps a failed call to an exit code from its context.
+func cli_kitchensink_v1_fields_proto_callErr(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+	switch ctx.Err() {
+	case context.DeadlineExceeded:
+		return cli_kitchensink_v1_fields_proto_exitError{124, err}
+	case context.Canceled:
+		return cli_kitchensink_v1_fields_proto_exitError{130, err}
+	}
+	return cli_kitchensink_v1_fields_proto_exitError{1, err}
+}
+
+// exclusiveFlags returns a usage error when the caller sets more than one flag.
+func cli_kitchensink_v1_fields_proto_exclusiveFlags(fs *pflag.FlagSet, names ...string) error {
+	var set []string
+	for _, n := range names {
+		if fs.Changed(n) {
+			set = append(set, "--"+n)
+		}
+	}
+	if len(set) > 1 {
+		return cli_kitchensink_v1_fields_proto_usage(fmt.Errorf("%s are mutually exclusive", strings.Join(set, ", ")))
+	}
+	return nil
+}
+
 // loadInputs returns the request fragments for the -f and -i values.
 // The fragments come in merge order: first the -f documents in argument
 // order, then the -i values. A "-" filename reads stdin. Content selects
@@ -652,6 +710,8 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_fields_proto_outputHelp(printers, defaultOutput))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
+	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_kitchensink_v1_fields_proto_usage(err) })
 	cmd.AddCommand(func() *cobra.Command {
 		var flagDoubleField float64
 		var flagFloatField float64
@@ -672,7 +732,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 			Use:   "scalars",
 			Short: "Scalars contains every proto scalar type.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -688,6 +748,11 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_kitchensink_v1_fields_proto_callErr(ctx, err) }()
 				frags, err := cli_kitchensink_v1_fields_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -804,7 +869,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.ScalarsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
 				}
-				resp, err := client.Scalars(cmd.Context(), req)
+				resp, err := client.Scalars(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -871,7 +936,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 			Use:   "messages",
 			Short: "Messages contains every shape of message field.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -887,6 +952,11 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_kitchensink_v1_fields_proto_callErr(ctx, err) }()
 				frags, err := cli_kitchensink_v1_fields_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -1217,7 +1287,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.MessagesRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
 				}
-				resp, err := client.Messages(cmd.Context(), req)
+				resp, err := client.Messages(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -1276,7 +1346,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 			Use:   "repeated",
 			Short: "Repeated contains one repeated field for each element type.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -1292,6 +1362,11 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_kitchensink_v1_fields_proto_callErr(ctx, err) }()
 				frags, err := cli_kitchensink_v1_fields_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -1357,7 +1432,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.RepeatedRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
 				}
-				resp, err := client.Repeated(cmd.Context(), req)
+				resp, err := client.Repeated(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -1389,7 +1464,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 			Use:   "maps",
 			Short: "Maps contains one map field for each value type, plus integer and bool keys.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -1405,6 +1480,11 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_kitchensink_v1_fields_proto_callErr(ctx, err) }()
 				frags, err := cli_kitchensink_v1_fields_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -1566,7 +1646,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.MapsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
 				}
-				resp, err := client.Maps(cmd.Context(), req)
+				resp, err := client.Maps(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -1602,7 +1682,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 			Use:   "wrappers",
 			Short: "Wrappers contains the nine wrapper types plus repeated and map compositions.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -1618,6 +1698,11 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_kitchensink_v1_fields_proto_callErr(ctx, err) }()
 				frags, err := cli_kitchensink_v1_fields_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -1717,7 +1802,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.WrappersRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
 				}
-				resp, err := client.Wrappers(cmd.Context(), req)
+				resp, err := client.Wrappers(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -1749,7 +1834,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 			Use:   "well-known",
 			Short: "WellKnown contains the document-form well-known types.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -1765,6 +1850,11 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_kitchensink_v1_fields_proto_callErr(ctx, err) }()
 				frags, err := cli_kitchensink_v1_fields_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -1826,7 +1916,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.WellKnownRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
 				}
-				resp, err := client.WellKnown(cmd.Context(), req)
+				resp, err := client.WellKnown(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -1853,7 +1943,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 			Use:   "enums",
 			Short: "Enums contains an enum in every shape, plus aliases and a nested enum.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -1869,6 +1959,11 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_kitchensink_v1_fields_proto_callErr(ctx, err) }()
 				frags, err := cli_kitchensink_v1_fields_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -1930,7 +2025,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.EnumsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
 				}
-				resp, err := client.Enums(cmd.Context(), req)
+				resp, err := client.Enums(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -1971,7 +2066,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 			Short: "Oneofs contains a scalar-and-enum oneof, a message-and-scalar oneof, and a single-member oneof.",
 			Long:  "Oneofs contains a scalar-and-enum oneof, a message-and-scalar oneof, and a\nsingle-member oneof.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -1983,10 +2078,21 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.OneofsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
 				}
+				if err := cli_kitchensink_v1_fields_proto_exclusiveFlags(cmd.Flags(), "text", "count", "pick"); err != nil {
+					return err
+				}
+				if err := cli_kitchensink_v1_fields_proto_exclusiveFlags(cmd.Flags(), "outer", "enabled", "when"); err != nil {
+					return err
+				}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_kitchensink_v1_fields_proto_callErr(ctx, err) }()
 				frags, err := cli_kitchensink_v1_fields_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -2142,7 +2248,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.OneofsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
 				}
-				resp, err := client.Oneofs(cmd.Context(), req)
+				resp, err := client.Oneofs(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -2169,8 +2275,6 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		sub.Flags().StringVar(&flagOnly, "only", flagOnly, "")
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
 		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		sub.MarkFlagsMutuallyExclusive("text", "count", "pick")
-		sub.MarkFlagsMutuallyExclusive("outer", "enabled", "when")
 		return sub
 	}())
 	cmd.AddCommand(func() *cobra.Command {
@@ -2181,7 +2285,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 			Use:   "optionals",
 			Short: "Optionals contains proto3 optional fields.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -2197,6 +2301,11 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_kitchensink_v1_fields_proto_callErr(ctx, err) }()
 				frags, err := cli_kitchensink_v1_fields_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -2229,7 +2338,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.OptionalsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
 				}
-				resp, err := client.Optionals(cmd.Context(), req)
+				resp, err := client.Optionals(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -2250,7 +2359,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 			Use:   "collections",
 			Short: "Collections contains two message lists.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -2266,6 +2375,11 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_kitchensink_v1_fields_proto_callErr(ctx, err) }()
 				frags, err := cli_kitchensink_v1_fields_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -2301,7 +2415,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CollectionsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
 				}
-				resp, err := client.Collections(cmd.Context(), req)
+				resp, err := client.Collections(ctx, req)
 				if err != nil {
 					return err
 				}

@@ -331,6 +331,62 @@ func {{ fileIdent }}_oneRecord(m proto.Message) func() ([]byte, error) {
 		return {{ fileIdent }}_marshalJSON(m)
 	}
 }
+
+// callContext returns the call context, with a --timeout deadline when set.
+func {{ fileIdent }}_callContext(cmd *cobra.Command) (context.Context, context.CancelFunc) {
+	if d, _ := cmd.Flags().GetDuration("timeout"); d > 0 {
+		return context.WithTimeout(cmd.Context(), d)
+	}
+	return context.WithCancel(cmd.Context())
+}
+
+// An exitError is an error with a process exit code. Error removes the gRPC
+// "rpc error: ..." wrapper.
+type {{ fileIdent }}_exitError struct {
+	code int
+	err  error
+}
+
+func (e {{ fileIdent }}_exitError) Error() string {
+	if msg := status.Convert(e.err).Message(); msg != "" {
+		return msg
+	}
+	return e.err.Error()
+}
+func (e {{ fileIdent }}_exitError) Unwrap() error { return e.err }
+func (e {{ fileIdent }}_exitError) ExitCode() int { return e.code }
+
+func {{ fileIdent }}_usage(err error) error { return {{ fileIdent }}_exitError{2, err} }
+
+// callErr maps a failed call to an exit code from its context.
+func {{ fileIdent }}_callErr(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+	switch ctx.Err() {
+	case context.DeadlineExceeded:
+		return {{ fileIdent }}_exitError{124, err}
+	case context.Canceled:
+		return {{ fileIdent }}_exitError{130, err}
+	}
+	return {{ fileIdent }}_exitError{1, err}
+}
+{{- if anyOneofGroups }}
+
+// exclusiveFlags returns a usage error when the caller sets more than one flag.
+func {{ fileIdent }}_exclusiveFlags(fs *pflag.FlagSet, names ...string) error {
+	var set []string
+	for _, n := range names {
+		if fs.Changed(n) {
+			set = append(set, "--"+n)
+		}
+	}
+	if len(set) > 1 {
+		return {{ fileIdent }}_usage(fmt.Errorf("%s are mutually exclusive", strings.Join(set, ", ")))
+	}
+	return nil
+}
+{{- end }}
 {{- if anyRequestDocs }}
 
 // loadInputs returns the request fragments for the -f and -i values.
@@ -579,6 +635,8 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface, opts ...{{ $svc.
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", {{ fileIdent }}_outputHelp(printers, defaultOutput))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
+	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return {{ fileIdent }}_usage(err) })
 {{- range $svc.Commands }}
 	cmd.AddCommand(func() *cobra.Command {
 {{- range .Params }}
@@ -599,7 +657,7 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface, opts ...{{ $svc.
 			Hidden: true,
 {{- end }}
 			Args: cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -620,22 +678,26 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface, opts ...{{ $svc.
 					}
 {{- end }}
 					if missing != nil {
-						return fmt.Errorf("missing required flags: %s", strings.Join(missing, ", "))
+						return {{ fileIdent }}_usage(fmt.Errorf("missing required flags: %s", strings.Join(missing, ", ")))
 					}
+				}
+{{- end }}
+{{- range oneofGroups . }}
+				if err := {{ fileIdent }}_exclusiveFlags(cmd.Flags(), {{ quoteJoin . }}); err != nil {
+					return err
 				}
 {{- end }}
 				print, err := outputPrinter(cmd)
 				if err != nil {
 					return err
 				}
-{{- if .ClientStreaming }}
-{{- if .ServerStreaming }}
-				ctx, cancel := context.WithCancel(cmd.Context())
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := {{ fileIdent }}_callContext(cmd)
 				defer cancel()
+				defer func() { err = {{ fileIdent }}_callErr(ctx, err) }()
+{{- if .ClientStreaming }}
 				stream, err := client.{{ .GoName }}(ctx)
-{{- else }}
-				stream, err := client.{{ .GoName }}(cmd.Context())
-{{- end }}
 				if err != nil {
 					return err
 				}
@@ -658,7 +720,7 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface, opts ...{{ $svc.
 {{- else }}
 				// Send returns io.EOF when the server ends the stream early.
 				// The status comes from CloseAndRecv.
-				if err := {{ fileIdent }}_pumpRequests(cmd.Context(), cmd.InOrStdin(), cmd.ErrOrStderr(), send); err != nil && !errors.Is(err, io.EOF) {
+				if err := {{ fileIdent }}_pumpRequests(ctx, cmd.InOrStdin(), cmd.ErrOrStderr(), send); err != nil && !errors.Is(err, io.EOF) {
 					return err
 				}
 				resp, err := stream.CloseAndRecv()
@@ -683,7 +745,7 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface, opts ...{{ $svc.
 					return print(cmd.OutOrStdout(), viewFor({{ printf "%q" .Input.FullName }}), {{ fileIdent }}_oneRecord(req))
 				}
 {{- if .ServerStreaming }}
-				stream, err := client.{{ .GoName }}(cmd.Context(), req)
+				stream, err := client.{{ .GoName }}(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -696,7 +758,7 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface, opts ...{{ $svc.
 				}
 				return print(cmd.OutOrStdout(), viewFor({{ printf "%q" .Output }}), next)
 {{- else }}
-				resp, err := client.{{ .GoName }}(cmd.Context(), req)
+				resp, err := client.{{ .GoName }}(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -714,9 +776,6 @@ func New{{ $svc.GoName }}Command(conn grpc.ClientConnInterface, opts ...{{ $svc.
 {{- if not .ClientStreaming }}
 		{{ fileIdent }}_addInputFlags(sub.Flags(), decoders)
 		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-{{- end }}
-{{- range oneofGroups . }}
-		sub.MarkFlagsMutuallyExclusive({{ quoteJoin . }})
 {{- end }}
 		return sub
 	}())

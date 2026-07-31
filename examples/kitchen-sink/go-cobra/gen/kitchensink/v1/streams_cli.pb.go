@@ -22,6 +22,7 @@ import (
 	sjson "github.com/tidwall/sjson"
 	term "golang.org/x/term"
 	grpc "google.golang.org/grpc"
+	status "google.golang.org/grpc/status"
 	protojson "google.golang.org/protobuf/encoding/protojson"
 	proto "google.golang.org/protobuf/proto"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -346,6 +347,48 @@ func cli_kitchensink_v1_streams_proto_oneRecord(m proto.Message) func() ([]byte,
 	}
 }
 
+// callContext returns the call context, with a --timeout deadline when set.
+func cli_kitchensink_v1_streams_proto_callContext(cmd *cobra.Command) (context.Context, context.CancelFunc) {
+	if d, _ := cmd.Flags().GetDuration("timeout"); d > 0 {
+		return context.WithTimeout(cmd.Context(), d)
+	}
+	return context.WithCancel(cmd.Context())
+}
+
+// An exitError is an error with a process exit code. Error removes the gRPC
+// "rpc error: ..." wrapper.
+type cli_kitchensink_v1_streams_proto_exitError struct {
+	code int
+	err  error
+}
+
+func (e cli_kitchensink_v1_streams_proto_exitError) Error() string {
+	if msg := status.Convert(e.err).Message(); msg != "" {
+		return msg
+	}
+	return e.err.Error()
+}
+func (e cli_kitchensink_v1_streams_proto_exitError) Unwrap() error { return e.err }
+func (e cli_kitchensink_v1_streams_proto_exitError) ExitCode() int { return e.code }
+
+func cli_kitchensink_v1_streams_proto_usage(err error) error {
+	return cli_kitchensink_v1_streams_proto_exitError{2, err}
+}
+
+// callErr maps a failed call to an exit code from its context.
+func cli_kitchensink_v1_streams_proto_callErr(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+	switch ctx.Err() {
+	case context.DeadlineExceeded:
+		return cli_kitchensink_v1_streams_proto_exitError{124, err}
+	case context.Canceled:
+		return cli_kitchensink_v1_streams_proto_exitError{130, err}
+	}
+	return cli_kitchensink_v1_streams_proto_exitError{1, err}
+}
+
 // loadInputs returns the request fragments for the -f and -i values.
 // The fragments come in merge order: first the -f documents in argument
 // order, then the -i values. A "-" filename reads stdin. Content selects
@@ -565,6 +608,8 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 	}
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_streams_proto_outputHelp(printers, defaultOutput))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
+	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_kitchensink_v1_streams_proto_usage(err) })
 	cmd.AddCommand(func() *cobra.Command {
 		var flagText string
 		var flagCount int64
@@ -572,7 +617,7 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 			Use:   "unary",
 			Short: "Unary echoes the text once.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -588,6 +633,11 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_streams_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_kitchensink_v1_streams_proto_callErr(ctx, err) }()
 				frags, err := cli_kitchensink_v1_streams_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -613,7 +663,7 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.StreamsRequest"), cli_kitchensink_v1_streams_proto_oneRecord(req))
 				}
-				resp, err := client.Unary(cmd.Context(), req)
+				resp, err := client.Unary(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -634,7 +684,7 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 			Short: "ServerStream echoes the text the requested number of times.",
 			Long:  "ServerStream echoes the text the requested number of times.\n\nThe server may send multiple responses; each prints as it arrives.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -650,6 +700,11 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_streams_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_kitchensink_v1_streams_proto_callErr(ctx, err) }()
 				frags, err := cli_kitchensink_v1_streams_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -675,7 +730,7 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.StreamsRequest"), cli_kitchensink_v1_streams_proto_oneRecord(req))
 				}
-				stream, err := client.ServerStream(cmd.Context(), req)
+				stream, err := client.ServerStream(ctx, req)
 				if err != nil {
 					return err
 				}
@@ -701,7 +756,7 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 			Short: "ClientStream counts the streamed requests.",
 			Long:  "ClientStream counts the streamed requests.\n\nReads JSON requests from stdin, one after another.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -717,7 +772,12 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 				if err != nil {
 					return err
 				}
-				stream, err := client.ClientStream(cmd.Context())
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_streams_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_kitchensink_v1_streams_proto_callErr(ctx, err) }()
+				stream, err := client.ClientStream(ctx)
 				if err != nil {
 					return err
 				}
@@ -730,7 +790,7 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 				}
 				// Send returns io.EOF when the server ends the stream early.
 				// The status comes from CloseAndRecv.
-				if err := cli_kitchensink_v1_streams_proto_pumpRequests(cmd.Context(), cmd.InOrStdin(), cmd.ErrOrStderr(), send); err != nil && !errors.Is(err, io.EOF) {
+				if err := cli_kitchensink_v1_streams_proto_pumpRequests(ctx, cmd.InOrStdin(), cmd.ErrOrStderr(), send); err != nil && !errors.Is(err, io.EOF) {
 					return err
 				}
 				resp, err := stream.CloseAndRecv()
@@ -748,7 +808,7 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 			Short: "BidiStream echoes each request as it arrives.",
 			Long:  "BidiStream echoes each request as it arrives.\n\nReads JSON requests from stdin, one after another.\n\nThe server may send multiple responses; each prints as it arrives.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -764,8 +824,11 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 				if err != nil {
 					return err
 				}
-				ctx, cancel := context.WithCancel(cmd.Context())
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_streams_proto_callContext(cmd)
 				defer cancel()
+				defer func() { err = cli_kitchensink_v1_streams_proto_callErr(ctx, err) }()
 				stream, err := client.BidiStream(ctx)
 				if err != nil {
 					return err
@@ -795,7 +858,7 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 			Short: "EmptyStream streams a fixed batch of responses.",
 			Long:  "EmptyStream streams a fixed batch of responses.\n\nA generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:\n\n    service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe server may send multiple responses; each prints as it arrives.",
 			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) error {
+			RunE: func(cmd *cobra.Command, _ []string) (err error) {
 				if example, _ := cmd.Flags().GetBool("example"); example {
 					print, err := outputPrinter(cmd)
 					if err != nil {
@@ -811,6 +874,11 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 				if err != nil {
 					return err
 				}
+				// Set after the checks above, so they keep cobra's usage.
+				cmd.SilenceUsage = true
+				ctx, cancel := cli_kitchensink_v1_streams_proto_callContext(cmd)
+				defer cancel()
+				defer func() { err = cli_kitchensink_v1_streams_proto_callErr(ctx, err) }()
 				frags, err := cli_kitchensink_v1_streams_proto_loadInputs(decoders, cmd)
 				if err != nil {
 					return err
@@ -822,7 +890,7 @@ func NewStreamsServiceCommand(conn grpc.ClientConnInterface, opts ...StreamsServ
 				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
 					return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_kitchensink_v1_streams_proto_oneRecord(req))
 				}
-				stream, err := client.EmptyStream(cmd.Context(), req)
+				stream, err := client.EmptyStream(ctx, req)
 				if err != nil {
 					return err
 				}
