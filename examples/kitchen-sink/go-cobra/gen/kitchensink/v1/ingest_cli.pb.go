@@ -432,7 +432,9 @@ func NewIngestServiceCommand(conn grpc.ClientConnInterface, opts ...IngestServic
 		Use:   "ingest",
 		Short: "IngestService counts what it receives.",
 	}
+	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_ingest_proto_outputHelp(printers, defaultOutput))
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(slices.Sorted(maps.Keys(printers)), cobra.ShellCompDirectiveNoFileComp))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
 	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_kitchensink_v1_ingest_proto_usage(err) })
@@ -449,7 +451,7 @@ func NewIngestServiceCommand(conn grpc.ClientConnInterface, opts ...IngestServic
 						return err
 					}
 					req := &IngestRecord{}
-					if err := protojson.Unmarshal([]byte("{\"text\":\"Protect the number under uninterested load.\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"text\":\"Mind the year, then celebrate!\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.IngestRecord"), cli_kitchensink_v1_ingest_proto_oneRecord(req))
@@ -458,7 +460,7 @@ func NewIngestServiceCommand(conn grpc.ClientConnInterface, opts ...IngestServic
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_ingest_proto_callContext(cmd)
 				defer cancel()
@@ -501,7 +503,7 @@ func NewIngestServiceCommand(conn grpc.ClientConnInterface, opts ...IngestServic
 						return err
 					}
 					req := &v1.ImportedRequest{}
-					if err := protojson.Unmarshal([]byte("{\"id\":\"b84fb46b-9fe3-4aff-8b5a-111c601e3d1a\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"id\":\"Mind the year, then celebrate!\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("imported.v1.ImportedRequest"), cli_kitchensink_v1_ingest_proto_oneRecord(req))
@@ -510,7 +512,7 @@ func NewIngestServiceCommand(conn grpc.ClientConnInterface, opts ...IngestServic
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_ingest_proto_callContext(cmd)
 				defer cancel()

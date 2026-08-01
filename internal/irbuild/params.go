@@ -13,13 +13,13 @@ import (
 // messageBinds contains the message types that protojson shows as one JSON
 // value.
 var messageBinds = map[protoreflect.FullName]ir.Bind{
-	"google.protobuf.Timestamp": ir.BindString,
-	"google.protobuf.Duration":  ir.BindString,
-	"google.protobuf.FieldMask": ir.BindString,
+	"google.protobuf.Timestamp": ir.BindTimestamp,
+	"google.protobuf.Duration":  ir.BindDuration,
+	"google.protobuf.FieldMask": ir.BindFieldMask,
 
 	"google.protobuf.BoolValue":   ir.BindBool,
 	"google.protobuf.StringValue": ir.BindString,
-	"google.protobuf.BytesValue":  ir.BindString,
+	"google.protobuf.BytesValue":  ir.BindBytes,
 	"google.protobuf.Int32Value":  ir.BindInt,
 	"google.protobuf.Int64Value":  ir.BindInt,
 	"google.protobuf.UInt32Value": ir.BindUint,
@@ -29,15 +29,15 @@ var messageBinds = map[protoreflect.FullName]ir.Bind{
 
 	"google.protobuf.Struct":    ir.BindJSON,
 	"google.protobuf.Value":     ir.BindJSON,
-	"google.protobuf.ListValue": ir.BindJSON,
-	"google.protobuf.Any":       ir.BindJSON,
+	"google.protobuf.ListValue": ir.BindList,
+	"google.protobuf.Any":       ir.BindAny,
 	"google.protobuf.Empty":     ir.BindJSON,
 }
 
 var scalarBinds = map[protoreflect.Kind]ir.Bind{
 	protoreflect.BoolKind:     ir.BindBool,
 	protoreflect.StringKind:   ir.BindString,
-	protoreflect.BytesKind:    ir.BindString,
+	protoreflect.BytesKind:    ir.BindBytes,
 	protoreflect.Int32Kind:    ir.BindInt,
 	protoreflect.Sint32Kind:   ir.BindInt,
 	protoreflect.Sfixed32Kind: ir.BindInt,

@@ -10,8 +10,8 @@ import (
 	"github.com/braveokafor/proto-to-cli/internal/ir"
 )
 
-// RenderTemplate executes a template with model as its data. When override
-// is set, RenderTemplate parses that file instead.
+// RenderTemplate executes a template with model as its data. A non-empty
+// override names a file to parse instead.
 func RenderTemplate(
 	templateFS fs.FS,
 	name, override string,

@@ -404,9 +404,9 @@ func cli_bookstore_annotated_v1_bookstore_proto_exclusiveFlags(fs *pflag.FlagSet
 }
 
 // loadInputs returns the request fragments for the -f and -i values.
-// The fragments come in merge order: first the -f documents in argument
-// order, then the -i values. A "-" filename reads stdin. Content selects
-// the format of each input. loadInputs skips empty inputs.
+// The fragments come in merge order. The -f documents come first, in
+// argument order. The -i values follow. A "-" filename reads stdin.
+// Content selects the format of each input. loadInputs skips empty inputs.
 func cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders []cli_bookstore_annotated_v1_bookstore_proto_decoder, cmd *cobra.Command) ([]cli_bookstore_annotated_v1_bookstore_proto_fragment, error) {
 	files, _ := cmd.Flags().GetStringArray("filename")
 	inline, _ := cmd.Flags().GetStringArray("input")
@@ -486,6 +486,7 @@ func cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(fs *pflag.FlagSet,
 	fs.StringArrayP("filename", "f", nil,
 		"Request body from a file ("+formats+"), or '-' for stdin.\n"+
 			"Repeatable; -f files, -i values, and flags merge in that order.")
+	_ = cobra.MarkFlagFilename(fs, "filename", "json", "yaml", "yml")
 	fs.StringArrayP("input", "i", nil,
 		"Request body inline ("+formats+").\n"+
 			"Repeatable; merges after -f files and before flags.")
@@ -641,7 +642,9 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 		Long:    "A simple Bookstore API.\n\nThe API manages shelves and books resources. Shelves contain books.",
 		Aliases: []string{"books"},
 	}
+	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
 	cmd.PersistentFlags().StringP("output", "o", "", cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers, defaultOutput))
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(slices.Sorted(maps.Keys(printers)), cobra.ShellCompDirectiveNoFileComp))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
 	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_bookstore_annotated_v1_bookstore_proto_usage(err) })
@@ -668,7 +671,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
 				defer cancel()
@@ -709,7 +712,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 						return err
 					}
 					req := &CreateShelfRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":{\"id\":\"9172393864939720632\",\"theme\":\"Celebrate wins tied to the group.\"}}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"shelf\":{\"id\":\"998\",\"theme\":\"Protect the number under uninterested load.\"}}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
@@ -718,7 +721,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
 				defer cancel()
@@ -770,7 +773,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 						return err
 					}
 					req := &GetShelfRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.GetShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
@@ -779,7 +782,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
 				defer cancel()
@@ -829,7 +832,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 						return err
 					}
 					req := &DeleteShelfRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.DeleteShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
@@ -838,7 +841,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
 				defer cancel()
@@ -887,7 +890,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 						return err
 					}
 					req := &ListBooksRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListBooksRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
@@ -896,7 +899,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
 				defer cancel()
@@ -948,7 +951,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 						return err
 					}
 					req := &CreateBookRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\",\"book\":{\"id\":\"1890700816702069259\",\"author\":\"Launch the world midweek for clarity.\",\"title\":\"Usher\"}}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Celebrate wins tied to the group.\",\"title\":\"Up to the company, we chase a smaller woman.\"}}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
@@ -969,7 +972,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
 				defer cancel()
@@ -1046,7 +1049,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 						return err
 					}
 					req := &GetBookRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\",\"book\":\"1890700816702069259\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\",\"book\":\"103\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.GetBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
@@ -1067,7 +1070,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
 				defer cancel()
@@ -1126,7 +1129,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 						return err
 					}
 					req := &DeleteBookRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\",\"book\":\"1890700816702069259\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\",\"book\":\"103\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.DeleteBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
@@ -1135,7 +1138,7 @@ func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...Bookstore
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
 				defer cancel()
@@ -1282,7 +1285,9 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 		Use:   "auctions",
 		Short: "AuctionsService sells the store's rare books under the hammer.",
 	}
+	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
 	cmd.PersistentFlags().StringP("output", "o", "", cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers, defaultOutput))
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(slices.Sorted(maps.Keys(printers)), cobra.ShellCompDirectiveNoFileComp))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
 	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_bookstore_annotated_v1_bookstore_proto_usage(err) })
@@ -1311,7 +1316,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 						return err
 					}
 					req := &CreateAuctionRequest{}
-					if err := protojson.Unmarshal([]byte("{\"lot\":{\"id\":\"9172393864939720632\",\"book\":{\"id\":\"1890700816702069259\",\"author\":\"Launch the world midweek for clarity.\",\"title\":\"Usher\"},\"condition\":\"CONDITION_FAIR\",\"reservePrice\":0.7852299356682814,\"provenance\":[\"Theirs life has ready for fiction.\",\"The colorful hand being unexpectedly fondly.\"],\"flaws\":[{\"kind\":\"The friendship does be uptight enough.\",\"detail\":\"Continuously measure the company and answer the outliers.\"},{\"kind\":\"The solitude must be fancy far.\",\"detail\":\"Defaults at Genability did shape day.\"},{\"kind\":\"Review the fact every 4 weeks.\",\"detail\":\"Publish a changelog entry for the child.\"}],\"attributes\":{\"include\":\"Hers problem did ready for horror.\",\"what\":\"Mornings in St. Paul favor company.\",\"year\":\"Carefully switch the elephant patiently.\"},\"consignor\":{\"name\":\"Janice\",\"address\":{\"street\":\"713 Lake Mountainsburgh\",\"city\":\"Albuquerque\",\"country\":{\"code\":\"Weekends reserve time for Embroidery and child.\",\"name\":\"Isabelle\"}}}},\"startsAt\":\"1908-08-21T20:24:56.928378544Z\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"lot\":{\"id\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Celebrate wins tied to the group.\",\"title\":\"Up to the company, we chase a smaller woman.\"},\"condition\":\"CONDITION_FINE\",\"reservePrice\":297,\"provenance\":[\"Theirs life has ready for fiction.\"],\"flaws\":[{\"kind\":\"Publish a changelog entry for the way.\",\"detail\":\"Consistent hand being the foundation of thrill.\"}],\"attributes\":{\"in\":\"Sample government at 9s intervals.\"},\"consignor\":{\"name\":\"Subtle MediumAquaMarine accents is effective somewhat.\",\"address\":{\"street\":\"Carefully carry the bakery painfully.\",\"city\":\"Share the decision record for the life.\",\"country\":{\"code\":\"Nevertheless, keep the thing simple.\",\"name\":\"Nobody float when the thing spikes.\"}}}},\"startsAt\":\"2029-03-15T22:28:26Z\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateAuctionRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
@@ -1329,7 +1334,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
 				defer cancel()
@@ -1473,6 +1478,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 		sub.Flags().StringVarP(&flagLotBookAuthor, "book.author", "a", flagLotBookAuthor, "An author of the book.")
 		sub.Flags().StringVarP(&flagLotBookTitle, "book.title", "t", flagLotBookTitle, "A book title. (required)")
 		sub.Flags().StringVar(&flagLotCondition, "condition", flagLotCondition, "(values: CONDITION_UNSPECIFIED | CONDITION_FINE | CONDITION_VERY_GOOD | CONDITION_GOOD | CONDITION_FAIR | CONDITION_POOR)")
+		_ = sub.RegisterFlagCompletionFunc("condition", cobra.FixedCompletions([]string{"CONDITION_UNSPECIFIED", "CONDITION_FINE", "CONDITION_VERY_GOOD", "CONDITION_GOOD", "CONDITION_FAIR", "CONDITION_POOR"}, cobra.ShellCompDirectiveNoFileComp))
 		sub.Flags().Float64Var(&flagLotReservePrice, "reserve", flagLotReservePrice, "")
 		sub.Flags().StringArrayVar(&flagLotProvenance, "provenance", flagLotProvenance, "Chain of custody, oldest first.")
 		sub.Flags().StringArrayVar(&flagLotFlaws, "flaws", flagLotFlaws, "")
@@ -1498,7 +1504,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 						return err
 					}
 					req := &ListAuctionsRequest{}
-					if err := protojson.Unmarshal([]byte("{\"state\":\"AUCTION_STATE_SETTLED\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"state\":\"AUCTION_STATE_SCHEDULED\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListAuctionsRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
@@ -1507,7 +1513,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
 				defer cancel()
@@ -1538,6 +1544,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 			},
 		}
 		sub.Flags().StringVar(&flagState, "state", flagState, "(values: AUCTION_STATE_UNSPECIFIED | AUCTION_STATE_SCHEDULED | AUCTION_STATE_OPEN | AUCTION_STATE_HAMMERED | AUCTION_STATE_SETTLED)")
+		_ = sub.RegisterFlagCompletionFunc("state", cobra.FixedCompletions([]string{"AUCTION_STATE_UNSPECIFIED", "AUCTION_STATE_SCHEDULED", "AUCTION_STATE_OPEN", "AUCTION_STATE_HAMMERED", "AUCTION_STATE_SETTLED"}, cobra.ShellCompDirectiveNoFileComp))
 		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
 		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
@@ -1558,7 +1565,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 						return err
 					}
 					req := &WatchAuctionRequest{}
-					if err := protojson.Unmarshal([]byte("{\"auction\":\"1890700816702069259\",\"limit\":1854751411}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"auction\":\"103\",\"limit\":864}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.WatchAuctionRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
@@ -1570,7 +1577,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
 				defer cancel()
@@ -1642,7 +1649,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 						return err
 					}
 					req := &PlaceBidRequest{}
-					if err := protojson.Unmarshal([]byte("{\"auction\":\"9172393864939720632\",\"amount\":0.9099579380225021}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"auction\":\"998\",\"amount\":103}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.PlaceBidRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
@@ -1651,7 +1658,7 @@ func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsSe
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
 				defer cancel()
@@ -1761,7 +1768,9 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 		Short:  "InventoryService is the back office's stock system.",
 		Hidden: true,
 	}
+	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
 	cmd.PersistentFlags().StringP("output", "o", "", cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers, defaultOutput))
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(slices.Sorted(maps.Keys(printers)), cobra.ShellCompDirectiveNoFileComp))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
 	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_bookstore_annotated_v1_bookstore_proto_usage(err) })
@@ -1778,7 +1787,7 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 						return err
 					}
 					req := &ImportBooksRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\",\"book\":{\"id\":\"1890700816702069259\",\"author\":\"Launch the world midweek for clarity.\",\"title\":\"Usher\"}}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Celebrate wins tied to the group.\",\"title\":\"Up to the company, we chase a smaller woman.\"}}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ImportBooksRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
@@ -1787,7 +1796,7 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
 				defer cancel()
@@ -1832,7 +1841,7 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 						return err
 					}
 					req := &ExportReportRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"9172393864939720632\",\"filename\":\"Antonio\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\",\"filename\":\"Protect the number under uninterested load.\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ExportReportRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
@@ -1841,7 +1850,7 @@ func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...Inventory
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
 				defer cancel()

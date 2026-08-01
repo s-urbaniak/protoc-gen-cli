@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/braveokafor/proto-to-cli/internal/ir"
-	cliv0 "github.com/braveokafor/proto-to-cli/proto/cli/v0"
+	cliv1 "github.com/braveokafor/proto-to-cli/proto/cli/v1"
 	"github.com/tidwall/gjson"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
@@ -45,7 +45,7 @@ func buildView(md protoreflect.MessageDescriptor, opts Options) *ir.View {
 		return cols
 	}
 
-	// The declared (cli.v0.view) fields of a message replace its derived
+	// The declared (cli.v1.view) fields of a message replace its derived
 	// fields in all of its views. Its expand_depth tunes the derived walk.
 	fieldsFor := func(md protoreflect.MessageDescriptor, top bool) []*ir.ViewField {
 		vo := viewOptions(md)
@@ -84,7 +84,7 @@ func buildView(md protoreflect.MessageDescriptor, opts Options) *ir.View {
 
 func declaredFields(
 	md protoreflect.MessageDescriptor,
-	declared []*cliv0.ViewField,
+	declared []*cliv1.ViewField,
 	warn func(string),
 ) []*ir.ViewField {
 	var cols []*ir.ViewField

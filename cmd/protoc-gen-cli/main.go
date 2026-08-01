@@ -7,6 +7,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"slices"
 	"strings"
 
@@ -20,6 +21,18 @@ import (
 
 // The -ldflags option sets version at build time. The default is "dev".
 var version = "dev"
+
+func resolveVersion() string {
+	if version != "dev" {
+		return version
+	}
+	if info, ok := debug.ReadBuildInfo(); ok {
+		if v := info.Main.Version; v != "" && v != "(devel)" {
+			return v
+		}
+	}
+	return version
+}
 
 // Config contains the inputs of one invocation.
 type Config struct {
@@ -36,13 +49,14 @@ type Config struct {
 }
 
 func main() {
+	ver := resolveVersion()
 	if len(os.Args) == 2 && (os.Args[1] == "-version" || os.Args[1] == "--version") {
-		fmt.Printf("%v %v\n", filepath.Base(os.Args[0]), version)
+		fmt.Printf("%v %v\n", filepath.Base(os.Args[0]), ver)
 		os.Exit(0)
 	}
 
 	var cfg Config
-	cfg.Version = version
+	cfg.Version = ver
 	cfg.Targets = map[string]target.Target{
 		"gocobra": gocobra.Generate,
 	}

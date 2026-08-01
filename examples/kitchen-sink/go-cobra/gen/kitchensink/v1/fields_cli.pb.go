@@ -403,9 +403,9 @@ func cli_kitchensink_v1_fields_proto_exclusiveFlags(fs *pflag.FlagSet, names ...
 }
 
 // loadInputs returns the request fragments for the -f and -i values.
-// The fragments come in merge order: first the -f documents in argument
-// order, then the -i values. A "-" filename reads stdin. Content selects
-// the format of each input. loadInputs skips empty inputs.
+// The fragments come in merge order. The -f documents come first, in
+// argument order. The -i values follow. A "-" filename reads stdin.
+// Content selects the format of each input. loadInputs skips empty inputs.
 func cli_kitchensink_v1_fields_proto_loadInputs(decoders []cli_kitchensink_v1_fields_proto_decoder, cmd *cobra.Command) ([]cli_kitchensink_v1_fields_proto_fragment, error) {
 	files, _ := cmd.Flags().GetStringArray("filename")
 	inline, _ := cmd.Flags().GetStringArray("input")
@@ -485,6 +485,7 @@ func cli_kitchensink_v1_fields_proto_addInputFlags(fs *pflag.FlagSet, decoders [
 	fs.StringArrayP("filename", "f", nil,
 		"Request body from a file ("+formats+"), or '-' for stdin.\n"+
 			"Repeatable; -f files, -i values, and flags merge in that order.")
+	_ = cobra.MarkFlagFilename(fs, "filename", "json", "yaml", "yml")
 	fs.StringArrayP("input", "i", nil,
 		"Request body inline ("+formats+").\n"+
 			"Repeatable; merges after -f files and before flags.")
@@ -708,7 +709,9 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		Short: "FieldsService echoes each request.",
 		Long:  "FieldsService echoes each request. Thus the response shows exactly what\narrived.",
 	}
+	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_fields_proto_outputHelp(printers, defaultOutput))
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(slices.Sorted(maps.Keys(printers)), cobra.ShellCompDirectiveNoFileComp))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
 	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_kitchensink_v1_fields_proto_usage(err) })
@@ -739,7 +742,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 						return err
 					}
 					req := &ScalarsRequest{}
-					if err := protojson.Unmarshal([]byte("{\"doubleField\":0.3402859786606234,\"floatField\":0.23874474,\"int32Field\":1854751411,\"int64Field\":\"7618499319381327068\",\"uint32Field\":1225739722,\"uint64Field\":\"17230347383051557718\",\"sint32Field\":1744610128,\"sint64Field\":\"1952627761515405933\",\"fixed32Field\":2373109660,\"fixed64Field\":\"5471171549183000348\",\"sfixed32Field\":814989980,\"sfixed64Field\":\"8957623386525274346\",\"boolField\":true,\"stringField\":\"Weekly, I tweak the way with way.\",\"bytesField\":\"TW9ybmluZ3MgaW4gTmFzaHZpbGxlLURhdmlkc29uLCBhZnRlcm5vb25zIGluIHBvcC11cC4=\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"doubleField\":998,\"floatField\":103,\"int32Field\":864,\"int64Field\":\"913\",\"uint32Field\":286,\"uint64Field\":\"935\",\"sint32Field\":813,\"sint64Field\":\"106\",\"fixed32Field\":553,\"fixed64Field\":\"297\",\"sfixed32Field\":380,\"sfixed64Field\":\"986\",\"boolField\":true,\"stringField\":\"Few agree when the number spikes.\",\"bytesField\":\"VGhlIGNvbG9yZnVsIGhhbmQgYmVpbmcgdW5leHBlY3RlZGx5IGZvbmRseS4=\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.ScalarsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
@@ -748,7 +751,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
 				defer cancel()
@@ -943,7 +946,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 						return err
 					}
 					req := &MessagesRequest{}
-					if err := protojson.Unmarshal([]byte("{}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"outer\":{\"stringLeaf\":\"Mind the year, then celebrate!\",\"int64Leaf\":\"864\",\"middle\":{\"leaf\":\"Launch the world midweek for clarity.\",\"inner\":{\"leaf\":\"Retire outdated company each quarter.\",\"deep\":{\"leaf\":\"Protect the woman under enthusiastic load.\",\"deeper\":{\"leaf\":\"Theirs life has ready for fiction.\",\"deepest\":{\"leaf\":\"Publish a changelog entry for the way.\"}}}}}},\"kebabOuter\":{\"stringLeaf\":\"Consistent hand being the foundation of thrill.\",\"int64Leaf\":\"602\",\"middle\":{\"leaf\":\"Write the one-sentence summary for the way.\",\"inner\":{\"leaf\":\"One wake when the day spikes.\",\"deep\":{\"leaf\":\"Attribute gains to year where possible.\",\"deeper\":{\"leaf\":\"Surface risks around the time barely.\",\"deepest\":{\"leaf\":\"The solitude must be fancy far.\"}}}}}},\"timestamp\":\"2026-02-21T12:14:50Z\",\"outers\":[{\"stringLeaf\":\"Defaults at Genability did shape day.\",\"int64Leaf\":\"202\",\"middle\":{\"leaf\":\"Review the fact every 4 weeks.\",\"inner\":{\"leaf\":\"Alert on number thresholds today.\",\"deep\":{\"leaf\":\"Compare group before and after you encourage.\",\"deeper\":{\"leaf\":\"The advantage were be smiling most.\",\"deepest\":{\"leaf\":\"The thing am sleepy.\"}}}}}}],\"labels\":{\"hand\":\"Depending on the hand, we swallow a smaller woman.\"},\"duration\":\"2258s\",\"struct\":{},\"recursive\":{\"name\":\"Warm starts beat cold place.\",\"next\":{}},\"odd\":{\"even\":{\"odd\":{}}}}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.MessagesRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
@@ -952,7 +955,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
 				defer cancel()
@@ -1353,7 +1356,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 						return err
 					}
 					req := &RepeatedRequest{}
-					if err := protojson.Unmarshal([]byte("{\"strings\":[\"Celebrate wins tied to the group.\",\"Retire outdated company each quarter.\",\"Establish a baseline for world.\",\"Onward to better life!\"],\"bools\":[true,true],\"uints\":[\"2305084656860551744\",\"2874873491405036954\",\"6643548458091912998\",\"4642773343372291130\"],\"doubles\":[0.03904819806684712],\"timestamps\":[\"1917-05-22T22:10:35.086061615Z\",\"2003-01-03T03:33:46.333584603Z\",\"1933-08-07T08:34:11.201304448Z\"],\"outers\":[{\"stringLeaf\":\"Weekly, she tweak the child with work.\",\"int64Leaf\":\"7051134352706333876\",\"middle\":{\"leaf\":\"The advantage were be smiling most.\",\"inner\":{\"leaf\":\"Steady angry progress in Chandler been visible.\",\"deep\":{\"leaf\":\"His woman does ready for rhythm.\"}}}},{\"stringLeaf\":\"Warm starts beat cold place.\",\"int64Leaf\":\"262808238379507306\",\"middle\":{\"leaf\":\"Consistent problem should the foundation of belief.\",\"inner\":{\"leaf\":\"Surface risks around the woman far.\",\"deep\":{\"leaf\":\"Scope the group to fit the moment.\"}}}},{\"stringLeaf\":\"Subtle Orange accents shall effective deeply.\",\"int64Leaf\":\"4499584838742953873\",\"middle\":{\"leaf\":\"Visualize man for faster decisions.\",\"inner\":{\"leaf\":\"Steady upset progress in Boston could visible.\",\"deep\":{\"leaf\":\"Consistent hand be the foundation of riches.\"}}}},{\"stringLeaf\":\"Meanwhile the review, she brush the week.\",\"int64Leaf\":\"3046889756581195750\",\"middle\":{\"leaf\":\"Before launch, they ski now.\",\"inner\":{\"leaf\":\"Aha! Great progress on child!\",\"deep\":{\"leaf\":\"Prefer predictable way over surprising year.\"}}}}]}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"strings\":[\"Mind the year, then celebrate!\"],\"bools\":[true],\"ints\":[\"864\"],\"uints\":[\"913\"],\"doubles\":[286],\"timestamps\":[\"2029-05-05T02:49:15Z\"],\"outers\":[{\"stringLeaf\":\"Surface risks around the year much.\",\"int64Leaf\":\"297\",\"middle\":{\"leaf\":\"Theirs life has ready for fiction.\",\"inner\":{\"leaf\":\"Publish a changelog entry for the way.\",\"deep\":{\"leaf\":\"Consistent hand being the foundation of thrill.\",\"deeper\":{\"leaf\":\"Sample government at 9s intervals.\",\"deepest\":{\"leaf\":\"One wake when the day spikes.\"}}}}}}]}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.RepeatedRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
@@ -1362,7 +1365,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
 				defer cancel()
@@ -1471,7 +1474,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 						return err
 					}
 					req := &MapsRequest{}
-					if err := protojson.Unmarshal([]byte("{\"stringValues\":{\"Celebrate wins tied to the group.\":\"Retire outdated company each quarter.\",\"Choose talented defaults.\":\"Consistent hand being the foundation of thrill.\",\"Establish a baseline for world.\":\"Onward to better life!\",\"Write the one-sentence summary for the way.\":\"Decompose problem into smaller day.\"},\"boolValues\":{\"Set a realistic target for government.\":true,\"Surface risks around the time barely.\":true},\"int64Values\":{\"Compare thing before and after you honour.\":\"1401657792888685950\"},\"doubleValues\":{\"Onward to better part!\":0.6960523510631607},\"timestampValues\":{\"Clarify ownership of the world later.\":\"1947-10-18T13:22:37.952346579Z\",\"Compare group before and after you encourage.\":\"1917-11-21T19:32:06.202165772Z\",\"Deliberately petrify the way.\":\"2019-09-04T07:48:32.272673051Z\",\"Scope the group to fit the moment.\":\"1949-03-23T14:09:14.484701900Z\"},\"outerValues\":{\"Aha! Great progress on child!\":{\"stringLeaf\":\"Prefer predictable way over surprising year.\",\"int64Leaf\":\"9058234864823221502\",\"middle\":{\"leaf\":\"Short feedback loops wait government boldly.\",\"inner\":{\"leaf\":\"Compose time from simple parts.\",\"deep\":{\"leaf\":\"Choose elated defaults.\"}}}},\"The black number will unexpectedly eagerly.\":{\"stringLeaf\":\"Write the one-sentence summary for the world.\",\"int64Leaf\":\"1002874920726959468\",\"middle\":{\"leaf\":\"In the first place, document the life and grab the rest.\",\"inner\":{\"leaf\":\"Clarify ownership of the place soon.\",\"deep\":{\"leaf\":\"Attribute gains to part where possible.\"}}}},\"What ski quickly edify the fact.\":{\"stringLeaf\":\"Consistent hand be the foundation of riches.\",\"int64Leaf\":\"7249697207759864471\",\"middle\":{\"leaf\":\"Align place with user intent.\",\"inner\":{\"leaf\":\"Instrument the week for observability.\",\"deep\":{\"leaf\":\"Before launch, they ski now.\"}}}}},\"int64Keys\":{\"3779139473584860971\":\"Balance easy-clean with eye.\",\"5602244425874985894\":\"Share the decision record for the case.\"},\"boolKeys\":{\"true\":\"Many preen when the life spikes.\"}}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"stringValues\":{\"itself\":\"Mind the year, then celebrate!\"},\"boolValues\":{\"still\":true},\"int64Values\":{\"her\":\"813\"},\"uint64Values\":{\"without\":\"297\"},\"doubleValues\":{\"while\":351},\"timestampValues\":{\"how\":\"2021-04-01T11:23:44Z\"},\"outerValues\":{\"children\":{\"stringLeaf\":\"Because, keep the work simple.\",\"int64Leaf\":\"761\",\"middle\":{\"leaf\":\"The friendship does be uptight enough.\",\"inner\":{\"leaf\":\"Attribute gains to year where possible.\",\"deep\":{\"leaf\":\"Surface risks around the time barely.\",\"deeper\":{\"leaf\":\"The solitude must be fancy far.\",\"deepest\":{\"leaf\":\"Compare thing before and after you honour.\"}}}}}}},\"int64Keys\":{\"583\":\"Steady unusual progress in Boise has visible.\"},\"boolKeys\":{\"true\":\"Publish a changelog entry for the child.\"}}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.MapsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
@@ -1480,7 +1483,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
 				defer cancel()
@@ -1689,7 +1692,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 						return err
 					}
 					req := &WrappersRequest{}
-					if err := protojson.Unmarshal([]byte("{\"doubleValue\":0.3402859786606234,\"floatValue\":0.23874474,\"int64Value\":\"6708821275868298668\",\"uint64Value\":\"16841871356236102876\",\"int32Value\":612869861,\"uint32Value\":4011752871,\"boolValue\":true,\"stringValue\":\"Protect the woman under enthusiastic load.\",\"bytesValue\":\"QmFjayBhbGxleSArMSwgc2lkZS1kb29yIHBvdXRpbmUu\",\"repeatedStrings\":[\"Publish a changelog entry for the way.\",\"What turn quickly pierce the government.\"]}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"doubleValue\":998,\"floatValue\":103,\"int64Value\":\"864\",\"uint64Value\":\"913\",\"int32Value\":286,\"uint32Value\":935,\"boolValue\":true,\"stringValue\":\"Surface risks around the year much.\",\"bytesValue\":\"T250byB0aGUgZmFjdCwgYWxpZ24gZXhwZWN0YXRpb25zLg==\",\"repeatedStrings\":[\"Few agree when the number spikes.\"],\"boolMap\":{\"Bismarckian\":true}}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.WrappersRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
@@ -1698,7 +1701,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
 				defer cancel()
@@ -1841,7 +1844,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 						return err
 					}
 					req := &WellKnownRequest{}
-					if err := protojson.Unmarshal([]byte("{\"struct\":{\"Celebrate wins tied to the group.\":true,\"Onward to better life!\":0.6354844697597436,\"Surface risks around the year much.\":true,\"The colorful hand being unexpectedly fondly.\":\"The friendship does be uptight enough.\"},\"value\":\"Surface risks around the time barely.\",\"listValue\":[],\"empty\":{}}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"struct\":{},\"value\":{},\"listValue\":[\"Mind the year, then celebrate!\"],\"empty\":{}}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.WellKnownRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
@@ -1850,7 +1853,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
 				defer cancel()
@@ -1950,7 +1953,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 						return err
 					}
 					req := &EnumsRequest{}
-					if err := protojson.Unmarshal([]byte("{\"choices\":[\"CHOICE_SECOND\",\"CHOICE_UNSPECIFIED\",\"CHOICE_SECOND\",\"CHOICE_SECOND\"],\"optionalChoice\":\"CHOICE_SECOND\",\"aliased\":\"ALIASED_B\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"choice\":\"CHOICE_FIRST\",\"choices\":[\"CHOICE_FIRST\"],\"optionalChoice\":\"CHOICE_FIRST\",\"choiceMap\":{\"change\":\"CHOICE_FIRST\"},\"aliased\":\"ALIASED_A\",\"nested\":\"NESTED_ONE\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.EnumsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
@@ -1959,7 +1962,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
 				defer cancel()
@@ -2033,11 +2036,17 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 			},
 		}
 		sub.Flags().StringVar(&flagChoice, "choice", flagChoice, "Which option to pick. (values: CHOICE_UNSPECIFIED | CHOICE_FIRST | CHOICE_SECOND)")
+		_ = sub.RegisterFlagCompletionFunc("choice", cobra.FixedCompletions([]string{"CHOICE_UNSPECIFIED", "CHOICE_FIRST", "CHOICE_SECOND"}, cobra.ShellCompDirectiveNoFileComp))
 		sub.Flags().StringArrayVar(&flagChoices, "choices", flagChoices, "(values: CHOICE_UNSPECIFIED | CHOICE_FIRST | CHOICE_SECOND)")
+		_ = sub.RegisterFlagCompletionFunc("choices", cobra.FixedCompletions([]string{"CHOICE_UNSPECIFIED", "CHOICE_FIRST", "CHOICE_SECOND"}, cobra.ShellCompDirectiveNoFileComp))
 		sub.Flags().StringVar(&flagOptionalChoice, "optional-choice", flagOptionalChoice, "(values: CHOICE_UNSPECIFIED | CHOICE_FIRST | CHOICE_SECOND)")
+		_ = sub.RegisterFlagCompletionFunc("optional-choice", cobra.FixedCompletions([]string{"CHOICE_UNSPECIFIED", "CHOICE_FIRST", "CHOICE_SECOND"}, cobra.ShellCompDirectiveNoFileComp))
 		sub.Flags().StringArrayVar(&flagChoiceMap, "choice-map", flagChoiceMap, "(values: CHOICE_UNSPECIFIED | CHOICE_FIRST | CHOICE_SECOND)")
+		_ = sub.RegisterFlagCompletionFunc("choice-map", cobra.FixedCompletions([]string{"CHOICE_UNSPECIFIED", "CHOICE_FIRST", "CHOICE_SECOND"}, cobra.ShellCompDirectiveNoFileComp))
 		sub.Flags().StringVar(&flagAliased, "aliased", flagAliased, "(values: ALIASED_UNSPECIFIED | ALIASED_A | ALIASED_ALPHA | ALIASED_B)")
+		_ = sub.RegisterFlagCompletionFunc("aliased", cobra.FixedCompletions([]string{"ALIASED_UNSPECIFIED", "ALIASED_A", "ALIASED_ALPHA", "ALIASED_B"}, cobra.ShellCompDirectiveNoFileComp))
 		sub.Flags().StringVar(&flagNested, "nested", flagNested, "(values: NESTED_UNSPECIFIED | NESTED_ONE)")
+		_ = sub.RegisterFlagCompletionFunc("nested", cobra.FixedCompletions([]string{"NESTED_UNSPECIFIED", "NESTED_ONE"}, cobra.ShellCompDirectiveNoFileComp))
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
 		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
@@ -2073,7 +2082,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 						return err
 					}
 					req := &OneofsRequest{}
-					if err := protojson.Unmarshal([]byte("{\"pick\":\"CHOICE_UNSPECIFIED\",\"when\":\"2015-04-29T19:06:33.296592803Z\",\"only\":\"Onward to better life!\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"pick\":\"CHOICE_FIRST\",\"outer\":{\"stringLeaf\":\"Launch the world midweek for clarity.\",\"int64Leaf\":\"935\",\"middle\":{\"leaf\":\"Surface risks around the year much.\",\"inner\":{\"leaf\":\"Onto the fact, align expectations.\",\"deep\":{\"leaf\":\"Few agree when the number spikes.\",\"deeper\":{\"leaf\":\"The colorful hand being unexpectedly fondly.\",\"deepest\":{\"leaf\":\"Sample government at 9s intervals.\"}}}}}},\"only\":\"One wake when the day spikes.\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.OneofsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
@@ -2088,7 +2097,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
 				defer cancel()
@@ -2258,6 +2267,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		sub.Flags().StringVar(&flagText, "text", flagText, "")
 		sub.Flags().Int64Var(&flagCount, "count", flagCount, "")
 		sub.Flags().StringVar(&flagPick, "pick", flagPick, "(values: CHOICE_UNSPECIFIED | CHOICE_FIRST | CHOICE_SECOND)")
+		_ = sub.RegisterFlagCompletionFunc("pick", cobra.FixedCompletions([]string{"CHOICE_UNSPECIFIED", "CHOICE_FIRST", "CHOICE_SECOND"}, cobra.ShellCompDirectiveNoFileComp))
 		sub.Flags().StringVar(&flagOuter, "outer", flagOuter, "")
 		sub.Flags().StringVar(&flagOuterStringLeaf, "outer.string-leaf", flagOuterStringLeaf, "")
 		sub.Flags().Int64Var(&flagOuterInt64Leaf, "outer.int64-leaf", flagOuterInt64Leaf, "")
@@ -2292,7 +2302,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 						return err
 					}
 					req := &OptionalsRequest{}
-					if err := protojson.Unmarshal([]byte("{\"name\":\"Zachary\",\"age\":220106544,\"pick\":\"CHOICE_SECOND\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"name\":\"Mind the year, then celebrate!\",\"age\":864,\"pick\":\"CHOICE_FIRST\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.OptionalsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
@@ -2301,7 +2311,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
 				defer cancel()
@@ -2348,6 +2358,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 		sub.Flags().StringVar(&flagName, "name", flagName, "")
 		sub.Flags().Int64Var(&flagAge, "age", flagAge, "")
 		sub.Flags().StringVar(&flagPick, "pick", flagPick, "(values: CHOICE_UNSPECIFIED | CHOICE_FIRST | CHOICE_SECOND)")
+		_ = sub.RegisterFlagCompletionFunc("pick", cobra.FixedCompletions([]string{"CHOICE_UNSPECIFIED", "CHOICE_FIRST", "CHOICE_SECOND"}, cobra.ShellCompDirectiveNoFileComp))
 		cli_kitchensink_v1_fields_proto_addInputFlags(sub.Flags(), decoders)
 		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
 		return sub
@@ -2366,7 +2377,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 						return err
 					}
 					req := &CollectionsRequest{}
-					if err := protojson.Unmarshal([]byte("{\"outers\":[{\"stringLeaf\":\"Celebrate wins tied to the group.\",\"int64Leaf\":\"5264512023569697221\",\"middle\":{\"leaf\":\"Surface risks around the year much.\",\"inner\":{\"leaf\":\"Theirs life has ready for fiction.\",\"deep\":{\"leaf\":\"The colorful hand being unexpectedly fondly.\"}}}},{\"stringLeaf\":\"Write the one-sentence summary for the way.\",\"int64Leaf\":\"6457507951039411854\",\"middle\":{\"leaf\":\"Retire outdated day each quarter.\",\"inner\":{\"leaf\":\"Continuously measure the company and answer the outliers.\",\"deep\":{\"leaf\":\"The solitude must be fancy far.\"}}}},{\"stringLeaf\":\"Defaults at Genability did shape day.\",\"int64Leaf\":\"3713411651082243323\",\"middle\":{\"leaf\":\"Onward to better part!\",\"inner\":{\"leaf\":\"Publish a changelog entry for the child.\",\"deep\":{\"leaf\":\"Evenings in Denver invite quieter way.\"}}}},{\"stringLeaf\":\"Design for failure and graceful company.\",\"int64Leaf\":\"828722873427776146\",\"middle\":{\"leaf\":\"Steady angry progress in Chandler been visible.\",\"inner\":{\"leaf\":\"His woman does ready for rhythm.\",\"deep\":{\"leaf\":\"Warm starts beat cold place.\"}}}}]}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"outers\":[{\"stringLeaf\":\"Mind the year, then celebrate!\",\"int64Leaf\":\"864\",\"middle\":{\"leaf\":\"Launch the world midweek for clarity.\",\"inner\":{\"leaf\":\"Retire outdated company each quarter.\",\"deep\":{\"leaf\":\"Protect the woman under enthusiastic load.\",\"deeper\":{\"leaf\":\"Theirs life has ready for fiction.\",\"deepest\":{\"leaf\":\"Publish a changelog entry for the way.\"}}}}}}],\"middles\":[{\"leaf\":\"Consistent hand being the foundation of thrill.\",\"inner\":{\"leaf\":\"Sample government at 9s intervals.\",\"deep\":{\"leaf\":\"One wake when the day spikes.\",\"deeper\":{\"leaf\":\"Attribute gains to year where possible.\",\"deepest\":{\"leaf\":\"Surface risks around the time barely.\"}}}}}]}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CollectionsRequest"), cli_kitchensink_v1_fields_proto_oneRecord(req))
@@ -2375,7 +2386,7 @@ func NewFieldsServiceCommand(conn grpc.ClientConnInterface, opts ...FieldsServic
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_fields_proto_callContext(cmd)
 				defer cancel()

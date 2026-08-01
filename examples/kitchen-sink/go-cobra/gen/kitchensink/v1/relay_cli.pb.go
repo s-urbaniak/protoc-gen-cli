@@ -460,7 +460,9 @@ func NewRelayServiceCommand(conn grpc.ClientConnInterface, opts ...RelayServiceO
 		Use:   "relay",
 		Short: "RelayService echoes each note back as it arrives.",
 	}
+	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_relay_proto_outputHelp(printers, defaultOutput))
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(slices.Sorted(maps.Keys(printers)), cobra.ShellCompDirectiveNoFileComp))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
 	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_kitchensink_v1_relay_proto_usage(err) })
@@ -477,7 +479,7 @@ func NewRelayServiceCommand(conn grpc.ClientConnInterface, opts ...RelayServiceO
 						return err
 					}
 					req := &ChatNote{}
-					if err := protojson.Unmarshal([]byte("{\"text\":\"Protect the number under uninterested load.\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"text\":\"Mind the year, then celebrate!\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.ChatNote"), cli_kitchensink_v1_relay_proto_oneRecord(req))
@@ -486,7 +488,7 @@ func NewRelayServiceCommand(conn grpc.ClientConnInterface, opts ...RelayServiceO
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_relay_proto_callContext(cmd)
 				defer cancel()

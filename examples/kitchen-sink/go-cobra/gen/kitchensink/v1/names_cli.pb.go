@@ -392,9 +392,9 @@ func cli_kitchensink_v1_names_proto_callErr(ctx context.Context, err error) erro
 }
 
 // loadInputs returns the request fragments for the -f and -i values.
-// The fragments come in merge order: first the -f documents in argument
-// order, then the -i values. A "-" filename reads stdin. Content selects
-// the format of each input. loadInputs skips empty inputs.
+// The fragments come in merge order. The -f documents come first, in
+// argument order. The -i values follow. A "-" filename reads stdin.
+// Content selects the format of each input. loadInputs skips empty inputs.
 func cli_kitchensink_v1_names_proto_loadInputs(decoders []cli_kitchensink_v1_names_proto_decoder, cmd *cobra.Command) ([]cli_kitchensink_v1_names_proto_fragment, error) {
 	files, _ := cmd.Flags().GetStringArray("filename")
 	inline, _ := cmd.Flags().GetStringArray("input")
@@ -474,6 +474,7 @@ func cli_kitchensink_v1_names_proto_addInputFlags(fs *pflag.FlagSet, decoders []
 	fs.StringArrayP("filename", "f", nil,
 		"Request body from a file ("+formats+"), or '-' for stdin.\n"+
 			"Repeatable; -f files, -i values, and flags merge in that order.")
+	_ = cobra.MarkFlagFilename(fs, "filename", "json", "yaml", "yml")
 	fs.StringArrayP("input", "i", nil,
 		"Request body inline ("+formats+").\n"+
 			"Repeatable; merges after -f files and before flags.")
@@ -593,7 +594,9 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 		Use:   "names",
 		Short: "NamesService's RPCs echo their requests.",
 	}
+	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_names_proto_outputHelp(printers, defaultOutput))
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(slices.Sorted(maps.Keys(printers)), cobra.ShellCompDirectiveNoFileComp))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
 	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_kitchensink_v1_names_proto_usage(err) })
@@ -618,7 +621,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 						return err
 					}
 					req := &CollisionsRequest{}
-					if err := protojson.Unmarshal([]byte("{\"req\":\"Protect the number under uninterested load.\",\"err\":\"Retire outdated company each quarter.\",\"cmd\":\"Establish a baseline for world.\",\"resp\":\"Onward to better life!\",\"out\":\"Choose talented defaults.\",\"frags\":\"Consistent hand being the foundation of thrill.\",\"type\":\"Write the one-sentence summary for the way.\",\"func\":\"Decompose problem into smaller day.\",\"return\":\"Continuously measure the company and answer the outliers.\",\"import\":\"The solitude must be fancy far.\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"req\":\"Mind the year, then celebrate!\",\"err\":\"Celebrate wins tied to the group.\",\"cmd\":\"Up to the company, we chase a smaller woman.\",\"resp\":\"Onto the fact, align expectations.\",\"out\":\"Few agree when the number spikes.\",\"frags\":\"The colorful hand being unexpectedly fondly.\",\"type\":\"Sample government at 9s intervals.\",\"func\":\"One wake when the day spikes.\",\"return\":\"Attribute gains to year where possible.\",\"import\":\"Surface risks around the time barely.\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CollisionsRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
@@ -627,7 +630,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
 				defer cancel()
@@ -746,7 +749,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 						return err
 					}
 					req := &v1.ImportedRequest{}
-					if err := protojson.Unmarshal([]byte("{\"id\":\"b84fb46b-9fe3-4aff-8b5a-111c601e3d1a\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"id\":\"Mind the year, then celebrate!\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("imported.v1.ImportedRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
@@ -755,7 +758,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
 				defer cancel()
@@ -802,7 +805,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 						return err
 					}
 					req := &v12.PingRequest{}
-					if err := protojson.Unmarshal([]byte("{\"text\":\"Protect the number under uninterested load.\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"text\":\"Mind the year, then celebrate!\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("second.v1.PingRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
@@ -811,7 +814,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
 				defer cancel()
@@ -861,7 +864,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 						return err
 					}
 					req := &ReservedRequest{}
-					if err := protojson.Unmarshal([]byte("{\"filename\":\"Zachary\",\"input\":\"Celebrate wins tied to the group.\",\"help\":\"Retire outdated company each quarter.\",\"output\":\"Establish a baseline for world.\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"filename\":\"Mind the year, then celebrate!\",\"input\":\"Celebrate wins tied to the group.\",\"help\":\"Up to the company, we chase a smaller woman.\",\"output\":\"Onto the fact, align expectations.\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.ReservedRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
@@ -870,7 +873,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
 				defer cancel()
@@ -950,7 +953,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
 				defer cancel()
@@ -992,7 +995,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 						return err
 					}
 					req := &CasingRequest{}
-					if err := protojson.Unmarshal([]byte("{\"HTTPHeader\":\"Protect the number under uninterested load.\",\"camelField\":\"Retire outdated company each quarter.\",\"customName\":\"Aracely\",\"weird.name\":\"Onto the fact, align expectations.\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"HTTPHeader\":\"Mind the year, then celebrate!\",\"camelField\":\"Celebrate wins tied to the group.\",\"customName\":\"Up to the company, we chase a smaller woman.\",\"weird.name\":\"Onto the fact, align expectations.\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CasingRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
@@ -1001,7 +1004,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
 				defer cancel()
@@ -1075,7 +1078,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 						return err
 					}
 					req := &CasingRequest{}
-					if err := protojson.Unmarshal([]byte("{\"HTTPHeader\":\"Protect the number under uninterested load.\",\"camelField\":\"Retire outdated company each quarter.\",\"customName\":\"Aracely\",\"weird.name\":\"Onto the fact, align expectations.\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"HTTPHeader\":\"Mind the year, then celebrate!\",\"camelField\":\"Celebrate wins tied to the group.\",\"customName\":\"Up to the company, we chase a smaller woman.\",\"weird.name\":\"Onto the fact, align expectations.\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CasingRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
@@ -1084,7 +1087,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
 				defer cancel()
@@ -1166,7 +1169,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 						return err
 					}
 					req := &Outer{}
-					if err := protojson.Unmarshal([]byte("{\"stringLeaf\":\"Protect the number under uninterested load.\",\"int64Leaf\":\"5264512023569697221\",\"middle\":{\"leaf\":\"Surface risks around the year much.\",\"inner\":{\"leaf\":\"Theirs life has ready for fiction.\",\"deep\":{\"leaf\":\"The colorful hand being unexpectedly fondly.\",\"deeper\":{\"leaf\":\"Write the one-sentence summary for the way.\"}}}}}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"stringLeaf\":\"Mind the year, then celebrate!\",\"int64Leaf\":\"864\",\"middle\":{\"leaf\":\"Launch the world midweek for clarity.\",\"inner\":{\"leaf\":\"Retire outdated company each quarter.\",\"deep\":{\"leaf\":\"Protect the woman under enthusiastic load.\",\"deeper\":{\"leaf\":\"Theirs life has ready for fiction.\",\"deepest\":{\"leaf\":\"Publish a changelog entry for the way.\"}}}}}}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.Outer"), cli_kitchensink_v1_names_proto_oneRecord(req))
@@ -1175,7 +1178,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
 				defer cancel()
@@ -1325,7 +1328,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 						return err
 					}
 					req := &Envelope_Letter{}
-					if err := protojson.Unmarshal([]byte("{\"body\":\"Protect the number under uninterested load. Up to the company, we chase a smaller woman.\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"body\":\"Mind the year, then celebrate!\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.Envelope.Letter"), cli_kitchensink_v1_names_proto_oneRecord(req))
@@ -1334,7 +1337,7 @@ func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceO
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
 				defer cancel()

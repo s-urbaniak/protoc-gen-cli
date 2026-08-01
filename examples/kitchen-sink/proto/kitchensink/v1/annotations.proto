@@ -1,22 +1,21 @@
-// This file exercises the (cli.v0.*) knob variants that the
-// bookstore-annotated story does not cover.
+// This file shows the (cli.v1.*) options that bookstore-annotated does not use.
 
 syntax = "proto3";
 
 package kitchensink.v1;
 
-import "cli/v0/cli.proto";
+import "cli/v1/cli.proto";
 import "google/protobuf/struct.proto";
 
 option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
 
 // AnnotationsService's RPCs echo their requests.
 service AnnotationsService {
-  option (cli.v0.service).aliases = "ann";
+  option (cli.v1.service).aliases = "ann";
 
   rpc Echo(EchoRequest) returns (EchoRequest) {
-    option (cli.v0.command).aliases = "e";
-    option (cli.v0.command).aliases = "say";
+    option (cli.v1.command).aliases = "e";
+    option (cli.v1.command).aliases = "say";
   }
   rpc Knobs(KnobsRequest) returns (KnobsRequest) {}
   rpc Curated(CuratedRequest) returns (CuratedRequest) {}
@@ -42,21 +41,20 @@ message Gizmo {
 }
 
 message KnobsRequest {
-  string capital = 1 [(cli.v0.param).shorthand = "S"];
-  Widget shallow = 2 [(cli.v0.param).expand_depth = 2];
-  Widget whole = 3 [(cli.v0.param).expand_depth = 0];
-  // The next three options cannot apply. Generation warns and drops each
-  // option.
-  string lifted = 4 [(cli.v0.param).hoist = true];
-  string deepened = 5 [(cli.v0.param).expand_depth = 3];
-  Widget insisted = 6 [(cli.v0.param).required = true];
-  google.protobuf.Struct blob = 7 [(cli.v0.param).shorthand = "j"];
+  string capital = 1 [(cli.v1.param).shorthand = "S"];
+  Widget shallow = 2 [(cli.v1.param).expand_depth = 2];
+  Widget whole = 3 [(cli.v1.param).expand_depth = 0];
+  // The next three options cannot apply. Generation drops each one. It prints
+  // a warning.
+  string lifted = 4 [(cli.v1.param).hoist = true];
+  string deepened = 5 [(cli.v1.param).expand_depth = 3];
+  Widget insisted = 6 [(cli.v1.param).required = true];
+  google.protobuf.Struct blob = 7 [(cli.v1.param).shorthand = "j"];
 }
 
 message CuratedRequest {
-  // The last path does not resolve. This is intentional. Generation warns
-  // and drops it.
-  option (cli.v0.view) = {
+  // The last path does not resolve. Generation drops it. It prints a warning.
+  option (cli.v1.view) = {
     fields: [
       {
         label: "KEY"
@@ -75,7 +73,7 @@ message CuratedRequest {
 }
 
 message FlatRequest {
-  option (cli.v0.view).expand_depth = 0;
+  option (cli.v1.view).expand_depth = 0;
 
   Widget widget = 1;
   string note = 2;

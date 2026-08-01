@@ -54,7 +54,7 @@
               }
             ]
           },
-          "example_json": "{\"text\":\"Protect the number under uninterested load.\",\"count\":612869861}"
+          "example_json": "{\"text\":\"Mind the year, then celebrate!\",\"count\":864}"
         },
         {
           "proto_name": "ServerStream",
@@ -97,7 +97,7 @@
               }
             ]
           },
-          "example_json": "{\"text\":\"Protect the number under uninterested load.\",\"count\":612869861}"
+          "example_json": "{\"text\":\"Mind the year, then celebrate!\",\"count\":864}"
         },
         {
           "proto_name": "ClientStream",
@@ -128,7 +128,7 @@
               }
             ]
           },
-          "example_json": "{\"text\":\"Protect the number under uninterested load.\",\"count\":612869861}"
+          "example_json": "{\"text\":\"Mind the year, then celebrate!\",\"count\":864}"
         },
         {
           "proto_name": "BidiStream",
@@ -160,7 +160,7 @@
               }
             ]
           },
-          "example_json": "{\"text\":\"Protect the number under uninterested load.\",\"count\":612869861}"
+          "example_json": "{\"text\":\"Mind the year, then celebrate!\",\"count\":864}"
         },
         {
           "proto_name": "EmptyStream",

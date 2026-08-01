@@ -1,12 +1,12 @@
 syntax = "proto3";
 
-// The cli.v0 options give a proto's owner control of the generated CLI.
+// The cli.v1 options give a proto's owner control of the generated CLI.
 // Without them, everything derives from the proto.
-package cli.v0;
+package cli.v1;
 
 import "google/protobuf/descriptor.proto";
 
-option go_package = "github.com/braveokafor/proto-to-cli/proto/cli/v0;cliv0";
+option go_package = "github.com/braveokafor/proto-to-cli/proto/cli/v1;cliv1";
 
 // ServiceOptions controls the command that a service generates.
 message ServiceOptions {
@@ -35,8 +35,7 @@ message ParamOptions {
   string name = 1;
   // hidden removes the param from the lists. The param continues to parse.
   bool hidden = 2;
-  // shorthand is the one-letter form of the param. The letters f, i, h and o
-  // are reserved.
+  // shorthand is the one-letter form of the param. Do not use f, i, h, or o.
   string shorthand = 3;
   // skip derives no params from the field or its subtree. Whole-request input
   // continues to set the field.
@@ -62,15 +61,13 @@ message ViewOptions {
 
 // ViewField is one field of a declared view.
 message ViewField {
-  // label is the text that shows for the field. An empty label uses the path.
+  // label is the display text for the field. An empty label uses the path.
   string label = 1;
-  // path joins proto field names with dots, from the viewed message. The path
-  // can go through only singular message fields that expand.
+  // path joins proto field names with dots, from the viewed message. Each
+  // segment must be a singular message field that expands.
   string path = 2;
 }
 
-// The number 86471 is an arbitrary choice from protobuf's internal-use
-// extension range (50000–99999).
 extend google.protobuf.ServiceOptions {
   ServiceOptions service = 86471;
 }

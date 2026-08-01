@@ -1,5 +1,5 @@
 // Command bookstore-annotated is the example CLI for the bookstore-annotated
-// fixture. The (cli.v0.*) options in the proto control it, not code.
+// fixture. The (cli.v1.*) options in the proto control it, not code.
 package main
 
 import (

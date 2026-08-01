@@ -231,7 +231,7 @@ func validateCommand(svc *Service, cmd *Command) []error {
 
 		if slices.Contains(ReservedParamNames, f.Name) {
 			errs = append(errs, fmt.Errorf(
-				"rpc %s: flag --%s is reserved by a built-in flag; pick another (cli.v0.param).name",
+				"rpc %s: flag --%s is reserved by a built-in flag; pick another (cli.v1.param).name",
 				name,
 				f.Name,
 			))

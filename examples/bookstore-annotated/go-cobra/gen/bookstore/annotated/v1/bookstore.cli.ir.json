@@ -95,7 +95,7 @@
               }
             ]
           },
-          "example_json": "{\"shelf\":{\"id\":\"9172393864939720632\",\"theme\":\"Celebrate wins tied to the group.\"}}"
+          "example_json": "{\"shelf\":{\"id\":\"998\",\"theme\":\"Protect the number under uninterested load.\"}}"
         },
         {
           "proto_name": "GetShelf",
@@ -133,7 +133,7 @@
               }
             ]
           },
-          "example_json": "{\"shelf\":\"9172393864939720632\"}"
+          "example_json": "{\"shelf\":\"998\"}"
         },
         {
           "proto_name": "DeleteShelf",
@@ -162,7 +162,7 @@
           "view": {
             "full_name": "google.protobuf.Empty"
           },
-          "example_json": "{\"shelf\":\"9172393864939720632\"}"
+          "example_json": "{\"shelf\":\"998\"}"
         },
         {
           "proto_name": "ListBooks",
@@ -211,7 +211,7 @@
               }
             ]
           },
-          "example_json": "{\"shelf\":\"9172393864939720632\"}"
+          "example_json": "{\"shelf\":\"998\"}"
         },
         {
           "proto_name": "CreateBook",
@@ -275,7 +275,7 @@
               }
             ]
           },
-          "example_json": "{\"shelf\":\"9172393864939720632\",\"book\":{\"id\":\"1890700816702069259\",\"author\":\"Launch the world midweek for clarity.\",\"title\":\"Usher\"}}"
+          "example_json": "{\"shelf\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Celebrate wins tied to the group.\",\"title\":\"Up to the company, we chase a smaller woman.\"}}"
         },
         {
           "proto_name": "GetBook",
@@ -325,7 +325,7 @@
               }
             ]
           },
-          "example_json": "{\"shelf\":\"9172393864939720632\",\"book\":\"1890700816702069259\"}"
+          "example_json": "{\"shelf\":\"998\",\"book\":\"103\"}"
         },
         {
           "proto_name": "DeleteBook",
@@ -362,7 +362,7 @@
           "view": {
             "full_name": "google.protobuf.Empty"
           },
-          "example_json": "{\"shelf\":\"9172393864939720632\",\"book\":\"1890700816702069259\"}"
+          "example_json": "{\"shelf\":\"998\",\"book\":\"103\"}"
         }
       ]
     },
@@ -468,7 +468,7 @@
             {
               "proto_path": "starts_at",
               "name": "starts-at",
-              "bind": "string"
+              "bind": "timestamp"
             }
           ],
           "view": {
@@ -504,7 +504,7 @@
               }
             ]
           },
-          "example_json": "{\"lot\":{\"id\":\"9172393864939720632\",\"book\":{\"id\":\"1890700816702069259\",\"author\":\"Launch the world midweek for clarity.\",\"title\":\"Usher\"},\"condition\":\"CONDITION_FAIR\",\"reservePrice\":0.7852299356682814,\"provenance\":[\"Theirs life has ready for fiction.\",\"The colorful hand being unexpectedly fondly.\"],\"flaws\":[{\"kind\":\"The friendship does be uptight enough.\",\"detail\":\"Continuously measure the company and answer the outliers.\"},{\"kind\":\"The solitude must be fancy far.\",\"detail\":\"Defaults at Genability did shape day.\"},{\"kind\":\"Review the fact every 4 weeks.\",\"detail\":\"Publish a changelog entry for the child.\"}],\"attributes\":{\"include\":\"Hers problem did ready for horror.\",\"what\":\"Mornings in St. Paul favor company.\",\"year\":\"Carefully switch the elephant patiently.\"},\"consignor\":{\"name\":\"Janice\",\"address\":{\"street\":\"713 Lake Mountainsburgh\",\"city\":\"Albuquerque\",\"country\":{\"code\":\"Weekends reserve time for Embroidery and child.\",\"name\":\"Isabelle\"}}}},\"startsAt\":\"1908-08-21T20:24:56.928378544Z\"}"
+          "example_json": "{\"lot\":{\"id\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Celebrate wins tied to the group.\",\"title\":\"Up to the company, we chase a smaller woman.\"},\"condition\":\"CONDITION_FINE\",\"reservePrice\":297,\"provenance\":[\"Theirs life has ready for fiction.\"],\"flaws\":[{\"kind\":\"Publish a changelog entry for the way.\",\"detail\":\"Consistent hand being the foundation of thrill.\"}],\"attributes\":{\"in\":\"Sample government at 9s intervals.\"},\"consignor\":{\"name\":\"Subtle MediumAquaMarine accents is effective somewhat.\",\"address\":{\"street\":\"Carefully carry the bakery painfully.\",\"city\":\"Share the decision record for the life.\",\"country\":{\"code\":\"Nevertheless, keep the thing simple.\",\"name\":\"Nobody float when the thing spikes.\"}}}},\"startsAt\":\"2029-03-15T22:28:26Z\"}"
         },
         {
           "proto_name": "ListAuctions",
@@ -584,7 +584,7 @@
               }
             ]
           },
-          "example_json": "{\"state\":\"AUCTION_STATE_SETTLED\"}"
+          "example_json": "{\"state\":\"AUCTION_STATE_SCHEDULED\"}"
         },
         {
           "proto_name": "WatchAuction",
@@ -648,7 +648,7 @@
               }
             ]
           },
-          "example_json": "{\"auction\":\"1890700816702069259\",\"limit\":1854751411}"
+          "example_json": "{\"auction\":\"103\",\"limit\":864}"
         },
         {
           "proto_name": "Bid",
@@ -692,7 +692,7 @@
               }
             ]
           },
-          "example_json": "{\"auction\":\"9172393864939720632\",\"amount\":0.9099579380225021}"
+          "example_json": "{\"auction\":\"998\",\"amount\":103}"
         }
       ]
     },
@@ -728,7 +728,7 @@
               }
             ]
           },
-          "example_json": "{\"shelf\":\"9172393864939720632\",\"book\":{\"id\":\"1890700816702069259\",\"author\":\"Launch the world midweek for clarity.\",\"title\":\"Usher\"}}"
+          "example_json": "{\"shelf\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Celebrate wins tied to the group.\",\"title\":\"Up to the company, we chase a smaller woman.\"}}"
         },
         {
           "proto_name": "ExportReport",
@@ -772,7 +772,7 @@
               }
             ]
           },
-          "example_json": "{\"shelf\":\"9172393864939720632\",\"filename\":\"Antonio\"}"
+          "example_json": "{\"shelf\":\"998\",\"filename\":\"Protect the number under uninterested load.\"}"
         }
       ]
     }

@@ -77,8 +77,8 @@ func funcMap(model *ir.Model) template.FuncMap {
 				func(c *ir.Command) bool { return c.ClientStreaming && c.ServerStreaming },
 			)
 		},
-		"isJSONBind":   func(f *ir.Param) bool { return f.Bind == ir.BindJSON },
-		"isStringBind": func(f *ir.Param) bool { return f.Bind == ir.BindString },
+		"isJSONBind":   func(f *ir.Param) bool { return isJSONBind(f.Bind) },
+		"isStringBind": func(f *ir.Param) bool { return isStringBind(f.Bind) },
 		"oneofGroups":  oneofGroups,
 		"anyOneofGroups": func() bool {
 			return anyCommand(func(c *ir.Command) bool { return len(oneofGroups(c)) > 0 })
@@ -211,20 +211,50 @@ type pflagBinding struct {
 	GoType string
 }
 
+// isJSONBind tells if the request takes the argument as unquoted JSON text.
+func isJSONBind(b ir.Bind) bool {
+	switch b {
+	case ir.BindJSON, ir.BindList, ir.BindAny:
+		return true
+	}
+	return false
+}
+
+// isStringBind tells if the request takes the argument as a quoted string.
+func isStringBind(b ir.Bind) bool {
+	switch b {
+	case ir.BindString, ir.BindBytes, ir.BindTimestamp, ir.BindDuration, ir.BindFieldMask:
+		return true
+	}
+	return false
+}
+
 var singularBindings = map[ir.Bind]pflagBinding{
-	ir.BindString: {"String", "string"},
-	ir.BindBool:   {"Bool", "bool"},
-	ir.BindInt:    {"Int64", "int64"},
-	ir.BindUint:   {"Uint64", "uint64"},
-	ir.BindFloat:  {"Float64", "float64"},
-	ir.BindJSON:   {"String", "string"},
+	ir.BindString:    {"String", "string"},
+	ir.BindBool:      {"Bool", "bool"},
+	ir.BindInt:       {"Int64", "int64"},
+	ir.BindUint:      {"Uint64", "uint64"},
+	ir.BindFloat:     {"Float64", "float64"},
+	ir.BindJSON:      {"String", "string"},
+	ir.BindList:      {"String", "string"},
+	ir.BindAny:       {"String", "string"},
+	ir.BindBytes:     {"String", "string"},
+	ir.BindTimestamp: {"String", "string"},
+	ir.BindDuration:  {"String", "string"},
+	ir.BindFieldMask: {"String", "string"},
 }
 
 var repeatedBindings = map[ir.Bind]pflagBinding{
-	ir.BindString: {"StringArray", "[]string"},
-	ir.BindBool:   {"BoolSlice", "[]bool"},
-	ir.BindInt:    {"Int64Slice", "[]int64"},
-	ir.BindUint:   {"UintSlice", "[]uint"},
-	ir.BindFloat:  {"Float64Slice", "[]float64"},
-	ir.BindJSON:   {"StringArray", "[]string"},
+	ir.BindString:    {"StringArray", "[]string"},
+	ir.BindBool:      {"BoolSlice", "[]bool"},
+	ir.BindInt:       {"Int64Slice", "[]int64"},
+	ir.BindUint:      {"UintSlice", "[]uint"},
+	ir.BindFloat:     {"Float64Slice", "[]float64"},
+	ir.BindJSON:      {"StringArray", "[]string"},
+	ir.BindList:      {"StringArray", "[]string"},
+	ir.BindAny:       {"StringArray", "[]string"},
+	ir.BindBytes:     {"StringArray", "[]string"},
+	ir.BindTimestamp: {"StringArray", "[]string"},
+	ir.BindDuration:  {"StringArray", "[]string"},
+	ir.BindFieldMask: {"StringArray", "[]string"},
 }

@@ -389,9 +389,9 @@ func cli_kitchensink_v1_annotations_proto_callErr(ctx context.Context, err error
 }
 
 // loadInputs returns the request fragments for the -f and -i values.
-// The fragments come in merge order: first the -f documents in argument
-// order, then the -i values. A "-" filename reads stdin. Content selects
-// the format of each input. loadInputs skips empty inputs.
+// The fragments come in merge order. The -f documents come first, in
+// argument order. The -i values follow. A "-" filename reads stdin.
+// Content selects the format of each input. loadInputs skips empty inputs.
 func cli_kitchensink_v1_annotations_proto_loadInputs(decoders []cli_kitchensink_v1_annotations_proto_decoder, cmd *cobra.Command) ([]cli_kitchensink_v1_annotations_proto_fragment, error) {
 	files, _ := cmd.Flags().GetStringArray("filename")
 	inline, _ := cmd.Flags().GetStringArray("input")
@@ -471,6 +471,7 @@ func cli_kitchensink_v1_annotations_proto_addInputFlags(fs *pflag.FlagSet, decod
 	fs.StringArrayP("filename", "f", nil,
 		"Request body from a file ("+formats+"), or '-' for stdin.\n"+
 			"Repeatable; -f files, -i values, and flags merge in that order.")
+	_ = cobra.MarkFlagFilename(fs, "filename", "json", "yaml", "yml")
 	fs.StringArrayP("input", "i", nil,
 		"Request body inline ("+formats+").\n"+
 			"Repeatable; merges after -f files and before flags.")
@@ -574,7 +575,9 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 		Short:   "AnnotationsService's RPCs echo their requests.",
 		Aliases: []string{"ann"},
 	}
+	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_annotations_proto_outputHelp(printers, defaultOutput))
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(slices.Sorted(maps.Keys(printers)), cobra.ShellCompDirectiveNoFileComp))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
 	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_kitchensink_v1_annotations_proto_usage(err) })
@@ -591,7 +594,7 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 						return err
 					}
 					req := &EchoRequest{}
-					if err := protojson.Unmarshal([]byte("{\"text\":\"Protect the number under uninterested load.\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"text\":\"Mind the year, then celebrate!\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.EchoRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
@@ -600,7 +603,7 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_annotations_proto_callContext(cmd)
 				defer cancel()
@@ -662,7 +665,7 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 						return err
 					}
 					req := &KnobsRequest{}
-					if err := protojson.Unmarshal([]byte("{\"capital\":\"Protect the number under uninterested load.\",\"shallow\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Retire outdated company each quarter.\"},\"leaf\":\"Establish a baseline for world.\"},\"leaf\":\"Onward to better life!\"},\"whole\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Choose talented defaults.\"},\"leaf\":\"Consistent hand being the foundation of thrill.\"},\"leaf\":\"Write the one-sentence summary for the way.\"},\"lifted\":\"Decompose problem into smaller day.\",\"deepened\":\"Continuously measure the company and answer the outliers.\",\"insisted\":{\"gadget\":{\"gizmo\":{\"leaf\":\"The solitude must be fancy far.\"},\"leaf\":\"Defaults at Genability did shape day.\"},\"leaf\":\"Review the fact every 4 weeks.\"},\"blob\":{\"Carefully switch the elephant patiently.\":0.7040337720573909,\"Reduce cognitive load in the work.\":{\"some\":\"Establish a baseline for year.\"}}}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"capital\":\"Mind the year, then celebrate!\",\"shallow\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Celebrate wins tied to the group.\"},\"leaf\":\"Up to the company, we chase a smaller woman.\"},\"leaf\":\"Onto the fact, align expectations.\"},\"whole\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Few agree when the number spikes.\"},\"leaf\":\"The colorful hand being unexpectedly fondly.\"},\"leaf\":\"Sample government at 9s intervals.\"},\"lifted\":\"One wake when the day spikes.\",\"deepened\":\"Attribute gains to year where possible.\",\"insisted\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Surface risks around the time barely.\"},\"leaf\":\"The solitude must be fancy far.\"},\"leaf\":\"Compare thing before and after you honour.\"},\"blob\":{}}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.KnobsRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
@@ -671,7 +674,7 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_annotations_proto_callContext(cmd)
 				defer cancel()
@@ -868,7 +871,7 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 						return err
 					}
 					req := &CuratedRequest{}
-					if err := protojson.Unmarshal([]byte("{\"key\":\"Protect the number under uninterested load.\",\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Retire outdated company each quarter.\"},\"leaf\":\"Establish a baseline for world.\"},\"leaf\":\"Onward to better life!\"}}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"key\":\"Mind the year, then celebrate!\",\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Celebrate wins tied to the group.\"},\"leaf\":\"Up to the company, we chase a smaller woman.\"},\"leaf\":\"Onto the fact, align expectations.\"}}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CuratedRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
@@ -877,7 +880,7 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_annotations_proto_callContext(cmd)
 				defer cancel()
@@ -987,7 +990,7 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 						return err
 					}
 					req := &FlatRequest{}
-					if err := protojson.Unmarshal([]byte("{\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Protect the number under uninterested load.\"},\"leaf\":\"Retire outdated company each quarter.\"},\"leaf\":\"Establish a baseline for world.\"},\"note\":\"Onward to better life!\"}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Mind the year, then celebrate!\"},\"leaf\":\"Celebrate wins tied to the group.\"},\"leaf\":\"Up to the company, we chase a smaller woman.\"},\"note\":\"Onto the fact, align expectations.\"}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.FlatRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
@@ -996,7 +999,7 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_annotations_proto_callContext(cmd)
 				defer cancel()

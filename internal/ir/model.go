@@ -98,15 +98,23 @@ type Param struct {
 }
 
 // A Bind is the JSON type that a param's argument becomes.
+// Two binds differ when protojson accepts different text for them.
 type Bind string
 
 const (
 	BindString Bind = "string"
 	BindBool   Bind = "bool"
-	BindInt    Bind = "int"
-	BindUint   Bind = "uint"
-	BindFloat  Bind = "float"
-	BindJSON   Bind = "json" // The argument is one JSON document.
+	BindInt    Bind = "int"   // A whole number. protojson rejects a fraction.
+	BindUint   Bind = "uint"  // A whole number, zero or above.
+	BindFloat  Bind = "float" // A number, with or without a fraction.
+	BindJSON   Bind = "json"  // The argument is one JSON document.
+	BindList   Bind = "list"  // The argument is one JSON array.
+
+	BindBytes     Bind = "bytes"      // Base64.
+	BindTimestamp Bind = "timestamp"  // RFC 3339, for example 2026-01-30T15:04:05Z.
+	BindDuration  Bind = "duration"   // Seconds with an s, for example 3600s.
+	BindFieldMask Bind = "field_mask" // Comma-joined field paths.
+	BindAny       Bind = "any"        // A JSON document with its own @type.
 )
 
 // A View is the display projection of a response message.

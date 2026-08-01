@@ -18,7 +18,7 @@ syntax = "proto3";
 
 package bookstore.annotated.v1;
 
-import "cli/v0/cli.proto";
+import "cli/v1/cli.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
@@ -28,12 +28,12 @@ option go_package = "github.com/braveokafor/proto-to-cli/examples/bookstore-anno
 //
 // The API manages shelves and books resources. Shelves contain books.
 service BookstoreService {
-  option (cli.v0.service).name = "catalog";
-  option (cli.v0.service).aliases = "books";
+  option (cli.v1.service).name = "catalog";
+  option (cli.v1.service).aliases = "books";
 
   // Returns a list of all shelves in the bookstore.
   rpc ListShelves(google.protobuf.Empty) returns (ListShelvesResponse) {
-    option (cli.v0.command).aliases = "shelves";
+    option (cli.v1.command).aliases = "shelves";
   }
   // Creates a new shelf in the bookstore.
   rpc CreateShelf(CreateShelfRequest) returns (Shelf) {}
@@ -41,24 +41,24 @@ service BookstoreService {
   rpc GetShelf(GetShelfRequest) returns (Shelf) {}
   // Deletes a shelf, including all books that are stored on the shelf.
   rpc DeleteShelf(DeleteShelfRequest) returns (google.protobuf.Empty) {
-    option (cli.v0.command).hidden = true;
+    option (cli.v1.command).hidden = true;
   }
   // Returns a list of books on a shelf.
   rpc ListBooks(ListBooksRequest) returns (ListBooksResponse) {
-    option (cli.v0.command).name = "list";
+    option (cli.v1.command).name = "list";
   }
   // Creates a new book.
   rpc CreateBook(CreateBookRequest) returns (Book) {
-    option (cli.v0.command).name = "add";
+    option (cli.v1.command).name = "add";
   }
   // Returns a specific book.
   rpc GetBook(GetBookRequest) returns (Book) {
-    option (cli.v0.command).name = "get";
+    option (cli.v1.command).name = "get";
   }
   // Deletes a book from a shelf.
   rpc DeleteBook(DeleteBookRequest) returns (google.protobuf.Empty) {
-    option (cli.v0.command).name = "delete";
-    option (cli.v0.command).aliases = "rm";
+    option (cli.v1.command).name = "delete";
+    option (cli.v1.command).aliases = "rm";
   }
 }
 
@@ -73,13 +73,13 @@ message Shelf {
 // A book resource.
 message Book {
   // A unique book id.
-  int64 id = 1 [(cli.v0.param).skip = true];
+  int64 id = 1 [(cli.v1.param).skip = true];
   // An author of the book.
-  string author = 2 [(cli.v0.param).shorthand = "a"];
+  string author = 2 [(cli.v1.param).shorthand = "a"];
   // A book title.
   string title = 3 [
-    (cli.v0.param).shorthand = "t",
-    (cli.v0.param).required = true
+    (cli.v1.param).shorthand = "t",
+    (cli.v1.param).required = true
   ];
 }
 
@@ -92,7 +92,7 @@ message ListShelvesResponse {
 // Request message for CreateShelf method.
 message CreateShelfRequest {
   // The shelf resource to create.
-  Shelf shelf = 1 [(cli.v0.param).expand_depth = 0];
+  Shelf shelf = 1 [(cli.v1.param).expand_depth = 0];
 }
 
 // Request message for GetShelf method.
@@ -122,7 +122,7 @@ message ListBooksResponse {
 // Request message for CreateBook method.
 message CreateBookRequest {
   // The ID of the shelf on which to create a book.
-  int64 shelf = 1 [(cli.v0.param).required = true];
+  int64 shelf = 1 [(cli.v1.param).required = true];
   // A book resource to create on the shelf.
   Book book = 2;
 }
@@ -130,9 +130,9 @@ message CreateBookRequest {
 // Request message for GetBook method.
 message GetBookRequest {
   // The ID of the shelf from which to retrieve a book.
-  int64 shelf = 1 [(cli.v0.param).required = true];
+  int64 shelf = 1 [(cli.v1.param).required = true];
   // The ID of the book to retrieve.
-  int64 book = 2 [(cli.v0.param).required = true];
+  int64 book = 2 [(cli.v1.param).required = true];
 }
 
 // Request message for DeleteBook method.
@@ -147,18 +147,18 @@ message DeleteBookRequest {
 service AuctionsService {
   // CreateAuction consigns a lot and schedules its auction.
   rpc CreateAuction(CreateAuctionRequest) returns (Auction) {
-    option (cli.v0.command).name = "create";
+    option (cli.v1.command).name = "create";
   }
 
   // ListAuctions lists auctions, optionally filtered by state.
   rpc ListAuctions(ListAuctionsRequest) returns (ListAuctionsResponse) {
-    option (cli.v0.command).name = "list";
+    option (cli.v1.command).name = "list";
   }
 
   // WatchAuction streams bidding updates for the selected auctions as a live
   // feed until the client cancels.
   rpc WatchAuction(WatchAuctionRequest) returns (stream AuctionUpdate) {
-    option (cli.v0.command).name = "watch";
+    option (cli.v1.command).name = "watch";
   }
 
   // Bid places bids and streams back every update on the bid's auction.
@@ -211,10 +211,10 @@ message Flaw {
 
 // Lot is a book consigned for auction.
 message Lot {
-  int64 id = 1 [(cli.v0.param).skip = true];
+  int64 id = 1 [(cli.v1.param).skip = true];
   Book book = 2;
   Condition condition = 3;
-  double reserve_price = 4 [(cli.v0.param).name = "reserve"];
+  double reserve_price = 4 [(cli.v1.param).name = "reserve"];
   // Chain of custody, oldest first.
   repeated string provenance = 5;
   repeated Flaw flaws = 6;
@@ -225,7 +225,7 @@ message Lot {
 
 // Auction is one lot under the hammer.
 message Auction {
-  option (cli.v0.view) = {
+  option (cli.v1.view) = {
     fields: [
       {
         label: "ID"
@@ -267,7 +267,7 @@ message Auction {
 }
 
 message CreateAuctionRequest {
-  Lot lot = 1 [(cli.v0.param).hoist = true];
+  Lot lot = 1 [(cli.v1.param).hoist = true];
   google.protobuf.Timestamp starts_at = 2;
 }
 
@@ -288,7 +288,7 @@ message WatchAuctionRequest {
     string author = 2;
   }
   // Cap on the number of updates streamed back.
-  int32 limit = 3 [(cli.v0.param).hidden = true];
+  int32 limit = 3 [(cli.v1.param).hidden = true];
 }
 
 message PlaceBidRequest {
@@ -307,17 +307,17 @@ message AuctionUpdate {
 
 // InventoryService is the back office's stock system.
 service InventoryService {
-  option (cli.v0.service).hidden = true;
+  option (cli.v1.service).hidden = true;
 
   // ImportBooks ingests a book catalogue as a stream of records.
   rpc ImportBooks(stream ImportBooksRequest) returns (ImportSummary) {
-    option (cli.v0.command).name = "import";
+    option (cli.v1.command).name = "import";
   }
 
   // ExportReport renders a shelf's stock report and writes it to a file on
   // the server.
   rpc ExportReport(ExportReportRequest) returns (Report) {
-    option (cli.v0.command).name = "export";
+    option (cli.v1.command).name = "export";
   }
 }
 
@@ -326,7 +326,7 @@ message ExportReportRequest {
   // The ID of the shelf to report on.
   int64 shelf = 1;
   // The file to write the report to.
-  string filename = 2 [(cli.v0.param).name = "report-file"];
+  string filename = 2 [(cli.v1.param).name = "report-file"];
 }
 
 // A stock report resource.

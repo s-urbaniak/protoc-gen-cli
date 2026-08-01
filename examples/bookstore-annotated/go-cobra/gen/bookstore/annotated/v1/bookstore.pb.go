@@ -23,7 +23,7 @@
 package bookstoreannotatedv1
 
 import (
-	_ "github.com/braveokafor/proto-to-cli/proto/cli/v0"
+	_ "github.com/braveokafor/proto-to-cli/proto/cli/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -2469,7 +2469,7 @@ var File_bookstore_annotated_v1_bookstore_proto protoreflect.FileDescriptor
 
 const file_bookstore_annotated_v1_bookstore_proto_rawDesc = "" +
 	"\n" +
-	"&bookstore/annotated/v1/bookstore.proto\x12\x16bookstore.annotated.v1\x1a\x10cli/v0/cli.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"-\n" +
+	"&bookstore/annotated/v1/bookstore.proto\x12\x16bookstore.annotated.v1\x1a\x10cli/v1/cli.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"-\n" +
 	"\x05Shelf\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
 	"\x05theme\x18\x02 \x01(\tR\x05theme\"`\n" +

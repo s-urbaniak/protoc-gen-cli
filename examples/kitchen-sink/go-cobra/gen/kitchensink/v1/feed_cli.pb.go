@@ -389,9 +389,9 @@ func cli_kitchensink_v1_feed_proto_callErr(ctx context.Context, err error) error
 }
 
 // loadInputs returns the request fragments for the -f and -i values.
-// The fragments come in merge order: first the -f documents in argument
-// order, then the -i values. A "-" filename reads stdin. Content selects
-// the format of each input. loadInputs skips empty inputs.
+// The fragments come in merge order. The -f documents come first, in
+// argument order. The -i values follow. A "-" filename reads stdin.
+// Content selects the format of each input. loadInputs skips empty inputs.
 func cli_kitchensink_v1_feed_proto_loadInputs(decoders []cli_kitchensink_v1_feed_proto_decoder, cmd *cobra.Command) ([]cli_kitchensink_v1_feed_proto_fragment, error) {
 	files, _ := cmd.Flags().GetStringArray("filename")
 	inline, _ := cmd.Flags().GetStringArray("input")
@@ -471,6 +471,7 @@ func cli_kitchensink_v1_feed_proto_addInputFlags(fs *pflag.FlagSet, decoders []c
 	fs.StringArrayP("filename", "f", nil,
 		"Request body from a file ("+formats+"), or '-' for stdin.\n"+
 			"Repeatable; -f files, -i values, and flags merge in that order.")
+	_ = cobra.MarkFlagFilename(fs, "filename", "json", "yaml", "yml")
 	fs.StringArrayP("input", "i", nil,
 		"Request body inline ("+formats+").\n"+
 			"Repeatable; merges after -f files and before flags.")
@@ -551,7 +552,9 @@ func NewFeedServiceCommand(conn grpc.ClientConnInterface, opts ...FeedServiceOpt
 		Use:   "feed",
 		Short: "FeedService streams fake events.",
 	}
+	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
 	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_feed_proto_outputHelp(printers, defaultOutput))
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(slices.Sorted(maps.Keys(printers)), cobra.ShellCompDirectiveNoFileComp))
 	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
 	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
 	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_kitchensink_v1_feed_proto_usage(err) })
@@ -569,7 +572,7 @@ func NewFeedServiceCommand(conn grpc.ClientConnInterface, opts ...FeedServiceOpt
 						return err
 					}
 					req := &TailRequest{}
-					if err := protojson.Unmarshal([]byte("{\"count\":2141549007}"), req); err != nil {
+					if err := protojson.Unmarshal([]byte("{\"count\":998}"), req); err != nil {
 						return err
 					}
 					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.TailRequest"), cli_kitchensink_v1_feed_proto_oneRecord(req))
@@ -578,7 +581,7 @@ func NewFeedServiceCommand(conn grpc.ClientConnInterface, opts ...FeedServiceOpt
 				if err != nil {
 					return err
 				}
-				// Set after the checks above, so they keep cobra's usage.
+				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
 				ctx, cancel := cli_kitchensink_v1_feed_proto_callContext(cmd)
 				defer cancel()

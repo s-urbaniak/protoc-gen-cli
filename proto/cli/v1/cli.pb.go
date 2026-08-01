@@ -2,12 +2,12 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        (unknown)
-// source: cli/v0/cli.proto
+// source: cli/v1/cli.proto
 
-// The cli.v0 options give a proto's owner control of the generated CLI.
+// The cli.v1 options give a proto's owner control of the generated CLI.
 // Without them, everything derives from the proto.
 
-package cliv0
+package cliv1
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -36,7 +36,7 @@ type ServiceOptions struct {
 
 func (x *ServiceOptions) Reset() {
 	*x = ServiceOptions{}
-	mi := &file_cli_v0_cli_proto_msgTypes[0]
+	mi := &file_cli_v1_cli_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -48,7 +48,7 @@ func (x *ServiceOptions) String() string {
 func (*ServiceOptions) ProtoMessage() {}
 
 func (x *ServiceOptions) ProtoReflect() protoreflect.Message {
-	mi := &file_cli_v0_cli_proto_msgTypes[0]
+	mi := &file_cli_v1_cli_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -125,7 +125,7 @@ type CommandOptions struct {
 
 func (x *CommandOptions) Reset() {
 	*x = CommandOptions{}
-	mi := &file_cli_v0_cli_proto_msgTypes[1]
+	mi := &file_cli_v1_cli_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -137,7 +137,7 @@ func (x *CommandOptions) String() string {
 func (*CommandOptions) ProtoMessage() {}
 
 func (x *CommandOptions) ProtoReflect() protoreflect.Message {
-	mi := &file_cli_v0_cli_proto_msgTypes[1]
+	mi := &file_cli_v1_cli_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -221,7 +221,7 @@ type ParamOptions struct {
 
 func (x *ParamOptions) Reset() {
 	*x = ParamOptions{}
-	mi := &file_cli_v0_cli_proto_msgTypes[2]
+	mi := &file_cli_v1_cli_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -233,7 +233,7 @@ func (x *ParamOptions) String() string {
 func (*ParamOptions) ProtoMessage() {}
 
 func (x *ParamOptions) ProtoReflect() protoreflect.Message {
-	mi := &file_cli_v0_cli_proto_msgTypes[2]
+	mi := &file_cli_v1_cli_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -341,8 +341,7 @@ type ParamOptions_builder struct {
 	Name string
 	// hidden removes the param from the lists. The param continues to parse.
 	Hidden bool
-	// shorthand is the one-letter form of the param. The letters f, i, h and o
-	// are reserved.
+	// shorthand is the one-letter form of the param. Do not use f, i, h, or o.
 	Shorthand string
 	// skip derives no params from the field or its subtree. Whole-request input
 	// continues to set the field.
@@ -388,7 +387,7 @@ type ViewOptions struct {
 
 func (x *ViewOptions) Reset() {
 	*x = ViewOptions{}
-	mi := &file_cli_v0_cli_proto_msgTypes[3]
+	mi := &file_cli_v1_cli_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -400,7 +399,7 @@ func (x *ViewOptions) String() string {
 func (*ViewOptions) ProtoMessage() {}
 
 func (x *ViewOptions) ProtoReflect() protoreflect.Message {
-	mi := &file_cli_v0_cli_proto_msgTypes[3]
+	mi := &file_cli_v1_cli_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -480,7 +479,7 @@ type ViewField struct {
 
 func (x *ViewField) Reset() {
 	*x = ViewField{}
-	mi := &file_cli_v0_cli_proto_msgTypes[4]
+	mi := &file_cli_v1_cli_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -492,7 +491,7 @@ func (x *ViewField) String() string {
 func (*ViewField) ProtoMessage() {}
 
 func (x *ViewField) ProtoReflect() protoreflect.Message {
-	mi := &file_cli_v0_cli_proto_msgTypes[4]
+	mi := &file_cli_v1_cli_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -528,10 +527,10 @@ func (x *ViewField) SetPath(v string) {
 type ViewField_builder struct {
 	_ [0]func() // Prevents comparability and use of unkeyed literals for the builder.
 
-	// label is the text that shows for the field. An empty label uses the path.
+	// label is the display text for the field. An empty label uses the path.
 	Label string
-	// path joins proto field names with dots, from the viewed message. The path
-	// can go through only singular message fields that expand.
+	// path joins proto field names with dots, from the viewed message. Each
+	// segment must be a singular message field that expands.
 	Path string
 }
 
@@ -544,70 +543,70 @@ func (b0 ViewField_builder) Build() *ViewField {
 	return m0
 }
 
-var file_cli_v0_cli_proto_extTypes = []protoimpl.ExtensionInfo{
+var file_cli_v1_cli_proto_extTypes = []protoimpl.ExtensionInfo{
 	{
 		ExtendedType:  (*descriptorpb.ServiceOptions)(nil),
 		ExtensionType: (*ServiceOptions)(nil),
 		Field:         86471,
-		Name:          "cli.v0.service",
+		Name:          "cli.v1.service",
 		Tag:           "bytes,86471,opt,name=service",
-		Filename:      "cli/v0/cli.proto",
+		Filename:      "cli/v1/cli.proto",
 	},
 	{
 		ExtendedType:  (*descriptorpb.MethodOptions)(nil),
 		ExtensionType: (*CommandOptions)(nil),
 		Field:         86471,
-		Name:          "cli.v0.command",
+		Name:          "cli.v1.command",
 		Tag:           "bytes,86471,opt,name=command",
-		Filename:      "cli/v0/cli.proto",
+		Filename:      "cli/v1/cli.proto",
 	},
 	{
 		ExtendedType:  (*descriptorpb.FieldOptions)(nil),
 		ExtensionType: (*ParamOptions)(nil),
 		Field:         86471,
-		Name:          "cli.v0.param",
+		Name:          "cli.v1.param",
 		Tag:           "bytes,86471,opt,name=param",
-		Filename:      "cli/v0/cli.proto",
+		Filename:      "cli/v1/cli.proto",
 	},
 	{
 		ExtendedType:  (*descriptorpb.MessageOptions)(nil),
 		ExtensionType: (*ViewOptions)(nil),
 		Field:         86471,
-		Name:          "cli.v0.view",
+		Name:          "cli.v1.view",
 		Tag:           "bytes,86471,opt,name=view",
-		Filename:      "cli/v0/cli.proto",
+		Filename:      "cli/v1/cli.proto",
 	},
 }
 
 // Extension fields to descriptorpb.ServiceOptions.
 var (
-	// optional cli.v0.ServiceOptions service = 86471;
-	E_Service = &file_cli_v0_cli_proto_extTypes[0]
+	// optional cli.v1.ServiceOptions service = 86471;
+	E_Service = &file_cli_v1_cli_proto_extTypes[0]
 )
 
 // Extension fields to descriptorpb.MethodOptions.
 var (
-	// optional cli.v0.CommandOptions command = 86471;
-	E_Command = &file_cli_v0_cli_proto_extTypes[1]
+	// optional cli.v1.CommandOptions command = 86471;
+	E_Command = &file_cli_v1_cli_proto_extTypes[1]
 )
 
 // Extension fields to descriptorpb.FieldOptions.
 var (
-	// optional cli.v0.ParamOptions param = 86471;
-	E_Param = &file_cli_v0_cli_proto_extTypes[2]
+	// optional cli.v1.ParamOptions param = 86471;
+	E_Param = &file_cli_v1_cli_proto_extTypes[2]
 )
 
 // Extension fields to descriptorpb.MessageOptions.
 var (
-	// optional cli.v0.ViewOptions view = 86471;
-	E_View = &file_cli_v0_cli_proto_extTypes[3]
+	// optional cli.v1.ViewOptions view = 86471;
+	E_View = &file_cli_v1_cli_proto_extTypes[3]
 )
 
-var File_cli_v0_cli_proto protoreflect.FileDescriptor
+var File_cli_v1_cli_proto protoreflect.FileDescriptor
 
-const file_cli_v0_cli_proto_rawDesc = "" +
+const file_cli_v1_cli_proto_rawDesc = "" +
 	"\n" +
-	"\x10cli/v0/cli.proto\x12\x06cli.v0\x1a google/protobuf/descriptor.proto\"V\n" +
+	"\x10cli/v1/cli.proto\x12\x06cli.v1\x1a google/protobuf/descriptor.proto\"V\n" +
 	"\x0eServiceOptions\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
 	"\x06hidden\x18\x02 \x01(\bR\x06hidden\x12\x18\n" +
@@ -626,39 +625,39 @@ const file_cli_v0_cli_proto_rawDesc = "" +
 	"\x05hoist\x18\a \x01(\bR\x05hoistB\x0f\n" +
 	"\r_expand_depth\"q\n" +
 	"\vViewOptions\x12)\n" +
-	"\x06fields\x18\x01 \x03(\v2\x11.cli.v0.ViewFieldR\x06fields\x12&\n" +
+	"\x06fields\x18\x01 \x03(\v2\x11.cli.v1.ViewFieldR\x06fields\x12&\n" +
 	"\fexpand_depth\x18\x02 \x01(\x05H\x00R\vexpandDepth\x88\x01\x01B\x0f\n" +
 	"\r_expand_depth\"5\n" +
 	"\tViewField\x12\x14\n" +
 	"\x05label\x18\x01 \x01(\tR\x05label\x12\x12\n" +
 	"\x04path\x18\x02 \x01(\tR\x04path:S\n" +
-	"\aservice\x12\x1f.google.protobuf.ServiceOptions\x18ǣ\x05 \x01(\v2\x16.cli.v0.ServiceOptionsR\aservice:R\n" +
-	"\acommand\x12\x1e.google.protobuf.MethodOptions\x18ǣ\x05 \x01(\v2\x16.cli.v0.CommandOptionsR\acommand:K\n" +
-	"\x05param\x12\x1d.google.protobuf.FieldOptions\x18ǣ\x05 \x01(\v2\x14.cli.v0.ParamOptionsR\x05param:J\n" +
-	"\x04view\x12\x1f.google.protobuf.MessageOptions\x18ǣ\x05 \x01(\v2\x13.cli.v0.ViewOptionsR\x04viewB8Z6github.com/braveokafor/proto-to-cli/proto/cli/v0;cliv0b\x06proto3"
+	"\aservice\x12\x1f.google.protobuf.ServiceOptions\x18ǣ\x05 \x01(\v2\x16.cli.v1.ServiceOptionsR\aservice:R\n" +
+	"\acommand\x12\x1e.google.protobuf.MethodOptions\x18ǣ\x05 \x01(\v2\x16.cli.v1.CommandOptionsR\acommand:K\n" +
+	"\x05param\x12\x1d.google.protobuf.FieldOptions\x18ǣ\x05 \x01(\v2\x14.cli.v1.ParamOptionsR\x05param:J\n" +
+	"\x04view\x12\x1f.google.protobuf.MessageOptions\x18ǣ\x05 \x01(\v2\x13.cli.v1.ViewOptionsR\x04viewB8Z6github.com/braveokafor/proto-to-cli/proto/cli/v1;cliv1b\x06proto3"
 
-var file_cli_v0_cli_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
-var file_cli_v0_cli_proto_goTypes = []any{
-	(*ServiceOptions)(nil),              // 0: cli.v0.ServiceOptions
-	(*CommandOptions)(nil),              // 1: cli.v0.CommandOptions
-	(*ParamOptions)(nil),                // 2: cli.v0.ParamOptions
-	(*ViewOptions)(nil),                 // 3: cli.v0.ViewOptions
-	(*ViewField)(nil),                   // 4: cli.v0.ViewField
+var file_cli_v1_cli_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_cli_v1_cli_proto_goTypes = []any{
+	(*ServiceOptions)(nil),              // 0: cli.v1.ServiceOptions
+	(*CommandOptions)(nil),              // 1: cli.v1.CommandOptions
+	(*ParamOptions)(nil),                // 2: cli.v1.ParamOptions
+	(*ViewOptions)(nil),                 // 3: cli.v1.ViewOptions
+	(*ViewField)(nil),                   // 4: cli.v1.ViewField
 	(*descriptorpb.ServiceOptions)(nil), // 5: google.protobuf.ServiceOptions
 	(*descriptorpb.MethodOptions)(nil),  // 6: google.protobuf.MethodOptions
 	(*descriptorpb.FieldOptions)(nil),   // 7: google.protobuf.FieldOptions
 	(*descriptorpb.MessageOptions)(nil), // 8: google.protobuf.MessageOptions
 }
-var file_cli_v0_cli_proto_depIdxs = []int32{
-	4, // 0: cli.v0.ViewOptions.fields:type_name -> cli.v0.ViewField
-	5, // 1: cli.v0.service:extendee -> google.protobuf.ServiceOptions
-	6, // 2: cli.v0.command:extendee -> google.protobuf.MethodOptions
-	7, // 3: cli.v0.param:extendee -> google.protobuf.FieldOptions
-	8, // 4: cli.v0.view:extendee -> google.protobuf.MessageOptions
-	0, // 5: cli.v0.service:type_name -> cli.v0.ServiceOptions
-	1, // 6: cli.v0.command:type_name -> cli.v0.CommandOptions
-	2, // 7: cli.v0.param:type_name -> cli.v0.ParamOptions
-	3, // 8: cli.v0.view:type_name -> cli.v0.ViewOptions
+var file_cli_v1_cli_proto_depIdxs = []int32{
+	4, // 0: cli.v1.ViewOptions.fields:type_name -> cli.v1.ViewField
+	5, // 1: cli.v1.service:extendee -> google.protobuf.ServiceOptions
+	6, // 2: cli.v1.command:extendee -> google.protobuf.MethodOptions
+	7, // 3: cli.v1.param:extendee -> google.protobuf.FieldOptions
+	8, // 4: cli.v1.view:extendee -> google.protobuf.MessageOptions
+	0, // 5: cli.v1.service:type_name -> cli.v1.ServiceOptions
+	1, // 6: cli.v1.command:type_name -> cli.v1.CommandOptions
+	2, // 7: cli.v1.param:type_name -> cli.v1.ParamOptions
+	3, // 8: cli.v1.view:type_name -> cli.v1.ViewOptions
 	9, // [9:9] is the sub-list for method output_type
 	9, // [9:9] is the sub-list for method input_type
 	5, // [5:9] is the sub-list for extension type_name
@@ -666,29 +665,29 @@ var file_cli_v0_cli_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_cli_v0_cli_proto_init() }
-func file_cli_v0_cli_proto_init() {
-	if File_cli_v0_cli_proto != nil {
+func init() { file_cli_v1_cli_proto_init() }
+func file_cli_v1_cli_proto_init() {
+	if File_cli_v1_cli_proto != nil {
 		return
 	}
-	file_cli_v0_cli_proto_msgTypes[2].OneofWrappers = []any{}
-	file_cli_v0_cli_proto_msgTypes[3].OneofWrappers = []any{}
+	file_cli_v1_cli_proto_msgTypes[2].OneofWrappers = []any{}
+	file_cli_v1_cli_proto_msgTypes[3].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cli_v0_cli_proto_rawDesc), len(file_cli_v0_cli_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cli_v1_cli_proto_rawDesc), len(file_cli_v1_cli_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   5,
 			NumExtensions: 4,
 			NumServices:   0,
 		},
-		GoTypes:           file_cli_v0_cli_proto_goTypes,
-		DependencyIndexes: file_cli_v0_cli_proto_depIdxs,
-		MessageInfos:      file_cli_v0_cli_proto_msgTypes,
-		ExtensionInfos:    file_cli_v0_cli_proto_extTypes,
+		GoTypes:           file_cli_v1_cli_proto_goTypes,
+		DependencyIndexes: file_cli_v1_cli_proto_depIdxs,
+		MessageInfos:      file_cli_v1_cli_proto_msgTypes,
+		ExtensionInfos:    file_cli_v1_cli_proto_extTypes,
 	}.Build()
-	File_cli_v0_cli_proto = out.File
-	file_cli_v0_cli_proto_goTypes = nil
-	file_cli_v0_cli_proto_depIdxs = nil
+	File_cli_v1_cli_proto = out.File
+	file_cli_v1_cli_proto_goTypes = nil
+	file_cli_v1_cli_proto_depIdxs = nil
 }
