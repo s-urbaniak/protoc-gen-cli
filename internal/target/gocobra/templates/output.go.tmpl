@@ -1,0 +1,249 @@
+{{- define "output" -}}
+// =============================================================================
+// Output: -o picks a printer, and a view names the fields of a response.
+// =============================================================================
+
+type {{ export }}ViewField struct {
+	Label string
+	Path  string // RFC 9535 JSONPath into the response.
+}
+
+type {{ export }}ViewList struct {
+	Label  string
+	Path   string
+	Fields []{{ export }}ViewField
+}
+
+type {{ export }}View struct {
+	Lists  []{{ export }}ViewList
+	Fields []{{ export }}ViewField
+}
+
+// A Printer renders one body. A streaming command calls it once for each
+// response. --dry-run and --example give it a request body and an empty view.
+type {{ export }}Printer func(w io.Writer, view {{ export }}View, body []byte) error
+
+// The built-in printers, keyed by the name -o takes.
+var {{ export }}Printers = map[string]{{ export }}Printer{
+	"json": func(w io.Writer, _ {{ export }}View, body []byte) error {
+		return {{ prefix }}printJSON(w, body, true)
+	},
+	"jsonl": func(w io.Writer, _ {{ export }}View, body []byte) error {
+		return {{ prefix }}printJSON(w, body, false)
+	},
+	"table": {{ prefix }}printTable,
+	"yaml":  {{ prefix }}printYAML,
+}
+
+// The view derived for each response message.
+var {{ prefix }}messageViews = map[string]{{ export }}View{
+{{- range messageViews }}
+{{- if or .Fields .Lists }}
+	{{ printf "%q" .FullName }}: {Fields: {{ template "output.viewFields" .Fields }}{{ if .Lists }}, Lists: []{{ export }}ViewList{
+{{- range .Lists }}
+		{Label: {{ printf "%q" .Label }}, Path: {{ printf "%q" .Path }}, Fields: {{ template "output.viewFields" .Fields }}},
+{{- end }}
+	}{{ end }}},
+{{- end }}
+{{- end }}
+}
+
+func {{ prefix }}printMessage(
+	w io.Writer,
+	printer {{ export }}Printer,
+	view {{ export }}View,
+	msg proto.Message,
+) error {
+	body, err := protojson.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	return printer(w, view, body)
+}
+
+func {{ prefix }}printJSON(w io.Writer, body []byte, indent bool) error {
+	// Indent and Compact both pin the spacing, which protojson varies
+	// between runs on purpose.
+	var buf bytes.Buffer
+	if indent {
+		if err := json.Indent(&buf, body, "", "  "); err != nil {
+			return err
+		}
+	} else if err := json.Compact(&buf, body); err != nil {
+		return err
+	}
+	_, err := fmt.Fprintln(w, buf.String())
+	return err
+}
+
+// {{ prefix }}printYAML starts the document with ---, so bodies render as one
+// valid YAML stream.
+func {{ prefix }}printYAML(w io.Writer, _ {{ export }}View, body []byte) error {
+	doc, err := yaml.JSONToYAML(body)
+	if err != nil {
+		return err
+	}
+	if _, err := io.WriteString(w, "---\n"); err != nil {
+		return err
+	}
+	_, err = w.Write(doc)
+	return err
+}
+
+func {{ prefix }}printTable(w io.Writer, view {{ export }}View, body []byte) error {
+	// UseNumber keeps a number's own spelling. The default renders a large
+	// integer in exponent form.
+	dec := json.NewDecoder(bytes.NewReader(body))
+	dec.UseNumber()
+	var doc any
+	if err := dec.Decode(&doc); err != nil {
+		return err
+	}
+
+	var cell func(value any) string
+	cell = func(value any) string {
+		switch v := value.(type) {
+		case nil:
+			return ""
+		case string:
+			return v
+		case []any:
+			parts := make([]string, len(v))
+			for i, item := range v {
+				parts[i] = cell(item)
+			}
+			return strings.Join(parts, ",")
+		case map[string]any:
+			parts := make([]string, 0, len(v))
+			for _, k := range slices.Sorted(maps.Keys(v)) {
+				parts = append(parts, k+"="+cell(v[k]))
+			}
+			return strings.Join(parts, ",")
+		}
+		return fmt.Sprint(value)
+	}
+
+	width := 0
+	if f, ok := w.(*os.File); ok {
+		if cols, _, err := term.GetSize(int(f.Fd())); err == nil && cols > 0 {
+			width = cols
+		}
+	}
+	render := func(title string, fields []{{ export }}ViewField, rows []any) error {
+		if len(rows) == 0 {
+			return nil
+		}
+		columns := make([]*jsonpath.Path, len(fields))
+		for i, f := range fields {
+			path, err := jsonpath.Parse(f.Path)
+			if err != nil {
+				return fmt.Errorf("column %s: %w", f.Label, err)
+			}
+			columns[i] = path
+		}
+
+		t := table.NewWriter()
+		t.Style().Size.WidthMax = width
+		if title != "" {
+			t.SetTitle(title)
+		}
+		header := make(table.Row, len(fields))
+		for j, f := range fields {
+			header[j] = f.Label
+		}
+		t.AppendHeader(header)
+		for _, row := range rows {
+			line := make(table.Row, len(fields))
+			for j, path := range columns {
+				found := path.Select(row)
+				if len(found) == 1 {
+					line[j] = cell(found[0])
+					continue
+				}
+				line[j] = cell([]any(found))
+			}
+			t.AppendRow(line)
+		}
+		_, err := fmt.Fprintln(w, t.Render())
+		return err
+	}
+
+	if len(view.Fields) > 0 {
+		if err := render("", view.Fields, []any{doc}); err != nil {
+			return err
+		}
+	}
+	for _, list := range view.Lists {
+		path, err := jsonpath.Parse(list.Path)
+		if err != nil {
+			return fmt.Errorf("list %s: %w", list.Label, err)
+		}
+		if err := render(strings.ToUpper(list.Label), list.Fields, path.Select(doc)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func {{ prefix }}resolveOutput(
+	out io.Writer,
+	response, method, format, columns string,
+	opt {{ export }}Options,
+) ({{ export }}Printer, {{ export }}View, error) {
+	if format == "" {
+		format = opt.DefaultPrinter
+	}
+
+	printer, found := opt.Printers[format]
+	if format != "" && !found {
+		return nil, {{ export }}View{}, {{ prefix }}exitError{ {{ prefix }}exitUsage, fmt.Errorf(
+			"unknown output format %q; use one of: %s",
+			format, strings.Join(slices.Sorted(maps.Keys(opt.Printers)), ", "))}
+	}
+	if format == "" {
+		// A removed printer cannot break the no-flag default.
+		tty := false
+		if f, ok := out.(*os.File); ok {
+			tty = term.IsTerminal(int(f.Fd()))
+		}
+		switch {
+		case columns != "":
+			printer = {{ export }}Printers["table"]
+		case tty:
+			printer = {{ export }}Printers["json"]
+		default:
+			printer = {{ export }}Printers["jsonl"]
+		}
+	}
+
+	if columns != "" {
+		parts := strings.Split(columns, ",")
+		fields := make([]{{ export }}ViewField, len(parts))
+		for i, part := range parts {
+			label, path, ok := strings.Cut(part, ":")
+			if !ok {
+				return nil, {{ export }}View{}, {{ prefix }}exitError{ {{ prefix }}exitUsage, fmt.Errorf(
+					"--columns entry %q has no colon; write LABEL:path", part)}
+			}
+			if _, err := jsonpath.Parse(path); err != nil {
+				return nil, {{ export }}View{}, {{ prefix }}exitError{ {{ prefix }}exitUsage, fmt.Errorf(
+					"--columns entry %q: %w", part, err)}
+			}
+			fields[i] = {{ export }}ViewField{Label: label, Path: path}
+		}
+		return printer, {{ export }}View{Fields: fields}, nil
+	}
+	if override, ok := opt.Views[method]; ok {
+		return printer, override, nil
+	}
+	return printer, {{ prefix }}messageViews[response], nil
+}
+{{ end -}}
+
+{{- define "output.viewFields" -}}
+[]{{ export }}ViewField{
+{{- range . }}
+		{Label: {{ printf "%q" .Label }}, Path: {{ printf "%q" .Path }}},
+{{- end }}
+	}
+{{- end }}

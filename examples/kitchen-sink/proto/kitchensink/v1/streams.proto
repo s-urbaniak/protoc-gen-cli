@@ -1,5 +1,4 @@
-// This service has all four streaming shapes, plus a flagless streaming
-// command.
+// This service has all four RPC shapes.
 
 syntax = "proto3";
 
@@ -7,7 +6,7 @@ package kitchensink.v1;
 
 import "google/protobuf/empty.proto";
 
-option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
+option go_package = "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
 
 // StreamsService echoes text back.
 service StreamsService {
@@ -19,6 +18,12 @@ service StreamsService {
   rpc ClientStream(stream StreamsRequest) returns (StreamsResponse);
   // BidiStream echoes each request as it arrives.
   rpc BidiStream(stream StreamsRequest) returns (stream StreamsResponse);
+  // ClientStreamEarlyReturn answers after the first request, while the client
+  // still sends.
+  rpc ClientStreamEarlyReturn(stream StreamsRequest) returns (StreamsResponse);
+  // BidiStreamEarlyReturn echoes the first request, then ends the exchange
+  // while the client still sends.
+  rpc BidiStreamEarlyReturn(stream StreamsRequest) returns (stream StreamsResponse);
   // EmptyStream streams a fixed batch of responses.
   rpc EmptyStream(google.protobuf.Empty) returns (stream StreamsResponse);
 }

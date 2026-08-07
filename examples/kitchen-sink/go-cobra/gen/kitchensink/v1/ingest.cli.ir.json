@@ -5,69 +5,80 @@
   "proto_package": "kitchensink.v1",
   "file_options": {
     "go_package_name": "kitchensinkv1",
-    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
-    "go_descriptor_name": "File_kitchensink_v1_ingest_proto"
+    "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1"
   },
   "services": [
     {
+      "full_name": "kitchensink.v1.IngestService",
       "proto_name": "IngestService",
-      "go_name": "IngestService",
       "name": "ingest",
       "short_help": "IngestService counts what it receives.",
       "commands": [
         {
+          "full_name": "kitchensink.v1.IngestService.Ingest",
           "proto_name": "Ingest",
-          "go_name": "Ingest",
           "name": "ingest",
           "short_help": "Ingest counts the streamed records.",
-          "long_help": "Ingest counts the streamed records.\n\nReads JSON requests from stdin, one after another.",
-          "input": {
+          "long_help": "Ingest counts the streamed records.\n\nEach request body becomes one request.",
+          "request": {
             "full_name": "kitchensink.v1.IngestRecord",
             "proto_file": "kitchensink/v1/ingest.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "IngestRecord",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.IngestSummary",
-          "client_streaming": true,
+          "response": "kitchensink.v1.IngestSummary",
+          "shape": "client_stream",
+          "params": [
+            {
+              "proto_path": "text",
+              "name": "text",
+              "bind": "string"
+            }
+          ],
           "view": {
             "full_name": "kitchensink.v1.IngestSummary",
             "fields": [
               {
                 "label": "received",
-                "path": "received"
+                "path": "$[\"received\"]"
               }
             ]
           },
-          "example_json": "{\"text\":\"Mind the year, then celebrate!\"}"
+          "example_json": "{\"text\":\"Repellat aut et.\"}"
         },
         {
+          "full_name": "kitchensink.v1.IngestService.Absorb",
           "proto_name": "Absorb",
-          "go_name": "Absorb",
           "name": "absorb",
           "short_help": "Absorb counts the streamed requests.",
-          "long_help": "Absorb counts the streamed requests.\n\nReads JSON requests from stdin, one after another.",
-          "input": {
+          "long_help": "Absorb counts the streamed requests.\n\nEach request body becomes one request.",
+          "request": {
             "full_name": "imported.v1.ImportedRequest",
             "proto_file": "imported/v1/imported.proto",
             "proto_package": "imported.v1",
-            "go_name": "ImportedRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/imported/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/imported/v1",
             "go_package_name": "v1"
           },
-          "output": "kitchensink.v1.IngestSummary",
-          "client_streaming": true,
+          "response": "kitchensink.v1.IngestSummary",
+          "shape": "client_stream",
+          "params": [
+            {
+              "proto_path": "id",
+              "name": "id",
+              "bind": "string"
+            }
+          ],
           "view": {
             "full_name": "kitchensink.v1.IngestSummary",
             "fields": [
               {
                 "label": "received",
-                "path": "received"
+                "path": "$[\"received\"]"
               }
             ]
           },
-          "example_json": "{\"id\":\"Mind the year, then celebrate!\"}"
+          "example_json": "{\"id\":\"Repellat aut et.\"}"
         }
       ]
     }

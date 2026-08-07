@@ -1,0 +1,178 @@
+{{- define "call" -}}
+// =============================================================================
+// Call: each rpc shape runs its call, or prints the requests instead.
+// =============================================================================
+
+func {{ prefix }}callContext(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
+	if timeout > 0 {
+		return context.WithTimeout(ctx, timeout)
+	}
+	return context.WithCancel(ctx)
+}
+{{ if fileHasShape "server_stream" "bidi" }}
+func {{ prefix }}printResponses[Res any, PRes interface{ proto.Message; *Res }](w io.Writer, printer {{ export }}Printer, view {{ export }}View, recv func() (*Res, error)) error {
+	for {
+		resp, err := recv()
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if err := {{ prefix }}printMessage(w, printer, view, PRes(resp)); err != nil {
+			return err
+		}
+	}
+}
+{{ end }}
+{{- if fileHasShape "unary" }}
+func {{ prefix }}runUnary[Req, Res proto.Message](ctx context.Context, out io.Writer, printer {{ export }}Printer, view {{ export }}View, req Req, dryRun bool, timeout time.Duration, call func(context.Context, Req, ...grpc.CallOption) (Res, error)) (err error) {
+	if dryRun {
+		return {{ prefix }}printMessage(out, printer, {{ export }}View{}, req)
+	}
+	ctx, cancel := {{ prefix }}callContext(ctx, timeout)
+	defer cancel()
+	defer func() { err = {{ prefix }}withExitCode(ctx, err) }()
+
+	resp, err := call(ctx, req)
+	if err != nil {
+		return err
+	}
+	return {{ prefix }}printMessage(out, printer, view, resp)
+}
+{{ end }}
+{{- if fileHasShape "server_stream" }}
+func {{ prefix }}runServerStream[Req proto.Message, Res any, PRes interface{ proto.Message; *Res }](ctx context.Context, out io.Writer, printer {{ export }}Printer, view {{ export }}View, req Req, dryRun bool, timeout time.Duration, open func(context.Context, Req, ...grpc.CallOption) (grpc.ServerStreamingClient[Res], error)) (err error) {
+	if dryRun {
+		return {{ prefix }}printMessage(out, printer, {{ export }}View{}, req)
+	}
+	ctx, cancel := {{ prefix }}callContext(ctx, timeout)
+	defer cancel()
+	defer func() { err = {{ prefix }}withExitCode(ctx, err) }()
+
+	stream, err := open(ctx, req)
+	if err != nil {
+		return err
+	}
+	return {{ prefix }}printResponses[Res, PRes](out, printer, view, stream.Recv)
+}
+{{ end }}
+{{- if fileHasShape "client_stream" }}
+func {{ prefix }}runClientStream[Req, Res any, PReq interface{ proto.Message; *Req }, PRes interface{ proto.Message; *Res }](ctx context.Context, out, stderr io.Writer, printer {{ export }}Printer, view {{ export }}View, reqs iter.Seq2[PReq, error], dryRun bool, timeout time.Duration, open func(context.Context, ...grpc.CallOption) (grpc.ClientStreamingClient[Req, Res], error)) (err error) {
+	if dryRun {
+		for req, err := range reqs {
+			if err != nil {
+				return err
+			}
+			if err := {{ prefix }}printMessage(out, printer, {{ export }}View{}, req); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	ctx, cancel := {{ prefix }}callContext(ctx, timeout)
+	defer cancel()
+	defer func() { err = {{ prefix }}withExitCode(ctx, err) }()
+
+	if f, ok := stderr.(*os.File); ok && term.IsTerminal(int(f.Fd())) {
+		fmt.Fprintln(stderr, "sending requests; the server replies when it has them all")
+	}
+
+	stream, err := open(ctx)
+	if err != nil {
+		return err
+	}
+	for req, err := range reqs {
+		if err != nil {
+			return err
+		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if err := stream.Send(req); err != nil {
+			if !errors.Is(err, io.EOF) {
+				return err
+			}
+			// The server ended the stream. CloseAndRecv has the reason.
+			break
+		}
+	}
+	resp, err := stream.CloseAndRecv()
+	if err != nil {
+		return err
+	}
+	return {{ prefix }}printMessage(out, printer, view, PRes(resp))
+}
+{{ end }}
+{{- if fileHasShape "bidi" }}
+// {{ prefix }}runBidi does not join the send side, which can block on stdin
+// forever. A send error outranks the canceled receive loop.
+func {{ prefix }}runBidi[Req, Res any, PReq interface{ proto.Message; *Req }, PRes interface{ proto.Message; *Res }](ctx context.Context, out io.Writer, printer {{ export }}Printer, view {{ export }}View, reqs iter.Seq2[PReq, error], dryRun bool, timeout time.Duration, open func(context.Context, ...grpc.CallOption) (grpc.BidiStreamingClient[Req, Res], error)) (err error) {
+	if dryRun {
+		for req, err := range reqs {
+			if err != nil {
+				return err
+			}
+			if err := {{ prefix }}printMessage(out, printer, {{ export }}View{}, req); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	callCtx, callCancel := {{ prefix }}callContext(ctx, timeout)
+	defer callCancel()
+	defer func() { err = {{ prefix }}withExitCode(callCtx, err) }()
+
+	// The child context ends the exchange without canceling callCtx, which
+	// classifies the exit code.
+	sendCtx, cancel := context.WithCancel(callCtx)
+	defer cancel()
+	stream, err := open(sendCtx)
+	if err != nil {
+		return err
+	}
+
+	sent := make(chan error, 1)
+	go func() {
+		var err error
+		for req, reqErr := range reqs {
+			if reqErr != nil {
+				err = reqErr
+				break
+			}
+			if err = sendCtx.Err(); err != nil {
+				break
+			}
+			if err = stream.Send(req); err != nil {
+				if errors.Is(err, io.EOF) {
+					// The server ended the stream. Recv has the reason.
+					err = nil
+				}
+				break
+			}
+		}
+		if closeErr := stream.CloseSend(); err == nil {
+			err = closeErr
+		}
+		if errors.Is(err, context.Canceled) {
+			err = nil
+		}
+		sent <- err
+		if err != nil {
+			cancel()
+		}
+	}()
+
+	recvErr := {{ prefix }}printResponses[Res, PRes](out, printer, view, stream.Recv)
+	cancel()
+	select {
+	case err := <-sent:
+		if err != nil {
+			return err
+		}
+	default:
+	}
+	return recvErr
+}
+{{ end }}
+{{- end -}}

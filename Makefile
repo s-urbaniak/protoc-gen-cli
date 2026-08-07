@@ -18,7 +18,7 @@ all: build lint test ## Build, lint and test
 
 .PHONY: build
 build: ## Build the plugin
-	go build -ldflags '-X main.version=$(VERSION)' -o $(BIN)/protoc-gen-cli ./cmd/protoc-gen-cli
+	CGO_ENABLED=0 go build -trimpath -ldflags '-X main.version=$(VERSION)' -o $(BIN)/protoc-gen-cli ./cmd/protoc-gen-cli
 
 .PHONY: test
 test: ## Run tests
@@ -46,11 +46,11 @@ gen: clean ## Regenerate proto code
 	$(MAKE) gen-examples
 
 .PHONY: gen-proto
-gen-proto: fmt ## Regenerate cli.v0 schema
+gen-proto: fmt-proto ## Regenerate cli.v1 schema
 	buf generate
 
 .PHONY: gen-examples
-gen-examples: fmt ## Regenerate examples
+gen-examples: fmt-proto ## Regenerate examples
 	cd examples/bookstore && buf generate
 	cd examples/bookstore-annotated && buf generate
 	cd examples/kitchen-sink && buf generate
@@ -61,15 +61,19 @@ verify-examples-regen: gen ## Fail if regenerating examples changes anything
 	if [ -n "$$status" ]; then echo "$$status"; exit 1; fi
 
 .PHONY: fmt
-fmt: fmt-proto ## Format code
+fmt: fmt-go fmt-proto ## Format code
 
 .PHONY: fmt-proto
 fmt-proto: ## Format proto files
 	buf format -w
 
+.PHONY: fmt-go
+fmt-go: ## Format Go files
+	golangci-lint fmt
+
 .PHONY: install
 install: ## Install protoc-gen-cli
-	go install -ldflags '-X main.version=$(VERSION)' ./cmd/protoc-gen-cli
+	CGO_ENABLED=0 go install -trimpath -ldflags '-X main.version=$(VERSION)' ./cmd/protoc-gen-cli
 
 .PHONY: upgrade
 upgrade: ## Upgrade dependencies

@@ -6,91 +6,77 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"unicode"
 
-	"github.com/braveokafor/proto-to-cli/internal/ir"
-	"github.com/stoewer/go-strcase"
+	"github.com/braveokafor/protoc-gen-cli/internal/ir"
+	"google.golang.org/protobuf/compiler/protogen"
 )
 
-func funcMap(model *ir.Model) template.FuncMap {
-	ident := "cli" + strings.TrimPrefix(model.FileOptions.GoDescriptorName, "File")
-	aliases := requestImports(model)
-	anyCommand := func(pred func(*ir.Command) bool) bool {
-		return slices.ContainsFunc(model.Services, func(svc *ir.Service) bool {
-			return slices.ContainsFunc(svc.Commands, pred)
-		})
+func funcMap(file *protogen.File, model *ir.Model) template.FuncMap {
+	// Two generated files can share a Go package.
+	ident := strings.Map(func(r rune) rune {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			return r
+		}
+		return '_'
+	}, model.ProtoFile)
+
+	// Proto full names are unique across services, methods and messages.
+	goNames := map[string]string{}
+	for _, svc := range file.Services {
+		goNames[string(svc.Desc.FullName())] = svc.GoName
+		for _, m := range svc.Methods {
+			goNames[string(m.Desc.FullName())] = m.GoName
+			goNames[string(m.Input.Desc.FullName())] = m.Input.GoIdent.GoName
+		}
 	}
+
+	rows := maps.Clone(templateImports)
+	foreign := map[string]string{}
+	for _, svc := range model.Services {
+		for _, cmd := range svc.Commands {
+			if path := cmd.Request.GoImportPath; path != model.FileOptions.GoImportPath {
+				foreign[path] = cmd.Request.GoPackageName
+			}
+		}
+	}
+	aliases := map[string]string{}
+	for _, path := range slices.Sorted(maps.Keys(foreign)) {
+		alias := foreign[path]
+		for i := 2; rows[alias] != ""; i++ {
+			alias = foreign[path] + strconv.Itoa(i)
+		}
+		rows[alias] = path
+		aliases[path] = alias
+	}
+
+	byMessage := map[string]*ir.View{}
+	for _, svc := range model.Services {
+		for _, cmd := range svc.Commands {
+			byMessage[cmd.View.FullName] = cmd.View
+		}
+	}
+	views := make([]*ir.View, 0, len(byMessage))
+	for _, name := range slices.Sorted(maps.Keys(byMessage)) {
+		views = append(views, byMessage[name])
+	}
+
 	return template.FuncMap{
-		"fileIdent":    func() string { return ident },
-		"goVarName":    goVarName,
-		"goClientType": func(svc *ir.Service) string { return svc.GoName + "Client" },
-		"goRequestType": func(cmd *ir.Command) string {
-			if alias, foreign := aliases[cmd.Input.GoImportPath]; foreign {
-				return alias + "." + cmd.Input.GoName
-			}
-			return cmd.Input.GoName
-		},
-		"goBinding": func(f *ir.Param) pflagBinding {
-			switch {
-			case f.Map:
-				return pflagBinding{"StringArray", "[]string"}
-			case f.Repeated:
-				return repeatedBindings[f.Bind]
-			default:
-				return singularBindings[f.Bind]
-			}
-		},
-		"imports": func() map[string]string {
-			rows := maps.Clone(templateImports)
-			for path, alias := range aliases {
-				rows[alias] = path
-			}
-			return rows
-		},
-		"responseViews": func(svc *ir.Service) []*ir.View {
-			byName := map[string]*ir.View{}
-			for _, cmd := range svc.Commands {
-				byName[cmd.View.FullName] = cmd.View
-			}
-			views := make([]*ir.View, 0, len(byName))
-			for _, name := range slices.Sorted(maps.Keys(byName)) {
-				views = append(views, byName[name])
-			}
-			return views
-		},
-		"hasRequestDocs": func(svc *ir.Service) bool {
-			return slices.ContainsFunc(
-				svc.Commands,
-				func(c *ir.Command) bool { return !c.ClientStreaming },
-			)
-		},
-		"anyRequestDocs": func() bool {
-			return anyCommand(func(c *ir.Command) bool { return !c.ClientStreaming })
-		},
-		"anySingleResponse": func() bool {
-			return anyCommand(func(c *ir.Command) bool { return !c.ServerStreaming })
-		},
-		"anyClientStreaming": func() bool {
-			return anyCommand(func(c *ir.Command) bool { return c.ClientStreaming })
-		},
-		"anyBidi": func() bool {
-			return anyCommand(
-				func(c *ir.Command) bool { return c.ClientStreaming && c.ServerStreaming },
-			)
-		},
-		"isJSONBind":   func(f *ir.Param) bool { return isJSONBind(f.Bind) },
-		"isStringBind": func(f *ir.Param) bool { return isStringBind(f.Bind) },
+		"goBinding":    goBinding,
+		"goDoc":        goDoc,
+		"flagUsage":    flagUsage,
 		"oneofGroups":  oneofGroups,
-		"anyOneofGroups": func() bool {
-			return anyCommand(func(c *ir.Command) bool { return len(oneofGroups(c)) > 0 })
-		},
-		"requiredParams": func(cmd *ir.Command) []*ir.Param {
-			var req []*ir.Param
-			for _, f := range cmd.Params {
-				if f.Required {
-					req = append(req, f)
-				}
+		"prefix":       func() string { return "cli_" + ident + "_" },
+		"export":       func() string { return "Cli_" + ident + "_" },
+		"imports":      func() map[string]string { return rows },
+		"messageViews": func() []*ir.View { return views },
+		"goName":       func(fullName string) string { return goNames[fullName] },
+		"goRequestType": func(cmd *ir.Command) string {
+			name := goNames[cmd.Request.FullName]
+			if alias, ok := aliases[cmd.Request.GoImportPath]; ok {
+				return alias + "." + name
 			}
-			return req
+			return name
 		},
 		"quoteJoin": func(names []string) string {
 			quoted := make([]string, len(names))
@@ -99,21 +85,103 @@ func funcMap(model *ir.Model) template.FuncMap {
 			}
 			return strings.Join(quoted, ", ")
 		},
-		"flagUsage": flagUsage,
+		"fileHasShape": func(shapes ...ir.Shape) bool {
+			for _, svc := range model.Services {
+				for _, cmd := range svc.Commands {
+					if slices.Contains(shapes, cmd.Shape) {
+						return true
+					}
+				}
+			}
+			return false
+		},
 	}
+}
+
+type pflagBinding struct {
+	// Method is the pflag method stem: String gives StringP and GetString.
+	Method string
+	Zero   string
+	// Overlay is the command.flag arm that sets the value in the request JSON.
+	Overlay string
+}
+
+var singularBindings = map[ir.Bind]pflagBinding{
+	ir.BindString:    {"String", `""`, "value"},
+	ir.BindBool:      {"Bool", "false", "value"},
+	ir.BindInt:       {"Int64", "0", "value"},
+	ir.BindUint:      {"Uint64", "0", "value"},
+	ir.BindFloat:     {"Float64", "0", "value"},
+	ir.BindJSON:      {"String", `""`, "json"},
+	ir.BindList:      {"String", `""`, "json"},
+	ir.BindAny:       {"String", `""`, "json"},
+	ir.BindBytes:     {"String", `""`, "value"},
+	ir.BindTimestamp: {"String", `""`, "value"},
+	ir.BindDuration:  {"String", `""`, "value"},
+	ir.BindFieldMask: {"String", `""`, "value"},
+}
+
+var repeatedBindings = map[ir.Bind]pflagBinding{
+	ir.BindString:    {"StringArray", "nil", "value"},
+	ir.BindBool:      {"BoolSlice", "nil", "value"},
+	ir.BindInt:       {"Int64Slice", "nil", "value"},
+	ir.BindUint:      {"UintSlice", "nil", "value"},
+	ir.BindFloat:     {"Float64Slice", "nil", "value"},
+	ir.BindJSON:      {"StringArray", "nil", "jsonArray"},
+	ir.BindList:      {"StringArray", "nil", "jsonArray"},
+	ir.BindAny:       {"StringArray", "nil", "jsonArray"},
+	ir.BindBytes:     {"StringArray", "nil", "value"},
+	ir.BindTimestamp: {"StringArray", "nil", "value"},
+	ir.BindDuration:  {"StringArray", "nil", "value"},
+	ir.BindFieldMask: {"StringArray", "nil", "value"},
+}
+
+func goBinding(param *ir.Param) pflagBinding {
+	switch {
+	case param.Map && isStringBind(param):
+		return pflagBinding{"StringArray", "nil", "mapString"}
+	case param.Map:
+		return pflagBinding{"StringArray", "nil", "mapJSON"}
+	case param.Repeated:
+		return repeatedBindings[param.Bind]
+	default:
+		return singularBindings[param.Bind]
+	}
+}
+
+// isStringBind reports whether the request takes the argument as a quoted JSON
+// string.
+func isStringBind(param *ir.Param) bool {
+	switch param.Bind {
+	case ir.BindString, ir.BindBytes, ir.BindTimestamp, ir.BindDuration, ir.BindFieldMask:
+		return true
+	}
+	return false
+}
+
+func goDoc(text string) string {
+	lines := strings.Split(strings.TrimSpace(text), "\n")
+	for i, line := range lines {
+		if line == "" {
+			lines[i] = "//"
+			continue
+		}
+		lines[i] = "// " + line
+	}
+	return strings.Join(lines, "\n")
 }
 
 func oneofGroups(cmd *ir.Command) [][]string {
 	var order []string
 	members := map[string][]string{}
-	for _, f := range cmd.Params {
-		if f.Oneof == "" {
+	for _, param := range cmd.Params {
+		if param.Oneof == "" {
 			continue
 		}
-		if _, seen := members[f.Oneof]; !seen {
-			order = append(order, f.Oneof)
+		if _, seen := members[param.Oneof]; !seen {
+			order = append(order, param.Oneof)
 		}
-		members[f.Oneof] = append(members[f.Oneof], f.Name)
+		members[param.Oneof] = append(members[param.Oneof], param.Name)
 	}
 	var groups [][]string
 	for _, oneof := range order {
@@ -124,39 +192,23 @@ func oneofGroups(cmd *ir.Command) [][]string {
 	return groups
 }
 
-func goVarName(f *ir.Param) string {
-	name := "flag"
-	for seg := range strings.SplitSeq(f.ProtoPath, ".") {
-		name += strcase.UpperCamelCase(seg)
-	}
-	return name
-}
-
-func flagUsage(f *ir.Param) string {
+func flagUsage(param *ir.Param) string {
 	// pflag reads a back-quoted word as the value name.
-	desc := strings.ReplaceAll(f.ShortHelp, "`", "")
+	desc := strings.ReplaceAll(param.ShortHelp, "`", "")
 
-	var hints []string
-	if f.Required {
-		hints = append(hints, "required")
-	}
-	if len(f.EnumValues) > 0 {
-		hints = append(hints, "values: "+strings.Join(f.EnumValues, " | "))
-	}
-	if len(hints) == 0 {
+	if len(param.EnumValues) == 0 {
 		return desc
 	}
 
-	marker := "(" + strings.Join(hints, "; ") + ")"
+	marker := "(values: " + strings.Join(param.EnumValues, " | ") + ")"
 	if desc == "" {
 		return marker
 	}
 	return desc + " " + marker
 }
 
-// templateImports is the template's import block, from name to path.
-// goimports drops the entries that a file does not use. Request aliases must
-// not take these names.
+// Every package a built-in template references has a row, so goimports only
+// prunes. A missing row makes it guess the path from the local machine.
 var templateImports = map[string]string{
 	"bytes":     "bytes",
 	"context":   "context",
@@ -164,97 +216,21 @@ var templateImports = map[string]string{
 	"errors":    "errors",
 	"fmt":       "fmt",
 	"io":        "io",
+	"iter":      "iter",
 	"maps":      "maps",
 	"os":        "os",
 	"slices":    "slices",
 	"strings":   "strings",
+	"time":      "time",
 	"table":     "github.com/jedib0t/go-pretty/v6/table",
 	"cobra":     "github.com/spf13/cobra",
-	"pflag":     "github.com/spf13/pflag",
-	"gjson":     "github.com/tidwall/gjson",
+	"jsonpath":  "github.com/theory/jsonpath",
 	"sjson":     "github.com/tidwall/sjson",
 	"term":      "golang.org/x/term",
 	"grpc":      "google.golang.org/grpc",
 	"status":    "google.golang.org/grpc/status",
 	"protojson": "google.golang.org/protobuf/encoding/protojson",
 	"proto":     "google.golang.org/protobuf/proto",
+	"yaml3":     "go.yaml.in/yaml/v3",
 	"yaml":      "sigs.k8s.io/yaml",
-}
-
-func requestImports(model *ir.Model) map[string]string {
-	pkgName := map[string]string{}
-	for _, svc := range model.Services {
-		for _, cmd := range svc.Commands {
-			if path := cmd.Input.GoImportPath; path != model.FileOptions.GoImportPath {
-				pkgName[path] = cmd.Input.GoPackageName
-			}
-		}
-	}
-	aliases := map[string]string{}
-	taken := map[string]bool{}
-	for name := range templateImports {
-		taken[name] = true
-	}
-	for _, path := range slices.Sorted(maps.Keys(pkgName)) {
-		alias := pkgName[path]
-		for i := 2; taken[alias]; i++ {
-			alias = pkgName[path] + strconv.Itoa(i)
-		}
-		taken[alias] = true
-		aliases[path] = alias
-	}
-	return aliases
-}
-
-type pflagBinding struct {
-	Setter string
-	GoType string
-}
-
-// isJSONBind tells if the request takes the argument as unquoted JSON text.
-func isJSONBind(b ir.Bind) bool {
-	switch b {
-	case ir.BindJSON, ir.BindList, ir.BindAny:
-		return true
-	}
-	return false
-}
-
-// isStringBind tells if the request takes the argument as a quoted string.
-func isStringBind(b ir.Bind) bool {
-	switch b {
-	case ir.BindString, ir.BindBytes, ir.BindTimestamp, ir.BindDuration, ir.BindFieldMask:
-		return true
-	}
-	return false
-}
-
-var singularBindings = map[ir.Bind]pflagBinding{
-	ir.BindString:    {"String", "string"},
-	ir.BindBool:      {"Bool", "bool"},
-	ir.BindInt:       {"Int64", "int64"},
-	ir.BindUint:      {"Uint64", "uint64"},
-	ir.BindFloat:     {"Float64", "float64"},
-	ir.BindJSON:      {"String", "string"},
-	ir.BindList:      {"String", "string"},
-	ir.BindAny:       {"String", "string"},
-	ir.BindBytes:     {"String", "string"},
-	ir.BindTimestamp: {"String", "string"},
-	ir.BindDuration:  {"String", "string"},
-	ir.BindFieldMask: {"String", "string"},
-}
-
-var repeatedBindings = map[ir.Bind]pflagBinding{
-	ir.BindString:    {"StringArray", "[]string"},
-	ir.BindBool:      {"BoolSlice", "[]bool"},
-	ir.BindInt:       {"Int64Slice", "[]int64"},
-	ir.BindUint:      {"UintSlice", "[]uint"},
-	ir.BindFloat:     {"Float64Slice", "[]float64"},
-	ir.BindJSON:      {"StringArray", "[]string"},
-	ir.BindList:      {"StringArray", "[]string"},
-	ir.BindAny:       {"StringArray", "[]string"},
-	ir.BindBytes:     {"StringArray", "[]string"},
-	ir.BindTimestamp: {"StringArray", "[]string"},
-	ir.BindDuration:  {"StringArray", "[]string"},
-	ir.BindFieldMask: {"StringArray", "[]string"},
 }

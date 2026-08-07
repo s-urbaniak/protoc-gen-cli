@@ -1,7 +1,7 @@
 package irbuild
 
 import (
-	cliv1 "github.com/braveokafor/proto-to-cli/proto/cli/v1"
+	cliv1 "github.com/braveokafor/protoc-gen-cli/proto/cli/v1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )

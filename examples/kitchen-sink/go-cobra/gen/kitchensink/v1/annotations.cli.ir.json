@@ -5,13 +5,12 @@
   "proto_package": "kitchensink.v1",
   "file_options": {
     "go_package_name": "kitchensinkv1",
-    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
-    "go_descriptor_name": "File_kitchensink_v1_annotations_proto"
+    "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1"
   },
   "services": [
     {
+      "full_name": "kitchensink.v1.AnnotationsService",
       "proto_name": "AnnotationsService",
-      "go_name": "AnnotationsService",
       "name": "annotations",
       "aliases": [
         "ann"
@@ -19,22 +18,22 @@
       "short_help": "AnnotationsService's RPCs echo their requests.",
       "commands": [
         {
+          "full_name": "kitchensink.v1.AnnotationsService.Echo",
           "proto_name": "Echo",
-          "go_name": "Echo",
           "name": "echo",
           "aliases": [
             "e",
             "say"
           ],
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.EchoRequest",
             "proto_file": "kitchensink/v1/annotations.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "EchoRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.EchoRequest",
+          "response": "kitchensink.v1.EchoRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "text",
@@ -47,25 +46,25 @@
             "fields": [
               {
                 "label": "text",
-                "path": "text"
+                "path": "$[\"text\"]"
               }
             ]
           },
-          "example_json": "{\"text\":\"Mind the year, then celebrate!\"}"
+          "example_json": "{\"text\":\"Repellat aut et.\"}"
         },
         {
+          "full_name": "kitchensink.v1.AnnotationsService.Knobs",
           "proto_name": "Knobs",
-          "go_name": "Knobs",
           "name": "knobs",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.KnobsRequest",
             "proto_file": "kitchensink/v1/annotations.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "KnobsRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.KnobsRequest",
+          "response": "kitchensink.v1.KnobsRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "capital",
@@ -106,42 +105,19 @@
             {
               "proto_path": "lifted",
               "name": "lifted",
-              "short_help": "The next three options cannot apply.",
+              "short_help": "A line of text.",
               "bind": "string"
             },
             {
               "proto_path": "deepened",
               "name": "deepened",
+              "short_help": "Another line of text.",
               "bind": "string"
             },
             {
-              "proto_path": "insisted",
-              "name": "insisted",
-              "bind": "json"
-            },
-            {
-              "proto_path": "insisted.gadget",
-              "name": "insisted.gadget",
-              "bind": "json"
-            },
-            {
-              "proto_path": "insisted.gadget.gizmo",
-              "name": "insisted.gadget.gizmo",
-              "bind": "json"
-            },
-            {
-              "proto_path": "insisted.gadget.gizmo.leaf",
-              "name": "insisted.gadget.gizmo.leaf",
-              "bind": "string"
-            },
-            {
-              "proto_path": "insisted.gadget.leaf",
-              "name": "insisted.gadget.leaf",
-              "bind": "string"
-            },
-            {
-              "proto_path": "insisted.leaf",
-              "name": "insisted.leaf",
+              "proto_path": "worded",
+              "name": "worded",
+              "short_help": "Set by the annotation, not the comment.",
               "bind": "string"
             },
             {
@@ -156,73 +132,65 @@
             "fields": [
               {
                 "label": "capital",
-                "path": "capital"
+                "path": "$[\"capital\"]"
               },
               {
                 "label": "shallow.gadget.gizmo.leaf",
-                "path": "shallow.gadget.gizmo.leaf"
+                "path": "$[\"shallow\"][\"gadget\"][\"gizmo\"][\"leaf\"]"
               },
               {
                 "label": "shallow.gadget.leaf",
-                "path": "shallow.gadget.leaf"
+                "path": "$[\"shallow\"][\"gadget\"][\"leaf\"]"
               },
               {
                 "label": "shallow.leaf",
-                "path": "shallow.leaf"
+                "path": "$[\"shallow\"][\"leaf\"]"
               },
               {
                 "label": "whole.gadget.gizmo.leaf",
-                "path": "whole.gadget.gizmo.leaf"
+                "path": "$[\"whole\"][\"gadget\"][\"gizmo\"][\"leaf\"]"
               },
               {
                 "label": "whole.gadget.leaf",
-                "path": "whole.gadget.leaf"
+                "path": "$[\"whole\"][\"gadget\"][\"leaf\"]"
               },
               {
                 "label": "whole.leaf",
-                "path": "whole.leaf"
+                "path": "$[\"whole\"][\"leaf\"]"
               },
               {
                 "label": "lifted",
-                "path": "lifted"
+                "path": "$[\"lifted\"]"
               },
               {
                 "label": "deepened",
-                "path": "deepened"
+                "path": "$[\"deepened\"]"
               },
               {
-                "label": "insisted.gadget.gizmo.leaf",
-                "path": "insisted.gadget.gizmo.leaf"
-              },
-              {
-                "label": "insisted.gadget.leaf",
-                "path": "insisted.gadget.leaf"
-              },
-              {
-                "label": "insisted.leaf",
-                "path": "insisted.leaf"
+                "label": "worded",
+                "path": "$[\"worded\"]"
               },
               {
                 "label": "blob",
-                "path": "blob"
+                "path": "$[\"blob\"]"
               }
             ]
           },
-          "example_json": "{\"capital\":\"Mind the year, then celebrate!\",\"shallow\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Celebrate wins tied to the group.\"},\"leaf\":\"Up to the company, we chase a smaller woman.\"},\"leaf\":\"Onto the fact, align expectations.\"},\"whole\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Few agree when the number spikes.\"},\"leaf\":\"The colorful hand being unexpectedly fondly.\"},\"leaf\":\"Sample government at 9s intervals.\"},\"lifted\":\"One wake when the day spikes.\",\"deepened\":\"Attribute gains to year where possible.\",\"insisted\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Surface risks around the time barely.\"},\"leaf\":\"The solitude must be fancy far.\"},\"leaf\":\"Compare thing before and after you honour.\"},\"blob\":{}}"
+          "example_json": "{\"capital\":\"Repellat aut et.\",\"shallow\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Repudiandae quis recusandae.\"},\"leaf\":\"Vel odit omnis.\"},\"leaf\":\"Exercitationem vel maiores.\"},\"whole\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Aliquid iusto consequatur.\"},\"leaf\":\"Vero consequuntur sequi.\"},\"leaf\":\"Ea magnam minima.\"},\"lifted\":\"Animi omnis qui.\",\"deepened\":\"Aliquid cumque non.\",\"worded\":\"Quia officia dicta.\",\"blob\":{}}"
         },
         {
+          "full_name": "kitchensink.v1.AnnotationsService.Curated",
           "proto_name": "Curated",
-          "go_name": "Curated",
           "name": "curated",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.CuratedRequest",
             "proto_file": "kitchensink/v1/annotations.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "CuratedRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.CuratedRequest",
+          "response": "kitchensink.v1.CuratedRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "key",
@@ -265,29 +233,29 @@
             "fields": [
               {
                 "label": "KEY",
-                "path": "key"
+                "path": "$[\"key\"]"
               },
               {
                 "label": "widget.gadget.leaf",
-                "path": "widget.gadget.leaf"
+                "path": "$[\"widget\"][\"gadget\"][\"leaf\"]"
               }
             ]
           },
-          "example_json": "{\"key\":\"Mind the year, then celebrate!\",\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Celebrate wins tied to the group.\"},\"leaf\":\"Up to the company, we chase a smaller woman.\"},\"leaf\":\"Onto the fact, align expectations.\"}}"
+          "example_json": "{\"key\":\"Repellat aut et.\",\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Repudiandae quis recusandae.\"},\"leaf\":\"Vel odit omnis.\"},\"leaf\":\"Exercitationem vel maiores.\"}}"
         },
         {
+          "full_name": "kitchensink.v1.AnnotationsService.Flat",
           "proto_name": "Flat",
-          "go_name": "Flat",
           "name": "flat",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.FlatRequest",
             "proto_file": "kitchensink/v1/annotations.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "FlatRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.FlatRequest",
+          "response": "kitchensink.v1.FlatRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "widget",
@@ -330,15 +298,15 @@
             "fields": [
               {
                 "label": "widget",
-                "path": "widget"
+                "path": "$[\"widget\"]"
               },
               {
                 "label": "note",
-                "path": "note"
+                "path": "$[\"note\"]"
               }
             ]
           },
-          "example_json": "{\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Mind the year, then celebrate!\"},\"leaf\":\"Celebrate wins tied to the group.\"},\"leaf\":\"Up to the company, we chase a smaller woman.\"},\"note\":\"Onto the fact, align expectations.\"}"
+          "example_json": "{\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Repellat aut et.\"},\"leaf\":\"Repudiandae quis recusandae.\"},\"leaf\":\"Vel odit omnis.\"},\"note\":\"Exercitationem vel maiores.\"}"
         }
       ]
     }

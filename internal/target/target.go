@@ -1,25 +1,22 @@
-// Package target defines the contract that a code-generation back-end
-// implements.
-//
-// A target renders the IR of one proto file into source for one language
-// and CLI library. Implementations are in subpackages with the name
-// <language><library>. gocobra is Go + Cobra. cmd/protoc-gen-cli selects
-// one back-end by its opt=target= name.
+// Package target defines the code-generation back-end contract.
+// Implementations live in subpackages named <language><library>.
 package target
 
-import "github.com/braveokafor/proto-to-cli/internal/ir"
+import (
+	"github.com/braveokafor/protoc-gen-cli/internal/ir"
+	"google.golang.org/protobuf/compiler/protogen"
+)
 
 // A Target is one code-generation back-end.
-type Target func(model *ir.Model, opts Options) ([]File, error)
+type Target func(file *protogen.File, model *ir.Model, opts Options) ([]File, error)
 
-// Options contains the per-invocation settings that every target receives.
 type Options struct {
-	// TemplateOverride renders with this file instead of the target's
-	// built-in template. Empty uses the built-in.
-	TemplateOverride string
+	// TemplatesDir names a directory of *.tmpl files. Each {{define}} block in
+	// them replaces the built-in template fragment of the same name. Empty
+	// uses the built-ins.
+	TemplatesDir string
 }
 
-// A File is one file to emit.
 type File struct {
 	Name    string // Name is relative to the plugin's output directory.
 	Content string

@@ -1,0 +1,53 @@
+{{- define "exit" -}}
+// =============================================================================
+// Exit: every failure contains the code the shell sees.
+// =============================================================================
+
+const (
+	{{ prefix }}exitFailure   = 1
+	{{ prefix }}exitUsage     = 2
+	{{ prefix }}exitTimeout   = 124
+	{{ prefix }}exitInterrupt = 130
+)
+
+type {{ prefix }}exitError struct {
+	code int
+	err  error
+}
+
+// Error removes the gRPC "rpc error: ..." wrapper.
+func (e {{ prefix }}exitError) Error() string {
+	if msg := status.Convert(e.err).Message(); msg != "" {
+		return msg
+	}
+	return e.err.Error()
+}
+
+func (e {{ prefix }}exitError) Unwrap() error { return e.err }
+func (e {{ prefix }}exitError) ExitCode() int { return e.code }
+
+// The context, not the gRPC status, decides the exit code.
+func {{ prefix }}withExitCode(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+	var coded {{ prefix }}exitError
+	if errors.As(err, &coded) {
+		return err
+	}
+	switch ctx.Err() {
+	case context.DeadlineExceeded:
+		return {{ prefix }}exitError{ {{ prefix }}exitTimeout, err}
+	case context.Canceled:
+		return {{ prefix }}exitError{ {{ prefix }}exitInterrupt, err}
+	}
+	return {{ prefix }}exitError{ {{ prefix }}exitFailure, err}
+}
+
+func {{ prefix }}noArgs(cmd *cobra.Command, args []string) error {
+	if err := cobra.NoArgs(cmd, args); err != nil {
+		return {{ prefix }}exitError{ {{ prefix }}exitUsage, err}
+	}
+	return nil
+}
+{{ end -}}

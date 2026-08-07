@@ -7,10 +7,11 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/braveokafor/proto-to-cli/internal/ir"
+	"github.com/braveokafor/protoc-gen-cli/internal/ir"
 	"github.com/stoewer/go-strcase"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/descriptorpb"
 )
 
 // Options configures the IR builder.
@@ -29,7 +30,6 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 		opts.PluginVersion = "dev"
 	}
 
-	// A request message that several RPCs share can repeat its warnings.
 	warned := map[string]bool{}
 	warn := opts.Warn
 	opts.Warn = func(msg string) {
@@ -46,9 +46,8 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 		GeneratedFilenamePrefix: file.GeneratedFilenamePrefix,
 		ProtoPackage:            string(file.Desc.Package()),
 		FileOptions: ir.FileOptions{
-			GoPackageName:    string(file.GoPackageName),
-			GoImportPath:     string(file.GoImportPath),
-			GoDescriptorName: file.GoDescriptorIdent.GoName,
+			GoPackageName: string(file.GoPackageName),
+			GoImportPath:  string(file.GoImportPath),
 		},
 	}
 
@@ -58,67 +57,73 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 			name = s
 		}
 
-		comment := cleanComment(string(svc.Comments.Leading))
-		short, long := helpFrom(comment)
-
 		so := serviceOptions(svc.Desc)
+		short, long := helpFrom(cmp.Or(so.GetHelp(), cleanComment(string(svc.Comments.Leading))))
+
 		service := &ir.Service{
-			ProtoName: string(svc.Desc.Name()),
-			GoName:    svc.GoName,
-			Name:      cmp.Or(so.GetName(), name),
-			Aliases:   so.GetAliases(),
-			Hidden:    so.GetHidden(),
-			ShortHelp: short,
-			LongHelp:  long,
+			FullName:   string(svc.Desc.FullName()),
+			ProtoName:  string(svc.Desc.Name()),
+			Name:       cmp.Or(so.GetName(), name),
+			Aliases:    so.GetAliases(),
+			Deprecated: svc.Desc.Options().(*descriptorpb.ServiceOptions).GetDeprecated(),
+			ShortHelp:  short,
+			LongHelp:   long,
 		}
 
 		for _, m := range svc.Methods {
-			request := &ir.Request{
+			request := &ir.MessageRef{
 				FullName:     string(m.Input.Desc.FullName()),
 				ProtoFile:    m.Input.Desc.ParentFile().Path(),
 				ProtoPackage: string(m.Input.Desc.ParentFile().Package()),
-				GoName:       m.Input.GoIdent.GoName,
 				GoImportPath: string(m.Input.GoIdent.GoImportPath),
 			}
 			request.GoPackageName = string(opts.Files[request.ProtoFile].GoPackageName)
 
-			clientStreaming := m.Desc.IsStreamingClient()
-			serverStreaming := m.Desc.IsStreamingServer()
-
-			doc := cleanComment(string(m.Comments.Leading))
-			notes := []string{cleanComment(string(m.Input.Comments.Leading))}
-			if clientStreaming {
-				notes = append(notes, "Reads JSON requests from stdin, one after another.")
+			shape := ir.ShapeUnary
+			switch {
+			case m.Desc.IsStreamingClient() && m.Desc.IsStreamingServer():
+				shape = ir.ShapeBidi
+			case m.Desc.IsStreamingClient():
+				shape = ir.ShapeClientStream
+			case m.Desc.IsStreamingServer():
+				shape = ir.ShapeServerStream
 			}
-			if serverStreaming {
+
+			co := commandOptions(m.Desc)
+			doc := cmp.Or(co.GetHelp(), cleanComment(string(m.Comments.Leading)))
+			// A well-known type's comment documents protobuf, not the caller's API.
+			var notes []string
+			if _, wellKnown := messageBinds[m.Input.Desc.FullName()]; !wellKnown {
+				notes = append(notes, cleanComment(string(m.Input.Comments.Leading)))
+			}
+			if shape == ir.ShapeClientStream || shape == ir.ShapeBidi {
+				notes = append(notes, "Each request body becomes one request.")
+			}
+			if shape == ir.ShapeServerStream || shape == ir.ShapeBidi {
 				notes = append(
 					notes,
-					"The server may send multiple responses; each prints as it arrives.",
+					"The server can send multiple responses. Each prints as it arrives.",
 				)
 			}
 			short, long := helpFrom(doc, notes...)
 
-			co := commandOptions(m.Desc)
 			cmd := &ir.Command{
+				FullName:  string(m.Desc.FullName()),
 				ProtoName: string(m.Desc.Name()),
-				GoName:    m.GoName,
 				Name: cmp.Or(
 					co.GetName(),
 					strcase.KebabCase(string(m.Desc.Name())),
 				),
-				Aliases:         co.GetAliases(),
-				Hidden:          co.GetHidden(),
-				Input:           request,
-				Output:          string(m.Output.Desc.FullName()),
-				ClientStreaming: clientStreaming,
-				ServerStreaming: serverStreaming,
-				ShortHelp:       short,
-				LongHelp:        long,
+				Aliases:    co.GetAliases(),
+				Deprecated: m.Desc.Options().(*descriptorpb.MethodOptions).GetDeprecated(),
+				Request:    request,
+				Response:   string(m.Output.Desc.FullName()),
+				Shape:      shape,
+				ShortHelp:  short,
+				LongHelp:   long,
 			}
 
-			if !clientStreaming {
-				cmd.Params = buildParams(m.Input.Desc, opts)
-			}
+			cmd.Params = buildParams(m.Input.Desc, opts)
 			cmd.View = buildView(m.Output.Desc, opts)
 			cmd.ExampleJSON = buildExample(m.Input.Desc, opts)
 
@@ -135,7 +140,6 @@ func Build(file *protogen.File, opts Options) (*ir.Model, error) {
 	return model, nil
 }
 
-// long is empty when it would only repeat short.
 func helpFrom(primary string, extra ...string) (short, long string) {
 	short = new(doc.Package).Synopsis(strings.TrimSpace(primary))
 	parts := slices.DeleteFunc(
@@ -156,7 +160,6 @@ func cleanComment(s string) string {
 	return strings.TrimSpace(strings.Join(lines, "\n"))
 }
 
-// isExpandable tells if the sub-fields of fd expand into their own entries.
 func isExpandable(fd protoreflect.FieldDescriptor) bool {
 	return isNested(fd) && !fd.IsList() && !fd.IsMap()
 }

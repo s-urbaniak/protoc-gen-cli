@@ -8,8 +8,8 @@ package kitchensinkv1
 
 import (
 	context "context"
-	v1 "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/imported/v1"
-	v11 "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/second/v1"
+	v1 "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/imported/v1"
+	v11 "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/second/v1"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"

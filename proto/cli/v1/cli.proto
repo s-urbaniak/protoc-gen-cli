@@ -6,56 +6,56 @@ package cli.v1;
 
 import "google/protobuf/descriptor.proto";
 
-option go_package = "github.com/braveokafor/proto-to-cli/proto/cli/v1;cliv1";
+option go_package = "github.com/braveokafor/protoc-gen-cli/proto/cli/v1;cliv1";
 
 // ServiceOptions controls the command that a service generates.
 message ServiceOptions {
   // name replaces the derived command name.
   string name = 1;
-  // hidden removes the command from the lists. The command continues to operate.
-  bool hidden = 2;
   // aliases are other names for the command.
-  repeated string aliases = 3;
+  repeated string aliases = 2;
+  // help replaces the command's derived help text.
+  // The plugin reads the service's leading comment when help is empty.
+  string help = 3;
 }
 
 // CommandOptions controls the subcommand that an rpc generates.
 message CommandOptions {
   // name replaces the derived subcommand name.
   string name = 1;
-  // hidden removes the subcommand from the lists. The subcommand continues to
-  // operate.
-  bool hidden = 2;
   // aliases are other names for the subcommand.
-  repeated string aliases = 3;
+  repeated string aliases = 2;
+  // help replaces the command's derived help text.
+  // The plugin reads the rpc's leading comment when help is empty.
+  string help = 3;
 }
 
 // ParamOptions controls the param that a request field generates.
 message ParamOptions {
   // name replaces the field's derived segment in param names.
   string name = 1;
-  // hidden removes the param from the lists. The param continues to parse.
-  bool hidden = 2;
-  // shorthand is the one-letter form of the param. Do not use f, i, h, or o.
-  string shorthand = 3;
+  // shorthand is the one-letter form of the param. Do not use f, d, h, or o.
+  string shorthand = 2;
   // skip derives no params from the field or its subtree. Whole-request input
   // continues to set the field.
-  bool skip = 4;
-  // required means that the user must type the param. Whole-request input is
-  // not sufficient.
-  bool required = 5;
+  bool skip = 3;
   // expand_depth sets the sub-param budget below the field. Zero keeps only
   // the field's own param.
-  optional int32 expand_depth = 6;
+  optional int32 expand_depth = 4;
   // hoist moves the field's sub-params into the parent namespace. The field's
   // own param remains.
-  bool hoist = 7;
+  bool hoist = 5;
+  // help replaces the param's derived help text.
+  // The plugin reads the field's leading comment when help is empty.
+  string help = 6;
 }
 
 // ViewOptions declares the view of a message.
 message ViewOptions {
   // fields replace the derived view fields in all views of the message.
   repeated ViewField fields = 1;
-  // expand_depth sets the sub-field budget of the message's derived view.
+  // expand_depth sets the sub-field budget of the derived view.
+  // Zero keeps only the message's own fields.
   optional int32 expand_depth = 2;
 }
 
@@ -63,8 +63,8 @@ message ViewOptions {
 message ViewField {
   // label is the display text for the field. An empty label uses the path.
   string label = 1;
-  // path joins proto field names with dots, from the viewed message. Each
-  // segment must be a singular message field that expands.
+  // path joins proto field names with dots, from the viewed message.
+  // Each segment but the last must be a singular message field that expands.
   string path = 2;
 }
 

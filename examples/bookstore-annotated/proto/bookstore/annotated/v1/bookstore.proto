@@ -22,7 +22,7 @@ import "cli/v1/cli.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1;bookstoreannotatedv1";
+option go_package = "github.com/braveokafor/protoc-gen-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1;bookstoreannotatedv1";
 
 // A simple Bookstore API.
 //
@@ -30,6 +30,7 @@ option go_package = "github.com/braveokafor/proto-to-cli/examples/bookstore-anno
 service BookstoreService {
   option (cli.v1.service).name = "catalog";
   option (cli.v1.service).aliases = "books";
+  option (cli.v1.service).help = "Browse and edit the shelves and their books.";
 
   // Returns a list of all shelves in the bookstore.
   rpc ListShelves(google.protobuf.Empty) returns (ListShelvesResponse) {
@@ -41,7 +42,7 @@ service BookstoreService {
   rpc GetShelf(GetShelfRequest) returns (Shelf) {}
   // Deletes a shelf, including all books that are stored on the shelf.
   rpc DeleteShelf(DeleteShelfRequest) returns (google.protobuf.Empty) {
-    option (cli.v1.command).hidden = true;
+    option deprecated = true;
   }
   // Returns a list of books on a shelf.
   rpc ListBooks(ListBooksRequest) returns (ListBooksResponse) {
@@ -50,6 +51,7 @@ service BookstoreService {
   // Creates a new book.
   rpc CreateBook(CreateBookRequest) returns (Book) {
     option (cli.v1.command).name = "add";
+    option (cli.v1.command).help = "Put a new book on a shelf.";
   }
   // Returns a specific book.
   rpc GetBook(GetBookRequest) returns (Book) {
@@ -79,7 +81,7 @@ message Book {
   // A book title.
   string title = 3 [
     (cli.v1.param).shorthand = "t",
-    (cli.v1.param).required = true
+    (cli.v1.param).help = "Title to print on the spine."
   ];
 }
 
@@ -122,7 +124,7 @@ message ListBooksResponse {
 // Request message for CreateBook method.
 message CreateBookRequest {
   // The ID of the shelf on which to create a book.
-  int64 shelf = 1 [(cli.v1.param).required = true];
+  int64 shelf = 1;
   // A book resource to create on the shelf.
   Book book = 2;
 }
@@ -130,9 +132,9 @@ message CreateBookRequest {
 // Request message for GetBook method.
 message GetBookRequest {
   // The ID of the shelf from which to retrieve a book.
-  int64 shelf = 1 [(cli.v1.param).required = true];
+  int64 shelf = 1;
   // The ID of the book to retrieve.
-  int64 book = 2 [(cli.v1.param).required = true];
+  int64 book = 2;
 }
 
 // Request message for DeleteBook method.
@@ -288,7 +290,7 @@ message WatchAuctionRequest {
     string author = 2;
   }
   // Cap on the number of updates streamed back.
-  int32 limit = 3 [(cli.v1.param).hidden = true];
+  int32 limit = 3 [deprecated = true];
 }
 
 message PlaceBidRequest {
@@ -307,9 +309,9 @@ message AuctionUpdate {
 
 // InventoryService is the back office's stock system.
 service InventoryService {
-  option (cli.v1.service).hidden = true;
+  option deprecated = true;
 
-  // ImportBooks ingests a book catalogue as a stream of records.
+  // ImportBooks ingests a book catalogue as a stream of books.
   rpc ImportBooks(stream ImportBooksRequest) returns (ImportSummary) {
     option (cli.v1.command).name = "import";
   }
@@ -337,7 +339,7 @@ message Report {
   int64 books = 2;
 }
 
-// ImportBooksRequest is one record of a catalogue import.
+// ImportBooksRequest is one book in a catalogue import.
 message ImportBooksRequest {
   int64 shelf = 1;
   Book book = 2;

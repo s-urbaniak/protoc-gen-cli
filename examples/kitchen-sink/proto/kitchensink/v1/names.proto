@@ -7,7 +7,7 @@ import "imported/v1/imported.proto";
 import "kitchensink/v1/fields.proto";
 import "second/v1/second.proto";
 
-option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
+option go_package = "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
 
 // NamesService's RPCs echo their requests.
 service NamesService {
@@ -37,9 +37,13 @@ message CollisionsRequest {
 
 message ReservedRequest {
   string filename = 1;
-  string input = 2;
+  string data = 2;
   string help = 3;
   string output = 4;
+  string timeout = 5;
+  string example = 6;
+  string dry_run = 7;
+  string columns = 8;
 }
 
 message CasingRequest {

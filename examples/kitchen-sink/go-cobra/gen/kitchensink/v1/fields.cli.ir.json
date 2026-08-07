@@ -5,31 +5,29 @@
   "proto_package": "kitchensink.v1",
   "file_options": {
     "go_package_name": "kitchensinkv1",
-    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
-    "go_descriptor_name": "File_kitchensink_v1_fields_proto"
+    "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1"
   },
   "services": [
     {
+      "full_name": "kitchensink.v1.FieldsService",
       "proto_name": "FieldsService",
-      "go_name": "FieldsService",
       "name": "fields",
       "short_help": "FieldsService echoes each request.",
-      "long_help": "FieldsService echoes each request. Thus the response shows exactly what\narrived.",
       "commands": [
         {
+          "full_name": "kitchensink.v1.FieldsService.Scalars",
           "proto_name": "Scalars",
-          "go_name": "Scalars",
           "name": "scalars",
           "short_help": "Scalars contains every proto scalar type.",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.ScalarsRequest",
             "proto_file": "kitchensink/v1/fields.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "ScalarsRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.ScalarsRequest",
+          "response": "kitchensink.v1.ScalarsRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "double_field",
@@ -119,87 +117,86 @@
             "fields": [
               {
                 "label": "double_field",
-                "path": "doubleField"
+                "path": "$[\"doubleField\"]"
               },
               {
                 "label": "float_field",
-                "path": "floatField"
+                "path": "$[\"floatField\"]"
               },
               {
                 "label": "int32_field",
-                "path": "int32Field"
+                "path": "$[\"int32Field\"]"
               },
               {
                 "label": "int64_field",
-                "path": "int64Field"
+                "path": "$[\"int64Field\"]"
               },
               {
                 "label": "uint32_field",
-                "path": "uint32Field"
+                "path": "$[\"uint32Field\"]"
               },
               {
                 "label": "uint64_field",
-                "path": "uint64Field"
+                "path": "$[\"uint64Field\"]"
               },
               {
                 "label": "sint32_field",
-                "path": "sint32Field"
+                "path": "$[\"sint32Field\"]"
               },
               {
                 "label": "sint64_field",
-                "path": "sint64Field"
+                "path": "$[\"sint64Field\"]"
               },
               {
                 "label": "fixed32_field",
-                "path": "fixed32Field"
+                "path": "$[\"fixed32Field\"]"
               },
               {
                 "label": "fixed64_field",
-                "path": "fixed64Field"
+                "path": "$[\"fixed64Field\"]"
               },
               {
                 "label": "sfixed32_field",
-                "path": "sfixed32Field"
+                "path": "$[\"sfixed32Field\"]"
               },
               {
                 "label": "sfixed64_field",
-                "path": "sfixed64Field"
+                "path": "$[\"sfixed64Field\"]"
               },
               {
                 "label": "bool_field",
-                "path": "boolField"
+                "path": "$[\"boolField\"]"
               },
               {
                 "label": "string_field",
-                "path": "stringField"
+                "path": "$[\"stringField\"]"
               },
               {
                 "label": "bytes_field",
-                "path": "bytesField"
+                "path": "$[\"bytesField\"]"
               }
             ]
           },
-          "example_json": "{\"doubleField\":998,\"floatField\":103,\"int32Field\":864,\"int64Field\":\"913\",\"uint32Field\":286,\"uint64Field\":\"935\",\"sint32Field\":813,\"sint64Field\":\"106\",\"fixed32Field\":553,\"fixed64Field\":\"297\",\"sfixed32Field\":380,\"sfixed64Field\":\"986\",\"boolField\":true,\"stringField\":\"Few agree when the number spikes.\",\"bytesField\":\"VGhlIGNvbG9yZnVsIGhhbmQgYmVpbmcgdW5leHBlY3RlZGx5IGZvbmRseS4=\"}"
+          "example_json": "{\"doubleField\":998,\"floatField\":103,\"int32Field\":864,\"int64Field\":\"913\",\"uint32Field\":286,\"uint64Field\":\"935\",\"sint32Field\":813,\"sint64Field\":\"106\",\"fixed32Field\":553,\"fixed64Field\":\"297\",\"sfixed32Field\":380,\"sfixed64Field\":\"986\",\"boolField\":true,\"stringField\":\"Aliquid iusto consequatur.\",\"bytesField\":\"VmVybyBjb25zZXF1dW50dXIgc2VxdWku\"}"
         },
         {
+          "full_name": "kitchensink.v1.FieldsService.Messages",
           "proto_name": "Messages",
-          "go_name": "Messages",
           "name": "messages",
           "short_help": "Messages contains every shape of message field.",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.MessagesRequest",
             "proto_file": "kitchensink/v1/fields.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "MessagesRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.MessagesRequest",
+          "response": "kitchensink.v1.MessagesRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "outer",
               "name": "outer",
-              "short_help": "The outer message.",
               "bind": "json"
             },
             {
@@ -388,147 +385,147 @@
             "fields": [
               {
                 "label": "outer.string_leaf",
-                "path": "outer.stringLeaf"
+                "path": "$[\"outer\"][\"stringLeaf\"]"
               },
               {
                 "label": "outer.int64_leaf",
-                "path": "outer.int64Leaf"
+                "path": "$[\"outer\"][\"int64Leaf\"]"
               },
               {
                 "label": "outer.middle.leaf",
-                "path": "outer.middle.leaf"
+                "path": "$[\"outer\"][\"middle\"][\"leaf\"]"
               },
               {
                 "label": "outer.middle.inner.leaf",
-                "path": "outer.middle.inner.leaf"
+                "path": "$[\"outer\"][\"middle\"][\"inner\"][\"leaf\"]"
               },
               {
                 "label": "outer.middle.inner.deep.leaf",
-                "path": "outer.middle.inner.deep.leaf"
+                "path": "$[\"outer\"][\"middle\"][\"inner\"][\"deep\"][\"leaf\"]"
               },
               {
                 "label": "outer.middle.inner.deep.deeper.leaf",
-                "path": "outer.middle.inner.deep.deeper.leaf"
+                "path": "$[\"outer\"][\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"leaf\"]"
               },
               {
                 "label": "outer.middle.inner.deep.deeper.deepest",
-                "path": "outer.middle.inner.deep.deeper.deepest"
+                "path": "$[\"outer\"][\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"deepest\"]"
               },
               {
                 "label": "kebab_outer.string_leaf",
-                "path": "kebabOuter.stringLeaf"
+                "path": "$[\"kebabOuter\"][\"stringLeaf\"]"
               },
               {
                 "label": "kebab_outer.int64_leaf",
-                "path": "kebabOuter.int64Leaf"
+                "path": "$[\"kebabOuter\"][\"int64Leaf\"]"
               },
               {
                 "label": "kebab_outer.middle.leaf",
-                "path": "kebabOuter.middle.leaf"
+                "path": "$[\"kebabOuter\"][\"middle\"][\"leaf\"]"
               },
               {
                 "label": "kebab_outer.middle.inner.leaf",
-                "path": "kebabOuter.middle.inner.leaf"
+                "path": "$[\"kebabOuter\"][\"middle\"][\"inner\"][\"leaf\"]"
               },
               {
                 "label": "kebab_outer.middle.inner.deep.leaf",
-                "path": "kebabOuter.middle.inner.deep.leaf"
+                "path": "$[\"kebabOuter\"][\"middle\"][\"inner\"][\"deep\"][\"leaf\"]"
               },
               {
                 "label": "kebab_outer.middle.inner.deep.deeper.leaf",
-                "path": "kebabOuter.middle.inner.deep.deeper.leaf"
+                "path": "$[\"kebabOuter\"][\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"leaf\"]"
               },
               {
                 "label": "kebab_outer.middle.inner.deep.deeper.deepest",
-                "path": "kebabOuter.middle.inner.deep.deeper.deepest"
+                "path": "$[\"kebabOuter\"][\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"deepest\"]"
               },
               {
                 "label": "timestamp",
-                "path": "timestamp"
+                "path": "$[\"timestamp\"]"
               },
               {
                 "label": "labels",
-                "path": "labels"
+                "path": "$[\"labels\"]"
               },
               {
                 "label": "duration",
-                "path": "duration"
+                "path": "$[\"duration\"]"
               },
               {
                 "label": "field_mask",
-                "path": "fieldMask"
+                "path": "$[\"fieldMask\"]"
               },
               {
                 "label": "struct",
-                "path": "struct"
+                "path": "$[\"struct\"]"
               },
               {
                 "label": "recursive.name",
-                "path": "recursive.name"
+                "path": "$[\"recursive\"][\"name\"]"
               },
               {
                 "label": "recursive.next",
-                "path": "recursive.next"
+                "path": "$[\"recursive\"][\"next\"]"
               },
               {
                 "label": "odd.even.odd",
-                "path": "odd.even.odd"
+                "path": "$[\"odd\"][\"even\"][\"odd\"]"
               }
             ],
             "lists": [
               {
                 "full_name": "kitchensink.v1.Outer",
                 "label": "outers",
-                "path": "outers",
+                "path": "$[\"outers\"][*]",
                 "fields": [
                   {
                     "label": "string_leaf",
-                    "path": "stringLeaf"
+                    "path": "$[\"stringLeaf\"]"
                   },
                   {
                     "label": "int64_leaf",
-                    "path": "int64Leaf"
+                    "path": "$[\"int64Leaf\"]"
                   },
                   {
                     "label": "middle.leaf",
-                    "path": "middle.leaf"
+                    "path": "$[\"middle\"][\"leaf\"]"
                   },
                   {
                     "label": "middle.inner.leaf",
-                    "path": "middle.inner.leaf"
+                    "path": "$[\"middle\"][\"inner\"][\"leaf\"]"
                   },
                   {
                     "label": "middle.inner.deep.leaf",
-                    "path": "middle.inner.deep.leaf"
+                    "path": "$[\"middle\"][\"inner\"][\"deep\"][\"leaf\"]"
                   },
                   {
                     "label": "middle.inner.deep.deeper.leaf",
-                    "path": "middle.inner.deep.deeper.leaf"
+                    "path": "$[\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"leaf\"]"
                   },
                   {
                     "label": "middle.inner.deep.deeper.deepest.leaf",
-                    "path": "middle.inner.deep.deeper.deepest.leaf"
+                    "path": "$[\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"deepest\"][\"leaf\"]"
                   }
                 ]
               }
             ]
           },
-          "example_json": "{\"outer\":{\"stringLeaf\":\"Mind the year, then celebrate!\",\"int64Leaf\":\"864\",\"middle\":{\"leaf\":\"Launch the world midweek for clarity.\",\"inner\":{\"leaf\":\"Retire outdated company each quarter.\",\"deep\":{\"leaf\":\"Protect the woman under enthusiastic load.\",\"deeper\":{\"leaf\":\"Theirs life has ready for fiction.\",\"deepest\":{\"leaf\":\"Publish a changelog entry for the way.\"}}}}}},\"kebabOuter\":{\"stringLeaf\":\"Consistent hand being the foundation of thrill.\",\"int64Leaf\":\"602\",\"middle\":{\"leaf\":\"Write the one-sentence summary for the way.\",\"inner\":{\"leaf\":\"One wake when the day spikes.\",\"deep\":{\"leaf\":\"Attribute gains to year where possible.\",\"deeper\":{\"leaf\":\"Surface risks around the time barely.\",\"deepest\":{\"leaf\":\"The solitude must be fancy far.\"}}}}}},\"timestamp\":\"2026-02-21T12:14:50Z\",\"outers\":[{\"stringLeaf\":\"Defaults at Genability did shape day.\",\"int64Leaf\":\"202\",\"middle\":{\"leaf\":\"Review the fact every 4 weeks.\",\"inner\":{\"leaf\":\"Alert on number thresholds today.\",\"deep\":{\"leaf\":\"Compare group before and after you encourage.\",\"deeper\":{\"leaf\":\"The advantage were be smiling most.\",\"deepest\":{\"leaf\":\"The thing am sleepy.\"}}}}}}],\"labels\":{\"hand\":\"Depending on the hand, we swallow a smaller woman.\"},\"duration\":\"2258s\",\"struct\":{},\"recursive\":{\"name\":\"Warm starts beat cold place.\",\"next\":{}},\"odd\":{\"even\":{\"odd\":{}}}}"
+          "example_json": "{\"outer\":{\"stringLeaf\":\"Repellat aut et.\",\"int64Leaf\":\"913\",\"middle\":{\"leaf\":\"Quis recusandae vel.\",\"inner\":{\"leaf\":\"Odit omnis exercitationem.\",\"deep\":{\"leaf\":\"Vel maiores aliquid.\",\"deeper\":{\"leaf\":\"Iusto consequatur vero.\",\"deepest\":{\"leaf\":\"Consequuntur sequi ea.\"}}}}}},\"kebabOuter\":{\"stringLeaf\":\"Magnam minima animi.\",\"int64Leaf\":\"761\",\"middle\":{\"leaf\":\"Qui aliquid cumque.\",\"inner\":{\"leaf\":\"Non quia officia.\",\"deep\":{\"leaf\":\"Dicta vel voluptatem.\",\"deeper\":{\"leaf\":\"Dicta eos iste.\",\"deepest\":{\"leaf\":\"Est suscipit quaerat.\"}}}}}},\"timestamp\":\"2026-02-21T12:14:50Z\",\"outers\":[{\"stringLeaf\":\"Non aliquid in.\",\"int64Leaf\":\"190\",\"middle\":{\"leaf\":\"Sed et voluptatibus.\",\"inner\":{\"leaf\":\"Molestiae qui at.\",\"deep\":{\"leaf\":\"Qui laborum aut.\",\"deeper\":{\"leaf\":\"Tempora dolores debitis.\",\"deepest\":{\"leaf\":\"Distinctio aut perspiciatis.\"}}}}}}],\"labels\":{\"you\":\"Aut sed doloremque.\"},\"duration\":\"2028s\",\"struct\":{},\"recursive\":{\"name\":\"Quis quibusdam iste.\",\"next\":{}},\"odd\":{\"even\":{\"odd\":{}}}}"
         },
         {
+          "full_name": "kitchensink.v1.FieldsService.Repeated",
           "proto_name": "Repeated",
-          "go_name": "Repeated",
           "name": "repeated",
           "short_help": "Repeated contains one repeated field for each element type.",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.RepeatedRequest",
             "proto_file": "kitchensink/v1/fields.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "RepeatedRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.RepeatedRequest",
+          "response": "kitchensink.v1.RepeatedRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "strings",
@@ -580,83 +577,83 @@
             "fields": [
               {
                 "label": "strings",
-                "path": "strings"
+                "path": "$[\"strings\"]"
               },
               {
                 "label": "bools",
-                "path": "bools"
+                "path": "$[\"bools\"]"
               },
               {
                 "label": "ints",
-                "path": "ints"
+                "path": "$[\"ints\"]"
               },
               {
                 "label": "uints",
-                "path": "uints"
+                "path": "$[\"uints\"]"
               },
               {
                 "label": "doubles",
-                "path": "doubles"
+                "path": "$[\"doubles\"]"
               },
               {
                 "label": "timestamps",
-                "path": "timestamps"
+                "path": "$[\"timestamps\"]"
               }
             ],
             "lists": [
               {
                 "full_name": "kitchensink.v1.Outer",
                 "label": "outers",
-                "path": "outers",
+                "path": "$[\"outers\"][*]",
                 "fields": [
                   {
                     "label": "string_leaf",
-                    "path": "stringLeaf"
+                    "path": "$[\"stringLeaf\"]"
                   },
                   {
                     "label": "int64_leaf",
-                    "path": "int64Leaf"
+                    "path": "$[\"int64Leaf\"]"
                   },
                   {
                     "label": "middle.leaf",
-                    "path": "middle.leaf"
+                    "path": "$[\"middle\"][\"leaf\"]"
                   },
                   {
                     "label": "middle.inner.leaf",
-                    "path": "middle.inner.leaf"
+                    "path": "$[\"middle\"][\"inner\"][\"leaf\"]"
                   },
                   {
                     "label": "middle.inner.deep.leaf",
-                    "path": "middle.inner.deep.leaf"
+                    "path": "$[\"middle\"][\"inner\"][\"deep\"][\"leaf\"]"
                   },
                   {
                     "label": "middle.inner.deep.deeper.leaf",
-                    "path": "middle.inner.deep.deeper.leaf"
+                    "path": "$[\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"leaf\"]"
                   },
                   {
                     "label": "middle.inner.deep.deeper.deepest.leaf",
-                    "path": "middle.inner.deep.deeper.deepest.leaf"
+                    "path": "$[\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"deepest\"][\"leaf\"]"
                   }
                 ]
               }
             ]
           },
-          "example_json": "{\"strings\":[\"Mind the year, then celebrate!\"],\"bools\":[true],\"ints\":[\"864\"],\"uints\":[\"913\"],\"doubles\":[286],\"timestamps\":[\"2029-05-05T02:49:15Z\"],\"outers\":[{\"stringLeaf\":\"Surface risks around the year much.\",\"int64Leaf\":\"297\",\"middle\":{\"leaf\":\"Theirs life has ready for fiction.\",\"inner\":{\"leaf\":\"Publish a changelog entry for the way.\",\"deep\":{\"leaf\":\"Consistent hand being the foundation of thrill.\",\"deeper\":{\"leaf\":\"Sample government at 9s intervals.\",\"deepest\":{\"leaf\":\"One wake when the day spikes.\"}}}}}}]}"
+          "example_json": "{\"strings\":[\"Repellat aut et.\"],\"bools\":[true],\"ints\":[\"913\"],\"uints\":[\"286\"],\"doubles\":[935],\"timestamps\":[\"2028-02-15T16:30:16Z\"],\"outers\":[{\"stringLeaf\":\"Odit omnis exercitationem.\",\"int64Leaf\":\"380\",\"middle\":{\"leaf\":\"Maiores aliquid iusto.\",\"inner\":{\"leaf\":\"Consequatur vero consequuntur.\",\"deep\":{\"leaf\":\"Sequi ea magnam.\",\"deeper\":{\"leaf\":\"Minima animi omnis.\",\"deepest\":{\"leaf\":\"Qui aliquid cumque.\"}}}}}}]}"
         },
         {
+          "full_name": "kitchensink.v1.FieldsService.Maps",
           "proto_name": "Maps",
-          "go_name": "Maps",
           "name": "maps",
           "short_help": "Maps contains one map field for each value type, plus integer and bool keys.",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.MapsRequest",
             "proto_file": "kitchensink/v1/fields.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "MapsRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.MapsRequest",
+          "response": "kitchensink.v1.MapsRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "string_values",
@@ -719,58 +716,58 @@
             "fields": [
               {
                 "label": "string_values",
-                "path": "stringValues"
+                "path": "$[\"stringValues\"]"
               },
               {
                 "label": "bool_values",
-                "path": "boolValues"
+                "path": "$[\"boolValues\"]"
               },
               {
                 "label": "int64_values",
-                "path": "int64Values"
+                "path": "$[\"int64Values\"]"
               },
               {
                 "label": "uint64_values",
-                "path": "uint64Values"
+                "path": "$[\"uint64Values\"]"
               },
               {
                 "label": "double_values",
-                "path": "doubleValues"
+                "path": "$[\"doubleValues\"]"
               },
               {
                 "label": "timestamp_values",
-                "path": "timestampValues"
+                "path": "$[\"timestampValues\"]"
               },
               {
                 "label": "outer_values",
-                "path": "outerValues"
+                "path": "$[\"outerValues\"]"
               },
               {
                 "label": "int64_keys",
-                "path": "int64Keys"
+                "path": "$[\"int64Keys\"]"
               },
               {
                 "label": "bool_keys",
-                "path": "boolKeys"
+                "path": "$[\"boolKeys\"]"
               }
             ]
           },
-          "example_json": "{\"stringValues\":{\"itself\":\"Mind the year, then celebrate!\"},\"boolValues\":{\"still\":true},\"int64Values\":{\"her\":\"813\"},\"uint64Values\":{\"without\":\"297\"},\"doubleValues\":{\"while\":351},\"timestampValues\":{\"how\":\"2021-04-01T11:23:44Z\"},\"outerValues\":{\"children\":{\"stringLeaf\":\"Because, keep the work simple.\",\"int64Leaf\":\"761\",\"middle\":{\"leaf\":\"The friendship does be uptight enough.\",\"inner\":{\"leaf\":\"Attribute gains to year where possible.\",\"deep\":{\"leaf\":\"Surface risks around the time barely.\",\"deeper\":{\"leaf\":\"The solitude must be fancy far.\",\"deepest\":{\"leaf\":\"Compare thing before and after you honour.\"}}}}}}},\"int64Keys\":{\"583\":\"Steady unusual progress in Boise has visible.\"},\"boolKeys\":{\"true\":\"Publish a changelog entry for the child.\"}}"
+          "example_json": "{\"stringValues\":{\"turn\":\"Repellat aut et.\"},\"boolValues\":{\"have\":true},\"int64Values\":{\"world\":\"106\"},\"uint64Values\":{\"honour\":\"380\"},\"doubleValues\":{\"this\":435},\"timestampValues\":{\"how\":\"2021-04-01T11:23:44Z\"},\"outerValues\":{\"that\":{\"stringLeaf\":\"Magnam minima animi.\",\"int64Leaf\":\"761\",\"middle\":{\"leaf\":\"Qui aliquid cumque.\",\"inner\":{\"leaf\":\"Non quia officia.\",\"deep\":{\"leaf\":\"Dicta vel voluptatem.\",\"deeper\":{\"leaf\":\"Dicta eos iste.\",\"deepest\":{\"leaf\":\"Est suscipit quaerat.\"}}}}}}},\"int64Keys\":{\"202\":\"Aliquid in consectetur.\"},\"boolKeys\":{\"true\":\"Et voluptatibus molestiae.\"}}"
         },
         {
+          "full_name": "kitchensink.v1.FieldsService.Wrappers",
           "proto_name": "Wrappers",
-          "go_name": "Wrappers",
           "name": "wrappers",
           "short_help": "Wrappers contains the nine wrapper types plus repeated and map compositions.",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.WrappersRequest",
             "proto_file": "kitchensink/v1/fields.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "WrappersRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.WrappersRequest",
+          "response": "kitchensink.v1.WrappersRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "double_value",
@@ -835,66 +832,66 @@
             "fields": [
               {
                 "label": "double_value",
-                "path": "doubleValue"
+                "path": "$[\"doubleValue\"]"
               },
               {
                 "label": "float_value",
-                "path": "floatValue"
+                "path": "$[\"floatValue\"]"
               },
               {
                 "label": "int64_value",
-                "path": "int64Value"
+                "path": "$[\"int64Value\"]"
               },
               {
                 "label": "uint64_value",
-                "path": "uint64Value"
+                "path": "$[\"uint64Value\"]"
               },
               {
                 "label": "int32_value",
-                "path": "int32Value"
+                "path": "$[\"int32Value\"]"
               },
               {
                 "label": "uint32_value",
-                "path": "uint32Value"
+                "path": "$[\"uint32Value\"]"
               },
               {
                 "label": "bool_value",
-                "path": "boolValue"
+                "path": "$[\"boolValue\"]"
               },
               {
                 "label": "string_value",
-                "path": "stringValue"
+                "path": "$[\"stringValue\"]"
               },
               {
                 "label": "bytes_value",
-                "path": "bytesValue"
+                "path": "$[\"bytesValue\"]"
               },
               {
                 "label": "repeated_strings",
-                "path": "repeatedStrings"
+                "path": "$[\"repeatedStrings\"]"
               },
               {
                 "label": "bool_map",
-                "path": "boolMap"
+                "path": "$[\"boolMap\"]"
               }
             ]
           },
-          "example_json": "{\"doubleValue\":998,\"floatValue\":103,\"int64Value\":\"864\",\"uint64Value\":\"913\",\"int32Value\":286,\"uint32Value\":935,\"boolValue\":true,\"stringValue\":\"Surface risks around the year much.\",\"bytesValue\":\"T250byB0aGUgZmFjdCwgYWxpZ24gZXhwZWN0YXRpb25zLg==\",\"repeatedStrings\":[\"Few agree when the number spikes.\"],\"boolMap\":{\"Bismarckian\":true}}"
+          "example_json": "{\"doubleValue\":998,\"floatValue\":103,\"int64Value\":\"864\",\"uint64Value\":\"913\",\"int32Value\":286,\"uint32Value\":935,\"boolValue\":true,\"stringValue\":\"Vel odit omnis.\",\"bytesValue\":\"RXhlcmNpdGF0aW9uZW0gdmVsIG1haW9yZXMu\",\"repeatedStrings\":[\"Aliquid iusto consequatur.\"],\"boolMap\":{\"myself\":true}}"
         },
         {
+          "full_name": "kitchensink.v1.FieldsService.WellKnown",
           "proto_name": "WellKnown",
-          "go_name": "WellKnown",
           "name": "well-known",
           "short_help": "WellKnown contains the document-form well-known types.",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.WellKnownRequest",
             "proto_file": "kitchensink/v1/fields.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "WellKnownRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.WellKnownRequest",
+          "response": "kitchensink.v1.WellKnownRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "struct",
@@ -927,42 +924,42 @@
             "fields": [
               {
                 "label": "struct",
-                "path": "struct"
+                "path": "$[\"struct\"]"
               },
               {
                 "label": "value",
-                "path": "value"
+                "path": "$[\"value\"]"
               },
               {
                 "label": "list_value",
-                "path": "listValue"
+                "path": "$[\"listValue\"]"
               },
               {
                 "label": "any",
-                "path": "any"
+                "path": "$[\"any\"]"
               },
               {
                 "label": "empty",
-                "path": "empty"
+                "path": "$[\"empty\"]"
               }
             ]
           },
-          "example_json": "{\"struct\":{},\"value\":{},\"listValue\":[\"Mind the year, then celebrate!\"],\"empty\":{}}"
+          "example_json": "{\"struct\":{},\"value\":{},\"listValue\":[\"Repellat aut et.\"],\"empty\":{}}"
         },
         {
+          "full_name": "kitchensink.v1.FieldsService.Enums",
           "proto_name": "Enums",
-          "go_name": "Enums",
           "name": "enums",
           "short_help": "Enums contains an enum in every shape, plus aliases and a nested enum.",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.EnumsRequest",
             "proto_file": "kitchensink/v1/fields.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "EnumsRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.EnumsRequest",
+          "response": "kitchensink.v1.EnumsRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "choice",
@@ -1000,12 +997,12 @@
               "proto_path": "choice_map",
               "name": "choice-map",
               "bind": "string",
-              "map": true,
               "enum_values": [
                 "CHOICE_UNSPECIFIED",
                 "CHOICE_FIRST",
                 "CHOICE_SECOND"
-              ]
+              ],
+              "map": true
             },
             {
               "proto_path": "aliased",
@@ -1033,47 +1030,47 @@
             "fields": [
               {
                 "label": "choice",
-                "path": "choice"
+                "path": "$[\"choice\"]"
               },
               {
                 "label": "choices",
-                "path": "choices"
+                "path": "$[\"choices\"]"
               },
               {
                 "label": "optional_choice",
-                "path": "optionalChoice"
+                "path": "$[\"optionalChoice\"]"
               },
               {
                 "label": "choice_map",
-                "path": "choiceMap"
+                "path": "$[\"choiceMap\"]"
               },
               {
                 "label": "aliased",
-                "path": "aliased"
+                "path": "$[\"aliased\"]"
               },
               {
                 "label": "nested",
-                "path": "nested"
+                "path": "$[\"nested\"]"
               }
             ]
           },
           "example_json": "{\"choice\":\"CHOICE_FIRST\",\"choices\":[\"CHOICE_FIRST\"],\"optionalChoice\":\"CHOICE_FIRST\",\"choiceMap\":{\"change\":\"CHOICE_FIRST\"},\"aliased\":\"ALIASED_A\",\"nested\":\"NESTED_ONE\"}"
         },
         {
+          "full_name": "kitchensink.v1.FieldsService.Oneofs",
           "proto_name": "Oneofs",
-          "go_name": "Oneofs",
           "name": "oneofs",
           "short_help": "Oneofs contains a scalar-and-enum oneof, a message-and-scalar oneof, and a single-member oneof.",
           "long_help": "Oneofs contains a scalar-and-enum oneof, a message-and-scalar oneof, and a\nsingle-member oneof.",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.OneofsRequest",
             "proto_file": "kitchensink/v1/fields.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "OneofsRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.OneofsRequest",
+          "response": "kitchensink.v1.OneofsRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "text",
@@ -1183,74 +1180,74 @@
             "fields": [
               {
                 "label": "text",
-                "path": "text"
+                "path": "$[\"text\"]"
               },
               {
                 "label": "count",
-                "path": "count"
+                "path": "$[\"count\"]"
               },
               {
                 "label": "pick",
-                "path": "pick"
+                "path": "$[\"pick\"]"
               },
               {
                 "label": "outer.string_leaf",
-                "path": "outer.stringLeaf"
+                "path": "$[\"outer\"][\"stringLeaf\"]"
               },
               {
                 "label": "outer.int64_leaf",
-                "path": "outer.int64Leaf"
+                "path": "$[\"outer\"][\"int64Leaf\"]"
               },
               {
                 "label": "outer.middle.leaf",
-                "path": "outer.middle.leaf"
+                "path": "$[\"outer\"][\"middle\"][\"leaf\"]"
               },
               {
                 "label": "outer.middle.inner.leaf",
-                "path": "outer.middle.inner.leaf"
+                "path": "$[\"outer\"][\"middle\"][\"inner\"][\"leaf\"]"
               },
               {
                 "label": "outer.middle.inner.deep.leaf",
-                "path": "outer.middle.inner.deep.leaf"
+                "path": "$[\"outer\"][\"middle\"][\"inner\"][\"deep\"][\"leaf\"]"
               },
               {
                 "label": "outer.middle.inner.deep.deeper.leaf",
-                "path": "outer.middle.inner.deep.deeper.leaf"
+                "path": "$[\"outer\"][\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"leaf\"]"
               },
               {
                 "label": "outer.middle.inner.deep.deeper.deepest",
-                "path": "outer.middle.inner.deep.deeper.deepest"
+                "path": "$[\"outer\"][\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"deepest\"]"
               },
               {
                 "label": "enabled",
-                "path": "enabled"
+                "path": "$[\"enabled\"]"
               },
               {
                 "label": "when",
-                "path": "when"
+                "path": "$[\"when\"]"
               },
               {
                 "label": "only",
-                "path": "only"
+                "path": "$[\"only\"]"
               }
             ]
           },
-          "example_json": "{\"pick\":\"CHOICE_FIRST\",\"outer\":{\"stringLeaf\":\"Launch the world midweek for clarity.\",\"int64Leaf\":\"935\",\"middle\":{\"leaf\":\"Surface risks around the year much.\",\"inner\":{\"leaf\":\"Onto the fact, align expectations.\",\"deep\":{\"leaf\":\"Few agree when the number spikes.\",\"deeper\":{\"leaf\":\"The colorful hand being unexpectedly fondly.\",\"deepest\":{\"leaf\":\"Sample government at 9s intervals.\"}}}}}},\"only\":\"One wake when the day spikes.\"}"
+          "example_json": "{\"pick\":\"CHOICE_FIRST\",\"outer\":{\"stringLeaf\":\"Repudiandae quis recusandae.\",\"int64Leaf\":\"813\",\"middle\":{\"leaf\":\"Odit omnis exercitationem.\",\"inner\":{\"leaf\":\"Vel maiores aliquid.\",\"deep\":{\"leaf\":\"Iusto consequatur vero.\",\"deeper\":{\"leaf\":\"Consequuntur sequi ea.\",\"deepest\":{\"leaf\":\"Magnam minima animi.\"}}}}}},\"only\":\"Omnis qui aliquid.\"}"
         },
         {
+          "full_name": "kitchensink.v1.FieldsService.Optionals",
           "proto_name": "Optionals",
-          "go_name": "Optionals",
           "name": "optionals",
           "short_help": "Optionals contains proto3 optional fields.",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.OptionalsRequest",
             "proto_file": "kitchensink/v1/fields.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "OptionalsRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.OptionalsRequest",
+          "response": "kitchensink.v1.OptionalsRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "name",
@@ -1278,34 +1275,34 @@
             "fields": [
               {
                 "label": "name",
-                "path": "name"
+                "path": "$[\"name\"]"
               },
               {
                 "label": "age",
-                "path": "age"
+                "path": "$[\"age\"]"
               },
               {
                 "label": "pick",
-                "path": "pick"
+                "path": "$[\"pick\"]"
               }
             ]
           },
-          "example_json": "{\"name\":\"Mind the year, then celebrate!\",\"age\":864,\"pick\":\"CHOICE_FIRST\"}"
+          "example_json": "{\"name\":\"Repellat aut et.\",\"age\":913,\"pick\":\"CHOICE_FIRST\"}"
         },
         {
+          "full_name": "kitchensink.v1.FieldsService.Collections",
           "proto_name": "Collections",
-          "go_name": "Collections",
           "name": "collections",
           "short_help": "Collections contains two message lists.",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.CollectionsRequest",
             "proto_file": "kitchensink/v1/fields.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "CollectionsRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.CollectionsRequest",
+          "response": "kitchensink.v1.CollectionsRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "outers",
@@ -1326,68 +1323,68 @@
               {
                 "full_name": "kitchensink.v1.Outer",
                 "label": "outers",
-                "path": "outers",
+                "path": "$[\"outers\"][*]",
                 "fields": [
                   {
                     "label": "string_leaf",
-                    "path": "stringLeaf"
+                    "path": "$[\"stringLeaf\"]"
                   },
                   {
                     "label": "int64_leaf",
-                    "path": "int64Leaf"
+                    "path": "$[\"int64Leaf\"]"
                   },
                   {
                     "label": "middle.leaf",
-                    "path": "middle.leaf"
+                    "path": "$[\"middle\"][\"leaf\"]"
                   },
                   {
                     "label": "middle.inner.leaf",
-                    "path": "middle.inner.leaf"
+                    "path": "$[\"middle\"][\"inner\"][\"leaf\"]"
                   },
                   {
                     "label": "middle.inner.deep.leaf",
-                    "path": "middle.inner.deep.leaf"
+                    "path": "$[\"middle\"][\"inner\"][\"deep\"][\"leaf\"]"
                   },
                   {
                     "label": "middle.inner.deep.deeper.leaf",
-                    "path": "middle.inner.deep.deeper.leaf"
+                    "path": "$[\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"leaf\"]"
                   },
                   {
                     "label": "middle.inner.deep.deeper.deepest.leaf",
-                    "path": "middle.inner.deep.deeper.deepest.leaf"
+                    "path": "$[\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"deepest\"][\"leaf\"]"
                   }
                 ]
               },
               {
                 "full_name": "kitchensink.v1.Middle",
                 "label": "middles",
-                "path": "middles",
+                "path": "$[\"middles\"][*]",
                 "fields": [
                   {
                     "label": "leaf",
-                    "path": "leaf"
+                    "path": "$[\"leaf\"]"
                   },
                   {
                     "label": "inner.leaf",
-                    "path": "inner.leaf"
+                    "path": "$[\"inner\"][\"leaf\"]"
                   },
                   {
                     "label": "inner.deep.leaf",
-                    "path": "inner.deep.leaf"
+                    "path": "$[\"inner\"][\"deep\"][\"leaf\"]"
                   },
                   {
                     "label": "inner.deep.deeper.leaf",
-                    "path": "inner.deep.deeper.leaf"
+                    "path": "$[\"inner\"][\"deep\"][\"deeper\"][\"leaf\"]"
                   },
                   {
                     "label": "inner.deep.deeper.deepest.leaf",
-                    "path": "inner.deep.deeper.deepest.leaf"
+                    "path": "$[\"inner\"][\"deep\"][\"deeper\"][\"deepest\"][\"leaf\"]"
                   }
                 ]
               }
             ]
           },
-          "example_json": "{\"outers\":[{\"stringLeaf\":\"Mind the year, then celebrate!\",\"int64Leaf\":\"864\",\"middle\":{\"leaf\":\"Launch the world midweek for clarity.\",\"inner\":{\"leaf\":\"Retire outdated company each quarter.\",\"deep\":{\"leaf\":\"Protect the woman under enthusiastic load.\",\"deeper\":{\"leaf\":\"Theirs life has ready for fiction.\",\"deepest\":{\"leaf\":\"Publish a changelog entry for the way.\"}}}}}}],\"middles\":[{\"leaf\":\"Consistent hand being the foundation of thrill.\",\"inner\":{\"leaf\":\"Sample government at 9s intervals.\",\"deep\":{\"leaf\":\"One wake when the day spikes.\",\"deeper\":{\"leaf\":\"Attribute gains to year where possible.\",\"deepest\":{\"leaf\":\"Surface risks around the time barely.\"}}}}}]}"
+          "example_json": "{\"outers\":[{\"stringLeaf\":\"Repellat aut et.\",\"int64Leaf\":\"913\",\"middle\":{\"leaf\":\"Quis recusandae vel.\",\"inner\":{\"leaf\":\"Odit omnis exercitationem.\",\"deep\":{\"leaf\":\"Vel maiores aliquid.\",\"deeper\":{\"leaf\":\"Iusto consequatur vero.\",\"deepest\":{\"leaf\":\"Consequuntur sequi ea.\"}}}}}}],\"middles\":[{\"leaf\":\"Magnam minima animi.\",\"inner\":{\"leaf\":\"Omnis qui aliquid.\",\"deep\":{\"leaf\":\"Cumque non quia.\",\"deeper\":{\"leaf\":\"Officia dicta vel.\",\"deepest\":{\"leaf\":\"Voluptatem dicta eos.\"}}}}}]}"
         }
       ]
     }

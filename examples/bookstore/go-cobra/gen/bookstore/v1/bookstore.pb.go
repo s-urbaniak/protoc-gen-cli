@@ -1609,7 +1609,7 @@ func (x *Report) GetBooks() int64 {
 	return 0
 }
 
-// ImportBooksRequest is one record of a catalogue import.
+// ImportBooksRequest is one book in a catalogue import.
 type ImportBooksRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Shelf         int64                  `protobuf:"varint,1,opt,name=shelf,proto3" json:"shelf,omitempty"`
@@ -1842,7 +1842,7 @@ const file_bookstore_v1_bookstore_proto_rawDesc = "" +
 	"\x03Bid\x12\x1d.bookstore.v1.PlaceBidRequest\x1a\x1b.bookstore.v1.AuctionUpdate(\x010\x012\xad\x01\n" +
 	"\x10InventoryService\x12N\n" +
 	"\vImportBooks\x12 .bookstore.v1.ImportBooksRequest\x1a\x1b.bookstore.v1.ImportSummary(\x01\x12I\n" +
-	"\fExportReport\x12!.bookstore.v1.ExportReportRequest\x1a\x14.bookstore.v1.Report\"\x00B^Z\\github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1;bookstorev1b\x06proto3"
+	"\fExportReport\x12!.bookstore.v1.ExportReportRequest\x1a\x14.bookstore.v1.Report\"\x00B`Z^github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1;bookstorev1b\x06proto3"
 
 var (
 	file_bookstore_v1_bookstore_proto_rawDescOnce sync.Once

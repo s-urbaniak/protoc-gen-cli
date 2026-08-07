@@ -71,7 +71,7 @@ const file_imported_v1_imported_proto_rawDesc = "" +
 	"\n" +
 	"\x1aimported/v1/imported.proto\x12\vimported.v1\"!\n" +
 	"\x0fImportedRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02idBTZRgithub.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/imported/v1b\x06proto3"
+	"\x02id\x18\x01 \x01(\tR\x02idBVZTgithub.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/imported/v1b\x06proto3"
 
 var (
 	file_imported_v1_imported_proto_rawDescOnce sync.Once

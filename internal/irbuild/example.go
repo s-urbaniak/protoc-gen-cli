@@ -8,7 +8,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/braveokafor/proto-to-cli/internal/ir"
+	"github.com/braveokafor/protoc-gen-cli/internal/ir"
 	"github.com/brianvoe/gofakeit/v7"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -19,13 +19,13 @@ import (
 func buildExample(md protoreflect.MessageDescriptor, opts Options) string {
 	fail := func() string {
 		opts.Warn(fmt.Sprintf(
-			"message %s: no example request; --example prints {}, so build it with -f or -i",
+			"message %s: no example request; --example prints {}, so build it with -f or -d",
 			md.FullName(),
 		))
 		return "{}"
 	}
 
-	// A zero seed would reseed gofakeit from crypto/rand on each run.
+	// A zero seed reseeds gofakeit from crypto/rand on each run.
 	faker := gofakeit.New(1)
 
 	var walk func(md protoreflect.MessageDescriptor, ancestors []protoreflect.FullName) map[string]any
@@ -33,7 +33,6 @@ func buildExample(md protoreflect.MessageDescriptor, opts Options) string {
 		value := func(fd protoreflect.FieldDescriptor) (any, bool) {
 			if isNested(fd) {
 				name := fd.Message().FullName()
-				// A recursive field still shows. The reader needs to know it.
 				if slices.Contains(ancestors, name) {
 					return map[string]any{}, true
 				}
@@ -49,7 +48,6 @@ func buildExample(md protoreflect.MessageDescriptor, opts Options) string {
 			return bindExample(bind, faker)
 		}
 
-		// A oneof shows one arm. A synthetic oneof is not a choice.
 		arms := map[protoreflect.Name]protoreflect.FieldDescriptor{}
 		oneofs := md.Oneofs()
 		for i := range oneofs.Len() {
@@ -94,7 +92,7 @@ func buildExample(md protoreflect.MessageDescriptor, opts Options) string {
 		return fail()
 	}
 
-	// The round trip validates the example. protojson gives the canonical form.
+	// The round trip validates the example and gives canonical protojson.
 	msg := dynamicpb.NewMessage(md)
 	if err := protojson.Unmarshal(doc, msg); err != nil {
 		return fail()
@@ -123,8 +121,7 @@ func exampleKey(fd protoreflect.FieldDescriptor, faker *gofakeit.Faker) string {
 	return faker.Word()
 }
 
-// bindExample makes one value of the bind's JSON type. It reports false for a
-// field that the example omits.
+// bindExample makes one value of the bind's JSON type.
 func bindExample(bind ir.Bind, faker *gofakeit.Faker) (any, bool) {
 	switch bind {
 	case ir.BindFieldMask, ir.BindAny:
@@ -136,7 +133,7 @@ func bindExample(bind ir.Bind, faker *gofakeit.Faker) (any, bool) {
 		// protojson accepts one whole number for every number type.
 		return faker.IntRange(1, 1000), true
 	case ir.BindBytes:
-		return base64.StdEncoding.EncodeToString([]byte(faker.Sentence(3))), true
+		return base64.StdEncoding.EncodeToString([]byte(faker.LoremIpsumSentence(3))), true
 	case ir.BindTimestamp:
 		at := faker.DateRange(
 			time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC),
@@ -146,15 +143,14 @@ func bindExample(bind ir.Bind, faker *gofakeit.Faker) (any, bool) {
 	case ir.BindDuration:
 		return fmt.Sprintf("%ds", faker.IntRange(1, 3600)), true
 	case ir.BindList:
-		return []any{faker.Sentence(3)}, true
+		return []any{faker.LoremIpsumSentence(3)}, true
 	case ir.BindJSON:
-		// google.protobuf.Empty accepts no field.
 		return map[string]any{}, true
 	}
-	return faker.Sentence(3), true
+	return faker.LoremIpsumSentence(3), true
 }
 
-// enumExample prefers a non-zero value. protojson omits a zero enum.
+// protojson omits a zero enum.
 func enumExample(ed protoreflect.EnumDescriptor) (any, bool) {
 	values := ed.Values()
 	for i := range values.Len() {

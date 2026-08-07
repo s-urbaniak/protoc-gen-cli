@@ -7,8 +7,8 @@
 package kitchensinkv1
 
 import (
-	v1 "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/imported/v1"
-	v11 "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/second/v1"
+	v1 "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/imported/v1"
+	v11 "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/second/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -143,9 +143,13 @@ func (x *CollisionsRequest) GetImport() string {
 type ReservedRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Filename      string                 `protobuf:"bytes,1,opt,name=filename,proto3" json:"filename,omitempty"`
-	Input         string                 `protobuf:"bytes,2,opt,name=input,proto3" json:"input,omitempty"`
+	Data          string                 `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
 	Help          string                 `protobuf:"bytes,3,opt,name=help,proto3" json:"help,omitempty"`
 	Output        string                 `protobuf:"bytes,4,opt,name=output,proto3" json:"output,omitempty"`
+	Timeout       string                 `protobuf:"bytes,5,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	Example       string                 `protobuf:"bytes,6,opt,name=example,proto3" json:"example,omitempty"`
+	DryRun        string                 `protobuf:"bytes,7,opt,name=dry_run,json=dryRun,proto3" json:"dry_run,omitempty"`
+	Columns       string                 `protobuf:"bytes,8,opt,name=columns,proto3" json:"columns,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -187,9 +191,9 @@ func (x *ReservedRequest) GetFilename() string {
 	return ""
 }
 
-func (x *ReservedRequest) GetInput() string {
+func (x *ReservedRequest) GetData() string {
 	if x != nil {
-		return x.Input
+		return x.Data
 	}
 	return ""
 }
@@ -204,6 +208,34 @@ func (x *ReservedRequest) GetHelp() string {
 func (x *ReservedRequest) GetOutput() string {
 	if x != nil {
 		return x.Output
+	}
+	return ""
+}
+
+func (x *ReservedRequest) GetTimeout() string {
+	if x != nil {
+		return x.Timeout
+	}
+	return ""
+}
+
+func (x *ReservedRequest) GetExample() string {
+	if x != nil {
+		return x.Example
+	}
+	return ""
+}
+
+func (x *ReservedRequest) GetDryRun() string {
+	if x != nil {
+		return x.DryRun
+	}
+	return ""
+}
+
+func (x *ReservedRequest) GetColumns() string {
+	if x != nil {
+		return x.Columns
 	}
 	return ""
 }
@@ -372,12 +404,16 @@ const file_kitchensink_v1_names_proto_rawDesc = "" +
 	"\x04func\x18\b \x01(\tR\x04func\x12\x16\n" +
 	"\x06return\x18\t \x01(\tR\x06return\x12\x16\n" +
 	"\x06import\x18\n" +
-	" \x01(\tR\x06import\"o\n" +
+	" \x01(\tR\x06import\"\xd4\x01\n" +
 	"\x0fReservedRequest\x12\x1a\n" +
-	"\bfilename\x18\x01 \x01(\tR\bfilename\x12\x14\n" +
-	"\x05input\x18\x02 \x01(\tR\x05input\x12\x12\n" +
+	"\bfilename\x18\x01 \x01(\tR\bfilename\x12\x12\n" +
+	"\x04data\x18\x02 \x01(\tR\x04data\x12\x12\n" +
 	"\x04help\x18\x03 \x01(\tR\x04help\x12\x16\n" +
-	"\x06output\x18\x04 \x01(\tR\x06output\"\x8f\x01\n" +
+	"\x06output\x18\x04 \x01(\tR\x06output\x12\x18\n" +
+	"\atimeout\x18\x05 \x01(\tR\atimeout\x12\x18\n" +
+	"\aexample\x18\x06 \x01(\tR\aexample\x12\x17\n" +
+	"\adry_run\x18\a \x01(\tR\x06dryRun\x12\x18\n" +
+	"\acolumns\x18\b \x01(\tR\acolumns\"\x8f\x01\n" +
 	"\rCasingRequest\x12\x1e\n" +
 	"\n" +
 	"HTTPHeader\x18\x01 \x01(\tR\n" +
@@ -402,7 +438,7 @@ const file_kitchensink_v1_names_proto_rawDesc = "" +
 	"\bHTTPCall\x12\x1d.kitchensink.v1.CasingRequest\x1a\x1d.kitchensink.v1.CasingRequest\"\x00\x12M\n" +
 	"\vlower_snake\x12\x1d.kitchensink.v1.CasingRequest\x1a\x1d.kitchensink.v1.CasingRequest\"\x00\x128\n" +
 	"\x06Borrow\x12\x15.kitchensink.v1.Outer\x1a\x15.kitchensink.v1.Outer\"\x00\x12L\n" +
-	"\x06Nested\x12\x1f.kitchensink.v1.Envelope.Letter\x1a\x1f.kitchensink.v1.Envelope.Letter\"\x00BeZcgithub.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1b\x06proto3"
+	"\x06Nested\x12\x1f.kitchensink.v1.Envelope.Letter\x1a\x1f.kitchensink.v1.Envelope.Letter\"\x00BgZegithub.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1b\x06proto3"
 
 var (
 	file_kitchensink_v1_names_proto_rawDescOnce sync.Once

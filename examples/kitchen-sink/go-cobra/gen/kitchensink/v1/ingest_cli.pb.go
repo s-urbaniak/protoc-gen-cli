@@ -10,15 +10,19 @@ import (
 	errors "errors"
 	fmt "fmt"
 	io "io"
+	iter "iter"
 	maps "maps"
 	os "os"
 	slices "slices"
 	strings "strings"
+	time "time"
 
-	v1 "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/imported/v1"
+	v1 "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/imported/v1"
 	table "github.com/jedib0t/go-pretty/v6/table"
 	cobra "github.com/spf13/cobra"
-	gjson "github.com/tidwall/gjson"
+	jsonpath "github.com/theory/jsonpath"
+	sjson "github.com/tidwall/sjson"
+	yaml3 "go.yaml.in/yaml/v3"
 	term "golang.org/x/term"
 	grpc "google.golang.org/grpc"
 	status "google.golang.org/grpc/status"
@@ -27,520 +31,811 @@ import (
 	yaml "sigs.k8s.io/yaml"
 )
 
-type cli_kitchensink_v1_ingest_proto_viewField struct {
-	Label string
-	Path  string
-}
+// =============================================================================
+// kitchensink.v1.IngestService — IngestService counts what it receives.
+// =============================================================================
 
-type cli_kitchensink_v1_ingest_proto_viewList struct {
-	FullName string
-	Label    string
-	Path     string
-	Fields   []cli_kitchensink_v1_ingest_proto_viewField
-}
+// IngestServiceOptions configures NewIngestServiceCommand.
+// The zero value keeps every built-in default.
+type IngestServiceOptions = Cli_kitchensink_v1_ingest_proto_Options
 
-// A view is the display projection of a message.
-type cli_kitchensink_v1_ingest_proto_view struct {
-	Lists  []cli_kitchensink_v1_ingest_proto_viewList
-	Fields []cli_kitchensink_v1_ingest_proto_viewField
-}
+// IngestServicePrinter renders one body.
+type IngestServicePrinter = Cli_kitchensink_v1_ingest_proto_Printer
 
-// viewFor returns the view of fullName. Configured fields replace the
-// derived fields.
-func cli_kitchensink_v1_ingest_proto_viewFor(fullName string, messageViews map[string]cli_kitchensink_v1_ingest_proto_view, views map[string][]cli_kitchensink_v1_ingest_proto_viewField) cli_kitchensink_v1_ingest_proto_view {
-	v := messageViews[fullName]
-	if fields, ok := views[fullName]; ok {
-		v.Fields = fields
-	}
-	if len(views) > 0 && len(v.Lists) > 0 {
-		lists := slices.Clone(v.Lists)
-		for i, l := range lists {
-			if fields, ok := views[l.FullName]; ok {
-				lists[i].Fields = fields
-			}
-		}
-		v.Lists = lists
-	}
-	return v
-}
+// IngestServiceDecoder decodes one source into request bodies.
+type IngestServiceDecoder = Cli_kitchensink_v1_ingest_proto_Decoder
 
-func cli_kitchensink_v1_ingest_proto_viewFields(message string, entries []string) []cli_kitchensink_v1_ingest_proto_viewField {
-	fields := make([]cli_kitchensink_v1_ingest_proto_viewField, 0, len(entries))
-	for _, entry := range entries {
-		label, path, ok := strings.Cut(entry, ":")
-		if !ok || label == "" || path == "" {
-			panic(fmt.Sprintf("Options.Views[%q]: %q is not \"Label:path\"", message, entry))
-		}
-		fields = append(fields, cli_kitchensink_v1_ingest_proto_viewField{Label: label, Path: path})
-	}
-	return fields
-}
+// IngestServiceView names the fields a printer shows.
+type IngestServiceView = Cli_kitchensink_v1_ingest_proto_View
 
-// marshalJSON returns m as compact JSON. The spacing of protojson is
-// unstable by design. json.Compact makes it stable.
-func cli_kitchensink_v1_ingest_proto_marshalJSON(m proto.Message) ([]byte, error) {
-	raw, err := protojson.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
-	var buf bytes.Buffer
-	if err := json.Compact(&buf, raw); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
+type IngestServiceViewList = Cli_kitchensink_v1_ingest_proto_ViewList
 
-// printJSON writes each record as one line of JSON.
-func cli_kitchensink_v1_ingest_proto_printJSON(indent bool) func(io.Writer, cli_kitchensink_v1_ingest_proto_view, func() ([]byte, error)) error {
-	return func(w io.Writer, _ cli_kitchensink_v1_ingest_proto_view, next func() ([]byte, error)) error {
-		for {
-			rec, err := next()
-			if errors.Is(err, io.EOF) {
-				return nil
-			}
-			if err != nil {
-				return err
-			}
-			if indent {
-				var buf bytes.Buffer
-				if err := json.Indent(&buf, rec, "", "  "); err != nil {
-					return err
-				}
-				rec = buf.Bytes()
-			}
-			if _, err := fmt.Fprintln(w, string(rec)); err != nil {
-				return err
-			}
-		}
-	}
-}
+type IngestServiceViewField = Cli_kitchensink_v1_ingest_proto_ViewField
 
-// printYAML writes each record as one YAML document. "---" separates the
-// documents.
-func cli_kitchensink_v1_ingest_proto_printYAML(w io.Writer, _ cli_kitchensink_v1_ingest_proto_view, next func() ([]byte, error)) error {
-	first := true
-	for {
-		rec, err := next()
-		if errors.Is(err, io.EOF) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		if !first {
-			if _, err := io.WriteString(w, "---\n"); err != nil {
-				return err
-			}
-		}
-		first = false
-		doc, err := yaml.JSONToYAML(rec)
-		if err != nil {
-			return err
-		}
-		if _, err := w.Write(doc); err != nil {
-			return err
-		}
-	}
-}
+// The built-in decoders, in the order the CLI tries them.
+var (
+	IngestServiceDecoderJSON = Cli_kitchensink_v1_ingest_proto_DecoderJSON
+	IngestServiceDecoderYAML = Cli_kitchensink_v1_ingest_proto_DecoderYAML
+	IngestServiceDecoders    = Cli_kitchensink_v1_ingest_proto_Decoders
+)
 
-// cell renders a JSON value as one table cell. Top-level entries stack.
-// Deeper levels go inline.
-func cli_kitchensink_v1_ingest_proto_cell(v gjson.Result, sep string) string {
-	switch {
-	case v.IsArray():
-		items := v.Array()
-		parts := make([]string, len(items))
-		for i, item := range items {
-			parts[i] = cli_kitchensink_v1_ingest_proto_cell(item, ",")
-		}
-		return strings.Join(parts, sep)
-	case v.IsObject():
-		var parts []string
-		v.ForEach(func(k, val gjson.Result) bool {
-			parts = append(parts, k.String()+"="+cli_kitchensink_v1_ingest_proto_cell(val, ","))
-			return true
-		})
-		return strings.Join(parts, sep)
-	default:
-		return v.String()
-	}
-}
-
-// printTable renders each record as a table under its view.
-func cli_kitchensink_v1_ingest_proto_printTable(w io.Writer, v cli_kitchensink_v1_ingest_proto_view, next func() ([]byte, error)) error {
-	width := 0
-	if f, ok := w.(*os.File); ok {
-		if cols, _, err := term.GetSize(int(f.Fd())); err == nil {
-			width = cols
-		}
-	}
-	for i := 0; ; i++ {
-		rec, err := next()
-		if errors.Is(err, io.EOF) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-
-		titled := len(v.Fields) > 0 || len(v.Lists) > 1
-		first := i == 0
-		section := func(title string, fields []cli_kitchensink_v1_ingest_proto_viewField, rows []gjson.Result) error {
-			t := table.NewWriter()
-			if width > 0 {
-				t.Style().Size.WidthMax = width
-			}
-			header := make(table.Row, len(fields))
-			for j, f := range fields {
-				header[j] = f.Label
-			}
-			t.AppendHeader(header)
-			for _, src := range rows {
-				row := make(table.Row, len(fields))
-				for j, f := range fields {
-					c := cli_kitchensink_v1_ingest_proto_cell(src.Get(f.Path), "\n")
-					if strings.Contains(c, "\n") {
-						t.Style().Options.SeparateRows = true
-					}
-					row[j] = c
-				}
-				t.AppendRow(row)
-			}
-			out := ""
-			if !first {
-				out += "\n"
-			}
-			first = false
-			if title != "" {
-				out += title + "\n"
-			}
-			out += strings.TrimRight(t.Render(), "\n") + "\n"
-			_, err := io.WriteString(w, out)
-			return err
-		}
-
-		if len(v.Fields) > 0 {
-			if err := section("", v.Fields, []gjson.Result{gjson.ParseBytes(rec)}); err != nil {
-				return err
-			}
-		}
-		for _, list := range v.Lists {
-			rows := gjson.GetBytes(rec, list.Path).Array()
-			if len(rows) == 0 {
-				continue
-			}
-			title := ""
-			if titled {
-				title = strings.ToUpper(list.Label)
-			}
-			if err := section(title, list.Fields, rows); err != nil {
-				return err
-			}
-		}
-	}
-}
-
-// printers returns the built-in -o formats.
-func cli_kitchensink_v1_ingest_proto_printers() map[string]func(io.Writer, cli_kitchensink_v1_ingest_proto_view, func() ([]byte, error)) error {
-	return map[string]func(io.Writer, cli_kitchensink_v1_ingest_proto_view, func() ([]byte, error)) error{
-		"json":        cli_kitchensink_v1_ingest_proto_printJSON(false),
-		"json-pretty": cli_kitchensink_v1_ingest_proto_printJSON(true),
-		"table":       cli_kitchensink_v1_ingest_proto_printTable,
-		"yaml":        cli_kitchensink_v1_ingest_proto_printYAML,
-	}
-}
-
-func cli_kitchensink_v1_ingest_proto_checkDefaultOutput(printers map[string]func(io.Writer, cli_kitchensink_v1_ingest_proto_view, func() ([]byte, error)) error, defaultOutput string) {
-	if defaultOutput == "" {
-		return
-	}
-	if _, ok := printers[defaultOutput]; !ok {
-		panic(fmt.Sprintf("Options.DefaultOutput: unknown format %q; use one of: %s",
-			defaultOutput, strings.Join(slices.Sorted(maps.Keys(printers)), ", ")))
-	}
-}
-
-// outputPrinter resolves -o to its print function. An empty -o means the
-// configured default, or JSON. JSON is pretty on a terminal and compact in
-// a pipe.
-func cli_kitchensink_v1_ingest_proto_outputPrinter(cmd *cobra.Command, printers map[string]func(io.Writer, cli_kitchensink_v1_ingest_proto_view, func() ([]byte, error)) error, defaultOutput string) (func(io.Writer, cli_kitchensink_v1_ingest_proto_view, func() ([]byte, error)) error, error) {
-	format, _ := cmd.Flags().GetString("output")
-	if format == "" {
-		format = defaultOutput
-	}
-	if format == "" {
-		pretty := false
-		if f, ok := cmd.OutOrStdout().(*os.File); ok {
-			pretty = term.IsTerminal(int(f.Fd()))
-		}
-		return cli_kitchensink_v1_ingest_proto_printJSON(pretty), nil
-	}
-	p, ok := printers[format]
-	if !ok {
-		return nil, fmt.Errorf("unknown output format %q; use one of: %s",
-			format, strings.Join(slices.Sorted(maps.Keys(printers)), ", "))
-	}
-	return p, nil
-}
-
-// outputHelp returns the -o usage text.
-func cli_kitchensink_v1_ingest_proto_outputHelp(printers map[string]func(io.Writer, cli_kitchensink_v1_ingest_proto_view, func() ([]byte, error)) error, defaultOutput string) string {
-	help := "Output format: " + strings.Join(slices.Sorted(maps.Keys(printers)), ", ") + ".\n"
-	if defaultOutput != "" {
-		return help + "Default: " + defaultOutput + "."
-	}
-	return help + "Default: pretty JSON on a terminal, compact when piped."
-}
-
-// oneRecord yields m once and then io.EOF.
-func cli_kitchensink_v1_ingest_proto_oneRecord(m proto.Message) func() ([]byte, error) {
-	done := false
-	return func() ([]byte, error) {
-		if done {
-			return nil, io.EOF
-		}
-		done = true
-		return cli_kitchensink_v1_ingest_proto_marshalJSON(m)
-	}
-}
-
-// callContext returns the call context, with a --timeout deadline when set.
-func cli_kitchensink_v1_ingest_proto_callContext(cmd *cobra.Command) (context.Context, context.CancelFunc) {
-	if d, _ := cmd.Flags().GetDuration("timeout"); d > 0 {
-		return context.WithTimeout(cmd.Context(), d)
-	}
-	return context.WithCancel(cmd.Context())
-}
-
-// An exitError is an error with a process exit code. Error removes the gRPC
-// "rpc error: ..." wrapper.
-type cli_kitchensink_v1_ingest_proto_exitError struct {
-	code int
-	err  error
-}
-
-func (e cli_kitchensink_v1_ingest_proto_exitError) Error() string {
-	if msg := status.Convert(e.err).Message(); msg != "" {
-		return msg
-	}
-	return e.err.Error()
-}
-func (e cli_kitchensink_v1_ingest_proto_exitError) Unwrap() error { return e.err }
-func (e cli_kitchensink_v1_ingest_proto_exitError) ExitCode() int { return e.code }
-
-func cli_kitchensink_v1_ingest_proto_usage(err error) error {
-	return cli_kitchensink_v1_ingest_proto_exitError{2, err}
-}
-
-// callErr maps a failed call to an exit code from its context.
-func cli_kitchensink_v1_ingest_proto_callErr(ctx context.Context, err error) error {
-	if err == nil {
-		return nil
-	}
-	switch ctx.Err() {
-	case context.DeadlineExceeded:
-		return cli_kitchensink_v1_ingest_proto_exitError{124, err}
-	case context.Canceled:
-		return cli_kitchensink_v1_ingest_proto_exitError{130, err}
-	}
-	return cli_kitchensink_v1_ingest_proto_exitError{1, err}
-}
-
-// pumpRequests decodes JSON requests from in, one after another, and sends
-// each request.
-func cli_kitchensink_v1_ingest_proto_pumpRequests(ctx context.Context, in io.Reader, errW io.Writer, send func(n int, raw json.RawMessage) error) error {
-	if f, ok := in.(*os.File); ok && term.IsTerminal(int(f.Fd())) {
-		fmt.Fprintln(errW,
-			"reading JSON requests from the terminal, one after another; Ctrl-D to finish")
-	}
-	dec := json.NewDecoder(in)
-	for n := 1; ; n++ {
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-		var raw json.RawMessage
-		if err := dec.Decode(&raw); err != nil {
-			if errors.Is(err, io.EOF) {
-				return nil
-			}
-			return fmt.Errorf("stdin request %d: %w", n, err)
-		}
-		if err := send(n, raw); err != nil {
-			return err
-		}
-	}
-}
-
-// IngestServiceOptions configures the IngestService commands.
-type IngestServiceOptions struct {
-	// Printers adds -o formats. A print function pulls JSON records from
-	// next until io.EOF. A nil function removes the named format.
-	Printers map[string]func(w io.Writer, next func() ([]byte, error)) error
-	// DefaultOutput is the format for an empty -o.
-	DefaultOutput string
-	// Views maps a message's full proto name to its "Label:path" fields
-	// (gjson paths). These fields replace the message's derived fields in
-	// all of its views. A malformed entry panics. A name that never displays
-	// has no effect.
-	Views map[string][]string
-}
-
-// NewIngestServiceCommand returns the IngestService command with
-// one subcommand for each RPC. Later opts override earlier opts for each
-// entry.
+// NewIngestServiceCommand returns the "ingest" command tree.
+//
+// IngestService counts what it receives.
+//
+// Later opts override earlier opts for each entry.
 func NewIngestServiceCommand(conn grpc.ClientConnInterface, opts ...IngestServiceOptions) *cobra.Command {
 	client := NewIngestServiceClient(conn)
-
-	printers := cli_kitchensink_v1_ingest_proto_printers()
-	defaultOutput := ""
-	views := map[string][]cli_kitchensink_v1_ingest_proto_viewField{}
-	for _, o := range opts {
-		for name, fn := range o.Printers {
-			if fn == nil {
-				delete(printers, name)
-				continue
-			}
-			printers[name] = func(w io.Writer, _ cli_kitchensink_v1_ingest_proto_view, next func() ([]byte, error)) error {
-				return fn(w, next)
-			}
-		}
-		if o.DefaultOutput != "" {
-			defaultOutput = o.DefaultOutput
-		}
-		for message, entries := range o.Views {
-			views[message] = cli_kitchensink_v1_ingest_proto_viewFields(message, entries)
-		}
-	}
-	cli_kitchensink_v1_ingest_proto_checkDefaultOutput(printers, defaultOutput)
-
-	// messageViews contains the derived views. Options.Views entries
-	// override them.
-	messageViews := map[string]cli_kitchensink_v1_ingest_proto_view{
-		"kitchensink.v1.IngestSummary": {Fields: []cli_kitchensink_v1_ingest_proto_viewField{
-			{Label: "received", Path: "received"},
-		}},
-	}
-
-	viewFor := func(fullName string) cli_kitchensink_v1_ingest_proto_view {
-		return cli_kitchensink_v1_ingest_proto_viewFor(fullName, messageViews, views)
-	}
-	outputPrinter := func(cmd *cobra.Command) (func(io.Writer, cli_kitchensink_v1_ingest_proto_view, func() ([]byte, error)) error, error) {
-		return cli_kitchensink_v1_ingest_proto_outputPrinter(cmd, printers, defaultOutput)
-	}
+	opt := cli_kitchensink_v1_ingest_proto_resolveOptions(opts)
 
 	cmd := &cobra.Command{
 		Use:   "ingest",
 		Short: "IngestService counts what it receives.",
 	}
 	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
-	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_ingest_proto_outputHelp(printers, defaultOutput))
-	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(slices.Sorted(maps.Keys(printers)), cobra.ShellCompDirectiveNoFileComp))
-	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
-	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
-	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_kitchensink_v1_ingest_proto_usage(err) })
-	cmd.AddCommand(func() *cobra.Command {
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {
+		return cli_kitchensink_v1_ingest_proto_exitError{cli_kitchensink_v1_ingest_proto_exitUsage, err}
+	})
+
+	// ----- persistent flags -----
+	printers := slices.Sorted(maps.Keys(opt.Printers))
+	if _, ok := opt.Printers[opt.DefaultPrinter]; opt.DefaultPrinter != "" && !ok {
+		panic(fmt.Sprintf("Options.DefaultPrinter: unknown printer %q; use one of: %s", opt.DefaultPrinter, strings.Join(printers, ", ")))
+	}
+	defaultFormat := "json on a terminal, jsonl when piped"
+	if opt.DefaultPrinter != "" {
+		defaultFormat = opt.DefaultPrinter
+	}
+
+	fs := cmd.PersistentFlags()
+	fs.StringArrayP("filename", "f", nil, "Request bodies from a file, or '-' for stdin.")
+	_ = cobra.MarkFlagFilename(fs, "filename")
+	fs.StringArrayP("data", "d", nil, "A request body, inline.")
+	fs.Bool("dry-run", false, "Print the assembled requests without sending them.")
+	fs.StringP("output", "o", "", "Output format: "+strings.Join(printers, ", ")+".\nDefault: "+defaultFormat+".")
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(printers, cobra.ShellCompDirectiveNoFileComp))
+	fs.String("columns", "", "Table columns, as LABEL:path pairs into the JSON response.\nExample: --columns 'ID:$.id,NAME:$.name'.")
+	fs.Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
+	fs.Bool("example", false, "Print an example request body without sending it.")
+
+	// ----- ingest — rpc Ingest -----
+	// Ingest counts the streamed records.
+	//
+	// Each request body becomes one request.
+	{
 		sub := &cobra.Command{
 			Use:   "ingest",
 			Short: "Ingest counts the streamed records.",
-			Long:  "Ingest counts the streamed records.\n\nReads JSON requests from stdin, one after another.",
-			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &IngestRecord{}
-					if err := protojson.Unmarshal([]byte("{\"text\":\"Mind the year, then celebrate!\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.IngestRecord"), cli_kitchensink_v1_ingest_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
+			Long:  "Ingest counts the streamed records.\n\nEach request body becomes one request.",
+			Args:  cli_kitchensink_v1_ingest_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_kitchensink_v1_ingest_proto_resolveOutput(cmd.OutOrStdout(), "kitchensink.v1.IngestSummary", "kitchensink.v1.IngestService.Ingest", format, columns, opt)
 				if err != nil {
 					return err
 				}
-				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
-				ctx, cancel := cli_kitchensink_v1_ingest_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_kitchensink_v1_ingest_proto_callErr(ctx, err) }()
-				stream, err := client.Ingest(ctx)
-				if err != nil {
-					return err
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_kitchensink_v1_ingest_proto_View{}, []byte("{\"text\":\"Repellat aut et.\"}"))
 				}
-				send := func(n int, raw json.RawMessage) error {
-					req := &IngestRecord{}
-					if err := protojson.Unmarshal(raw, req); err != nil {
-						return fmt.Errorf("stdin request %d: %w", n, err)
+				var flagsJSON []byte
+				if cmd.Flags().Changed("text") {
+					value, _ := cmd.Flags().GetString("text")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "text", value)
+					if err != nil {
+						return fmt.Errorf("flag --text: %w", err)
 					}
-					return stream.Send(req)
 				}
-				// Send returns io.EOF when the server ends the stream early.
-				// The status comes from CloseAndRecv.
-				if err := cli_kitchensink_v1_ingest_proto_pumpRequests(ctx, cmd.InOrStdin(), cmd.ErrOrStderr(), send); err != nil && !errors.Is(err, io.EOF) {
-					return err
-				}
-				resp, err := stream.CloseAndRecv()
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.IngestSummary"), cli_kitchensink_v1_ingest_proto_oneRecord(resp))
+				bodies := cli_kitchensink_v1_ingest_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				reqs := cli_kitchensink_v1_ingest_proto_buildRequests[IngestRecord](bodies, flagsJSON)
+				return cli_kitchensink_v1_ingest_proto_runClientStream(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), printer, view, reqs, dryRun, timeout, client.Ingest)
 			},
 		}
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
+		sub.Flags().String("text", "", "")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- absorb — rpc Absorb -----
+	// Absorb counts the streamed requests.
+	//
+	// Each request body becomes one request.
+	{
 		sub := &cobra.Command{
 			Use:   "absorb",
 			Short: "Absorb counts the streamed requests.",
-			Long:  "Absorb counts the streamed requests.\n\nReads JSON requests from stdin, one after another.",
-			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &v1.ImportedRequest{}
-					if err := protojson.Unmarshal([]byte("{\"id\":\"Mind the year, then celebrate!\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("imported.v1.ImportedRequest"), cli_kitchensink_v1_ingest_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
+			Long:  "Absorb counts the streamed requests.\n\nEach request body becomes one request.",
+			Args:  cli_kitchensink_v1_ingest_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_kitchensink_v1_ingest_proto_resolveOutput(cmd.OutOrStdout(), "kitchensink.v1.IngestSummary", "kitchensink.v1.IngestService.Absorb", format, columns, opt)
 				if err != nil {
 					return err
 				}
-				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
-				ctx, cancel := cli_kitchensink_v1_ingest_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_kitchensink_v1_ingest_proto_callErr(ctx, err) }()
-				stream, err := client.Absorb(ctx)
-				if err != nil {
-					return err
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_kitchensink_v1_ingest_proto_View{}, []byte("{\"id\":\"Repellat aut et.\"}"))
 				}
-				send := func(n int, raw json.RawMessage) error {
-					req := &v1.ImportedRequest{}
-					if err := protojson.Unmarshal(raw, req); err != nil {
-						return fmt.Errorf("stdin request %d: %w", n, err)
+				var flagsJSON []byte
+				if cmd.Flags().Changed("id") {
+					value, _ := cmd.Flags().GetString("id")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "id", value)
+					if err != nil {
+						return fmt.Errorf("flag --id: %w", err)
 					}
-					return stream.Send(req)
 				}
-				// Send returns io.EOF when the server ends the stream early.
-				// The status comes from CloseAndRecv.
-				if err := cli_kitchensink_v1_ingest_proto_pumpRequests(ctx, cmd.InOrStdin(), cmd.ErrOrStderr(), send); err != nil && !errors.Is(err, io.EOF) {
-					return err
-				}
-				resp, err := stream.CloseAndRecv()
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.IngestSummary"), cli_kitchensink_v1_ingest_proto_oneRecord(resp))
+				bodies := cli_kitchensink_v1_ingest_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				reqs := cli_kitchensink_v1_ingest_proto_buildRequests[v1.ImportedRequest](bodies, flagsJSON)
+				return cli_kitchensink_v1_ingest_proto_runClientStream(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), printer, view, reqs, dryRun, timeout, client.Absorb)
 			},
 		}
-		return sub
-	}())
+		sub.Flags().String("id", "", "")
+		cmd.AddCommand(sub)
+	}
+
 	return cmd
+}
+
+// =============================================================================
+// Options: what the caller configures.
+// =============================================================================
+
+// Cli_kitchensink_v1_ingest_proto_Options configures a service command. The zero value keeps every
+// built-in default.
+type Cli_kitchensink_v1_ingest_proto_Options struct {
+	// Printers adds a printer under the name -o takes. A nil printer removes
+	// the built-in of that name.
+	Printers map[string]Cli_kitchensink_v1_ingest_proto_Printer
+	// DefaultPrinter names the printer when -o is absent. An unknown one panics
+	// when the caller builds the command.
+	DefaultPrinter string
+	// Decoders replaces the built-in -f and -d decoders, in the order the CLI
+	// tries them.
+	Decoders []Cli_kitchensink_v1_ingest_proto_Decoder
+	// A Views entry replaces the derived view of a method, keyed by the
+	// method's full proto name.
+	Views map[string]Cli_kitchensink_v1_ingest_proto_View
+}
+
+func cli_kitchensink_v1_ingest_proto_resolveOptions(opts []Cli_kitchensink_v1_ingest_proto_Options) Cli_kitchensink_v1_ingest_proto_Options {
+	resolved := Cli_kitchensink_v1_ingest_proto_Options{
+		Printers: maps.Clone(Cli_kitchensink_v1_ingest_proto_Printers),
+		Decoders: Cli_kitchensink_v1_ingest_proto_Decoders,
+		Views:    map[string]Cli_kitchensink_v1_ingest_proto_View{},
+	}
+	for _, opt := range opts {
+		for name, printer := range opt.Printers {
+			if printer == nil {
+				delete(resolved.Printers, name)
+				continue
+			}
+			resolved.Printers[name] = printer
+		}
+		if opt.DefaultPrinter != "" {
+			resolved.DefaultPrinter = opt.DefaultPrinter
+		}
+		if len(opt.Decoders) > 0 {
+			resolved.Decoders = opt.Decoders
+		}
+		for method, view := range opt.Views {
+			resolved.Views[method] = view
+		}
+	}
+	return resolved
+}
+
+// =============================================================================
+// Input: -f files, then -d values, then flags, in that order.
+// =============================================================================
+
+// A Decoder decodes one source into request bodies.
+type Cli_kitchensink_v1_ingest_proto_Decoder struct {
+	// Name identifies the decoder in an error.
+	Name string
+	// Decode yields one JSON body for each document in the source, in order.
+	// It yields an error, and nothing more, for a source it cannot read.
+	Decode func(r io.Reader) iter.Seq2[[]byte, error]
+}
+
+var (
+	Cli_kitchensink_v1_ingest_proto_DecoderJSON = Cli_kitchensink_v1_ingest_proto_Decoder{
+		Name: "json",
+		Decode: func(r io.Reader) iter.Seq2[[]byte, error] {
+			return func(yield func([]byte, error) bool) {
+				dec := json.NewDecoder(r)
+				for {
+					var raw json.RawMessage
+					if err := dec.Decode(&raw); err != nil {
+						if !errors.Is(err, io.EOF) {
+							yield(nil, err)
+						}
+						return
+					}
+					var items []json.RawMessage
+					if err := json.Unmarshal(raw, &items); err != nil {
+						if !yield(raw, nil) {
+							return
+						}
+						continue
+					}
+					for _, item := range items {
+						if !yield(item, nil) {
+							return
+						}
+					}
+				}
+			}
+		},
+	}
+
+	Cli_kitchensink_v1_ingest_proto_DecoderYAML = Cli_kitchensink_v1_ingest_proto_Decoder{
+		Name: "yaml",
+		Decode: func(r io.Reader) iter.Seq2[[]byte, error] {
+			return func(yield func([]byte, error) bool) {
+				// yaml3 finds the document boundaries. yaml converts a
+				// document, including a map key that YAML allows and JSON
+				// does not.
+				dec := yaml3.NewDecoder(r)
+				for {
+					var node yaml3.Node
+					if err := dec.Decode(&node); err != nil {
+						if !errors.Is(err, io.EOF) {
+							yield(nil, err)
+						}
+						return
+					}
+					doc, err := yaml3.Marshal(&node)
+					if err != nil {
+						yield(nil, err)
+						return
+					}
+					body, err := yaml.YAMLToJSON(doc)
+					if err != nil {
+						yield(nil, err)
+						return
+					}
+					// An empty document converts to null, which is no body.
+					if bytes.Equal(bytes.TrimSpace(body), []byte("null")) {
+						continue
+					}
+					if !yield(body, nil) {
+						return
+					}
+				}
+			}
+		},
+	}
+
+	// The built-in decoders, in the order the CLI tries them.
+	Cli_kitchensink_v1_ingest_proto_Decoders = []Cli_kitchensink_v1_ingest_proto_Decoder{Cli_kitchensink_v1_ingest_proto_DecoderJSON, Cli_kitchensink_v1_ingest_proto_DecoderYAML}
+)
+
+// The first decoder to read a body takes the source.
+func cli_kitchensink_v1_ingest_proto_decodeSource(decoders []Cli_kitchensink_v1_ingest_proto_Decoder, source string, r io.Reader) iter.Seq2[[]byte, error] {
+	for _, dec := range decoders {
+		// A decoder reads as far as it needs to. The bytes a failed decoder
+		// read go to the next one, because stdin cannot replay them.
+		var seen bytes.Buffer
+		next, stop := iter.Pull2(dec.Decode(io.TeeReader(r, &seen)))
+		body, err, read := next()
+		stop()
+		r = io.MultiReader(bytes.NewReader(seen.Bytes()), r)
+		if err != nil {
+			continue
+		}
+		if read {
+			// A body fills a request message, so it is a JSON object. A
+			// source that reads as anything else belongs to another decoder.
+			opening, err := json.NewDecoder(bytes.NewReader(body)).Token()
+			if err != nil || opening != json.Delim('{') {
+				continue
+			}
+		}
+
+		return func(yield func([]byte, error) bool) {
+			for body, err := range dec.Decode(r) {
+				if err != nil {
+					yield(nil, fmt.Errorf("read %s as %s: %w", source, dec.Name, err))
+					return
+				}
+				if !yield(body, nil) {
+					return
+				}
+			}
+		}
+	}
+
+	names := make([]string, len(decoders))
+	for i, dec := range decoders {
+		names[i] = dec.Name
+	}
+	return func(yield func([]byte, error) bool) {
+		yield(nil, fmt.Errorf("cannot read %s as any of: %s", source, strings.Join(names, ", ")))
+	}
+}
+
+// cli_kitchensink_v1_ingest_proto_readBodies opens nothing until a caller ranges the sequence.
+func cli_kitchensink_v1_ingest_proto_readBodies(
+	decoders []Cli_kitchensink_v1_ingest_proto_Decoder,
+	filenames, data []string,
+	stdin io.Reader,
+	stderr io.Writer,
+) iter.Seq2[[]byte, error] {
+	if f, ok := stdin.(*os.File); ok && term.IsTerminal(int(f.Fd())) &&
+		slices.ContainsFunc(filenames, func(name string) bool {
+			return strings.TrimSpace(name) == "-"
+		}) {
+		fmt.Fprintln(stderr, "reading request bodies from the terminal; Ctrl-D to finish")
+	}
+
+	return func(yield func([]byte, error) bool) {
+		// read reports whether the caller wants more bodies.
+		read := func(source string, r io.Reader) bool {
+			for body, err := range cli_kitchensink_v1_ingest_proto_decodeSource(decoders, source, r) {
+				if !yield(body, err) || err != nil {
+					return false
+				}
+			}
+			return true
+		}
+
+		for _, filename := range filenames {
+			filename = strings.TrimSpace(filename)
+
+			var r io.Reader
+			source := filename
+			switch {
+			case filename == "":
+				continue
+			case filename == "-":
+				source, r = "stdin", stdin
+			default:
+				f, err := os.Open(filename)
+				if err != nil {
+					yield(nil, err)
+					return
+				}
+				defer f.Close()
+				r = f
+			}
+
+			if !read(source, r) {
+				return
+			}
+		}
+
+		for i, body := range data {
+			if !read(fmt.Sprintf("-d value %d", i+1), strings.NewReader(body)) {
+				return
+			}
+		}
+	}
+}
+
+func cli_kitchensink_v1_ingest_proto_applyJSON(msg proto.Message, body []byte) error {
+	// protojson clears the message it fills, so the body decodes into a fresh
+	// partial.
+	partial := msg.ProtoReflect().New().Interface()
+	if err := (protojson.UnmarshalOptions{AllowPartial: true}).Unmarshal(body, partial); err != nil {
+		return err
+	}
+	proto.Merge(msg, partial)
+	return nil
+}
+
+// With no body, the flags alone are one request. With neither, the sequence
+// is empty.
+func cli_kitchensink_v1_ingest_proto_buildRequests[Req any, PReq interface {
+	proto.Message
+	*Req
+}](
+	bodies iter.Seq2[[]byte, error],
+	flagsJSON []byte,
+) iter.Seq2[PReq, error] {
+	return func(yield func(PReq, error) bool) {
+		build := func(body []byte) (PReq, error) {
+			req := PReq(new(Req))
+			if body != nil {
+				if err := cli_kitchensink_v1_ingest_proto_applyJSON(req, body); err != nil {
+					return nil, err
+				}
+			}
+			if flagsJSON != nil {
+				if err := cli_kitchensink_v1_ingest_proto_applyJSON(req, flagsJSON); err != nil {
+					return nil, fmt.Errorf("flags: %w", err)
+				}
+			}
+			if err := proto.CheckInitialized(req); err != nil {
+				return nil, fmt.Errorf("request: %w", err)
+			}
+			return req, nil
+		}
+
+		n := 0
+		for body, err := range bodies {
+			if err != nil {
+				yield(nil, err)
+				return
+			}
+			n++
+			req, err := build(body)
+			if err != nil {
+				yield(nil, fmt.Errorf("request body %d: %w", n, err))
+				return
+			}
+			if !yield(req, nil) {
+				return
+			}
+		}
+		if n > 0 || flagsJSON == nil {
+			return
+		}
+
+		req, err := build(nil)
+		if err != nil {
+			yield(nil, err)
+			return
+		}
+		yield(req, nil)
+	}
+}
+
+// =============================================================================
+// Output: -o picks a printer, and a view names the fields of a response.
+// =============================================================================
+
+type Cli_kitchensink_v1_ingest_proto_ViewField struct {
+	Label string
+	Path  string // RFC 9535 JSONPath into the response.
+}
+
+type Cli_kitchensink_v1_ingest_proto_ViewList struct {
+	Label  string
+	Path   string
+	Fields []Cli_kitchensink_v1_ingest_proto_ViewField
+}
+
+type Cli_kitchensink_v1_ingest_proto_View struct {
+	Lists  []Cli_kitchensink_v1_ingest_proto_ViewList
+	Fields []Cli_kitchensink_v1_ingest_proto_ViewField
+}
+
+// A Printer renders one body. A streaming command calls it once for each
+// response. --dry-run and --example give it a request body and an empty view.
+type Cli_kitchensink_v1_ingest_proto_Printer func(w io.Writer, view Cli_kitchensink_v1_ingest_proto_View, body []byte) error
+
+// The built-in printers, keyed by the name -o takes.
+var Cli_kitchensink_v1_ingest_proto_Printers = map[string]Cli_kitchensink_v1_ingest_proto_Printer{
+	"json": func(w io.Writer, _ Cli_kitchensink_v1_ingest_proto_View, body []byte) error {
+		return cli_kitchensink_v1_ingest_proto_printJSON(w, body, true)
+	},
+	"jsonl": func(w io.Writer, _ Cli_kitchensink_v1_ingest_proto_View, body []byte) error {
+		return cli_kitchensink_v1_ingest_proto_printJSON(w, body, false)
+	},
+	"table": cli_kitchensink_v1_ingest_proto_printTable,
+	"yaml":  cli_kitchensink_v1_ingest_proto_printYAML,
+}
+
+// The view derived for each response message.
+var cli_kitchensink_v1_ingest_proto_messageViews = map[string]Cli_kitchensink_v1_ingest_proto_View{
+	"kitchensink.v1.IngestSummary": {Fields: []Cli_kitchensink_v1_ingest_proto_ViewField{
+		{Label: "received", Path: "$[\"received\"]"},
+	}},
+}
+
+func cli_kitchensink_v1_ingest_proto_printMessage(
+	w io.Writer,
+	printer Cli_kitchensink_v1_ingest_proto_Printer,
+	view Cli_kitchensink_v1_ingest_proto_View,
+	msg proto.Message,
+) error {
+	body, err := protojson.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	return printer(w, view, body)
+}
+
+func cli_kitchensink_v1_ingest_proto_printJSON(w io.Writer, body []byte, indent bool) error {
+	// Indent and Compact both pin the spacing, which protojson varies
+	// between runs on purpose.
+	var buf bytes.Buffer
+	if indent {
+		if err := json.Indent(&buf, body, "", "  "); err != nil {
+			return err
+		}
+	} else if err := json.Compact(&buf, body); err != nil {
+		return err
+	}
+	_, err := fmt.Fprintln(w, buf.String())
+	return err
+}
+
+// cli_kitchensink_v1_ingest_proto_printYAML starts the document with ---, so bodies render as one
+// valid YAML stream.
+func cli_kitchensink_v1_ingest_proto_printYAML(w io.Writer, _ Cli_kitchensink_v1_ingest_proto_View, body []byte) error {
+	doc, err := yaml.JSONToYAML(body)
+	if err != nil {
+		return err
+	}
+	if _, err := io.WriteString(w, "---\n"); err != nil {
+		return err
+	}
+	_, err = w.Write(doc)
+	return err
+}
+
+func cli_kitchensink_v1_ingest_proto_printTable(w io.Writer, view Cli_kitchensink_v1_ingest_proto_View, body []byte) error {
+	// UseNumber keeps a number's own spelling. The default renders a large
+	// integer in exponent form.
+	dec := json.NewDecoder(bytes.NewReader(body))
+	dec.UseNumber()
+	var doc any
+	if err := dec.Decode(&doc); err != nil {
+		return err
+	}
+
+	var cell func(value any) string
+	cell = func(value any) string {
+		switch v := value.(type) {
+		case nil:
+			return ""
+		case string:
+			return v
+		case []any:
+			parts := make([]string, len(v))
+			for i, item := range v {
+				parts[i] = cell(item)
+			}
+			return strings.Join(parts, ",")
+		case map[string]any:
+			parts := make([]string, 0, len(v))
+			for _, k := range slices.Sorted(maps.Keys(v)) {
+				parts = append(parts, k+"="+cell(v[k]))
+			}
+			return strings.Join(parts, ",")
+		}
+		return fmt.Sprint(value)
+	}
+
+	width := 0
+	if f, ok := w.(*os.File); ok {
+		if cols, _, err := term.GetSize(int(f.Fd())); err == nil && cols > 0 {
+			width = cols
+		}
+	}
+	render := func(title string, fields []Cli_kitchensink_v1_ingest_proto_ViewField, rows []any) error {
+		if len(rows) == 0 {
+			return nil
+		}
+		columns := make([]*jsonpath.Path, len(fields))
+		for i, f := range fields {
+			path, err := jsonpath.Parse(f.Path)
+			if err != nil {
+				return fmt.Errorf("column %s: %w", f.Label, err)
+			}
+			columns[i] = path
+		}
+
+		t := table.NewWriter()
+		t.Style().Size.WidthMax = width
+		if title != "" {
+			t.SetTitle(title)
+		}
+		header := make(table.Row, len(fields))
+		for j, f := range fields {
+			header[j] = f.Label
+		}
+		t.AppendHeader(header)
+		for _, row := range rows {
+			line := make(table.Row, len(fields))
+			for j, path := range columns {
+				found := path.Select(row)
+				if len(found) == 1 {
+					line[j] = cell(found[0])
+					continue
+				}
+				line[j] = cell([]any(found))
+			}
+			t.AppendRow(line)
+		}
+		_, err := fmt.Fprintln(w, t.Render())
+		return err
+	}
+
+	if len(view.Fields) > 0 {
+		if err := render("", view.Fields, []any{doc}); err != nil {
+			return err
+		}
+	}
+	for _, list := range view.Lists {
+		path, err := jsonpath.Parse(list.Path)
+		if err != nil {
+			return fmt.Errorf("list %s: %w", list.Label, err)
+		}
+		if err := render(strings.ToUpper(list.Label), list.Fields, path.Select(doc)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func cli_kitchensink_v1_ingest_proto_resolveOutput(
+	out io.Writer,
+	response, method, format, columns string,
+	opt Cli_kitchensink_v1_ingest_proto_Options,
+) (Cli_kitchensink_v1_ingest_proto_Printer, Cli_kitchensink_v1_ingest_proto_View, error) {
+	if format == "" {
+		format = opt.DefaultPrinter
+	}
+
+	printer, found := opt.Printers[format]
+	if format != "" && !found {
+		return nil, Cli_kitchensink_v1_ingest_proto_View{}, cli_kitchensink_v1_ingest_proto_exitError{cli_kitchensink_v1_ingest_proto_exitUsage, fmt.Errorf(
+			"unknown output format %q; use one of: %s",
+			format, strings.Join(slices.Sorted(maps.Keys(opt.Printers)), ", "))}
+	}
+	if format == "" {
+		// A removed printer cannot break the no-flag default.
+		tty := false
+		if f, ok := out.(*os.File); ok {
+			tty = term.IsTerminal(int(f.Fd()))
+		}
+		switch {
+		case columns != "":
+			printer = Cli_kitchensink_v1_ingest_proto_Printers["table"]
+		case tty:
+			printer = Cli_kitchensink_v1_ingest_proto_Printers["json"]
+		default:
+			printer = Cli_kitchensink_v1_ingest_proto_Printers["jsonl"]
+		}
+	}
+
+	if columns != "" {
+		parts := strings.Split(columns, ",")
+		fields := make([]Cli_kitchensink_v1_ingest_proto_ViewField, len(parts))
+		for i, part := range parts {
+			label, path, ok := strings.Cut(part, ":")
+			if !ok {
+				return nil, Cli_kitchensink_v1_ingest_proto_View{}, cli_kitchensink_v1_ingest_proto_exitError{cli_kitchensink_v1_ingest_proto_exitUsage, fmt.Errorf(
+					"--columns entry %q has no colon; write LABEL:path", part)}
+			}
+			if _, err := jsonpath.Parse(path); err != nil {
+				return nil, Cli_kitchensink_v1_ingest_proto_View{}, cli_kitchensink_v1_ingest_proto_exitError{cli_kitchensink_v1_ingest_proto_exitUsage, fmt.Errorf(
+					"--columns entry %q: %w", part, err)}
+			}
+			fields[i] = Cli_kitchensink_v1_ingest_proto_ViewField{Label: label, Path: path}
+		}
+		return printer, Cli_kitchensink_v1_ingest_proto_View{Fields: fields}, nil
+	}
+	if override, ok := opt.Views[method]; ok {
+		return printer, override, nil
+	}
+	return printer, cli_kitchensink_v1_ingest_proto_messageViews[response], nil
+}
+
+// =============================================================================
+// Call: each rpc shape runs its call, or prints the requests instead.
+// =============================================================================
+
+func cli_kitchensink_v1_ingest_proto_callContext(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
+	if timeout > 0 {
+		return context.WithTimeout(ctx, timeout)
+	}
+	return context.WithCancel(ctx)
+}
+
+func cli_kitchensink_v1_ingest_proto_runClientStream[Req, Res any, PReq interface {
+	proto.Message
+	*Req
+}, PRes interface {
+	proto.Message
+	*Res
+}](ctx context.Context, out, stderr io.Writer, printer Cli_kitchensink_v1_ingest_proto_Printer, view Cli_kitchensink_v1_ingest_proto_View, reqs iter.Seq2[PReq, error], dryRun bool, timeout time.Duration, open func(context.Context, ...grpc.CallOption) (grpc.ClientStreamingClient[Req, Res], error)) (err error) {
+	if dryRun {
+		for req, err := range reqs {
+			if err != nil {
+				return err
+			}
+			if err := cli_kitchensink_v1_ingest_proto_printMessage(out, printer, Cli_kitchensink_v1_ingest_proto_View{}, req); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	ctx, cancel := cli_kitchensink_v1_ingest_proto_callContext(ctx, timeout)
+	defer cancel()
+	defer func() { err = cli_kitchensink_v1_ingest_proto_withExitCode(ctx, err) }()
+
+	if f, ok := stderr.(*os.File); ok && term.IsTerminal(int(f.Fd())) {
+		fmt.Fprintln(stderr, "sending requests; the server replies when it has them all")
+	}
+
+	stream, err := open(ctx)
+	if err != nil {
+		return err
+	}
+	for req, err := range reqs {
+		if err != nil {
+			return err
+		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if err := stream.Send(req); err != nil {
+			if !errors.Is(err, io.EOF) {
+				return err
+			}
+			// The server ended the stream. CloseAndRecv has the reason.
+			break
+		}
+	}
+	resp, err := stream.CloseAndRecv()
+	if err != nil {
+		return err
+	}
+	return cli_kitchensink_v1_ingest_proto_printMessage(out, printer, view, PRes(resp))
+}
+
+// =============================================================================
+// Exit: every failure contains the code the shell sees.
+// =============================================================================
+
+const (
+	cli_kitchensink_v1_ingest_proto_exitFailure   = 1
+	cli_kitchensink_v1_ingest_proto_exitUsage     = 2
+	cli_kitchensink_v1_ingest_proto_exitTimeout   = 124
+	cli_kitchensink_v1_ingest_proto_exitInterrupt = 130
+)
+
+type cli_kitchensink_v1_ingest_proto_exitError struct {
+	code int
+	err  error
+}
+
+// Error removes the gRPC "rpc error: ..." wrapper.
+func (e cli_kitchensink_v1_ingest_proto_exitError) Error() string {
+	if msg := status.Convert(e.err).Message(); msg != "" {
+		return msg
+	}
+	return e.err.Error()
+}
+
+func (e cli_kitchensink_v1_ingest_proto_exitError) Unwrap() error { return e.err }
+func (e cli_kitchensink_v1_ingest_proto_exitError) ExitCode() int { return e.code }
+
+// The context, not the gRPC status, decides the exit code.
+func cli_kitchensink_v1_ingest_proto_withExitCode(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+	var coded cli_kitchensink_v1_ingest_proto_exitError
+	if errors.As(err, &coded) {
+		return err
+	}
+	switch ctx.Err() {
+	case context.DeadlineExceeded:
+		return cli_kitchensink_v1_ingest_proto_exitError{cli_kitchensink_v1_ingest_proto_exitTimeout, err}
+	case context.Canceled:
+		return cli_kitchensink_v1_ingest_proto_exitError{cli_kitchensink_v1_ingest_proto_exitInterrupt, err}
+	}
+	return cli_kitchensink_v1_ingest_proto_exitError{cli_kitchensink_v1_ingest_proto_exitFailure, err}
+}
+
+func cli_kitchensink_v1_ingest_proto_noArgs(cmd *cobra.Command, args []string) error {
+	if err := cobra.NoArgs(cmd, args); err != nil {
+		return cli_kitchensink_v1_ingest_proto_exitError{cli_kitchensink_v1_ingest_proto_exitUsage, err}
+	}
+	return nil
 }

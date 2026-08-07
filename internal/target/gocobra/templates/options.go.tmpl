@@ -1,0 +1,49 @@
+{{- define "options" -}}
+// =============================================================================
+// Options: what the caller configures.
+// =============================================================================
+
+// {{ export }}Options configures a service command. The zero value keeps every
+// built-in default.
+type {{ export }}Options struct {
+	// Printers adds a printer under the name -o takes. A nil printer removes
+	// the built-in of that name.
+	Printers map[string]{{ export }}Printer
+	// DefaultPrinter names the printer when -o is absent. An unknown one panics
+	// when the caller builds the command.
+	DefaultPrinter string
+	// Decoders replaces the built-in -f and -d decoders, in the order the CLI
+	// tries them.
+	Decoders []{{ export }}Decoder
+	// A Views entry replaces the derived view of a method, keyed by the
+	// method's full proto name.
+	Views map[string]{{ export }}View
+}
+
+func {{ prefix }}resolveOptions(opts []{{ export }}Options) {{ export }}Options {
+	resolved := {{ export }}Options{
+		Printers: maps.Clone({{ export }}Printers),
+		Decoders: {{ export }}Decoders,
+		Views:    map[string]{{ export }}View{},
+	}
+	for _, opt := range opts {
+		for name, printer := range opt.Printers {
+			if printer == nil {
+				delete(resolved.Printers, name)
+				continue
+			}
+			resolved.Printers[name] = printer
+		}
+		if opt.DefaultPrinter != "" {
+			resolved.DefaultPrinter = opt.DefaultPrinter
+		}
+		if len(opt.Decoders) > 0 {
+			resolved.Decoders = opt.Decoders
+		}
+		for method, view := range opt.Views {
+			resolved.Views[method] = view
+		}
+	}
+	return resolved
+}
+{{ end -}}

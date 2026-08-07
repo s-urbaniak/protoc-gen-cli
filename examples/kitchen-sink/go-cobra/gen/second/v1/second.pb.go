@@ -73,7 +73,7 @@ const file_second_v1_second_proto_rawDesc = "" +
 	"\vPingRequest\x12\x12\n" +
 	"\x04text\x18\x01 \x01(\tR\x04text2I\n" +
 	"\rSecondService\x128\n" +
-	"\x04Ping\x12\x16.second.v1.PingRequest\x1a\x16.second.v1.PingRequest\"\x00BRZPgithub.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/second/v1b\x06proto3"
+	"\x04Ping\x12\x16.second.v1.PingRequest\x1a\x16.second.v1.PingRequest\"\x00BTZRgithub.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/second/v1b\x06proto3"
 
 var (
 	file_second_v1_second_proto_rawDescOnce sync.Once

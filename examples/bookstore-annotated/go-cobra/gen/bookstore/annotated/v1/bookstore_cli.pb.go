@@ -10,16 +10,18 @@ import (
 	errors "errors"
 	fmt "fmt"
 	io "io"
+	iter "iter"
 	maps "maps"
 	os "os"
 	slices "slices"
 	strings "strings"
+	time "time"
 
 	table "github.com/jedib0t/go-pretty/v6/table"
 	cobra "github.com/spf13/cobra"
-	pflag "github.com/spf13/pflag"
-	gjson "github.com/tidwall/gjson"
+	jsonpath "github.com/theory/jsonpath"
 	sjson "github.com/tidwall/sjson"
+	yaml3 "go.yaml.in/yaml/v3"
 	term "golang.org/x/term"
 	grpc "google.golang.org/grpc"
 	status "google.golang.org/grpc/status"
@@ -29,447 +31,1351 @@ import (
 	yaml "sigs.k8s.io/yaml"
 )
 
-type cli_bookstore_annotated_v1_bookstore_proto_viewField struct {
-	Label string
-	Path  string
-}
+// =============================================================================
+// bookstore.annotated.v1.BookstoreService — Browse and edit the shelves and their books.
+// =============================================================================
 
-type cli_bookstore_annotated_v1_bookstore_proto_viewList struct {
-	FullName string
-	Label    string
-	Path     string
-	Fields   []cli_bookstore_annotated_v1_bookstore_proto_viewField
-}
+// BookstoreServiceOptions configures NewBookstoreServiceCommand.
+// The zero value keeps every built-in default.
+type BookstoreServiceOptions = Cli_bookstore_annotated_v1_bookstore_proto_Options
 
-// A view is the display projection of a message.
-type cli_bookstore_annotated_v1_bookstore_proto_view struct {
-	Lists  []cli_bookstore_annotated_v1_bookstore_proto_viewList
-	Fields []cli_bookstore_annotated_v1_bookstore_proto_viewField
-}
+// BookstoreServicePrinter renders one body.
+type BookstoreServicePrinter = Cli_bookstore_annotated_v1_bookstore_proto_Printer
 
-// viewFor returns the view of fullName. Configured fields replace the
-// derived fields.
-func cli_bookstore_annotated_v1_bookstore_proto_viewFor(fullName string, messageViews map[string]cli_bookstore_annotated_v1_bookstore_proto_view, views map[string][]cli_bookstore_annotated_v1_bookstore_proto_viewField) cli_bookstore_annotated_v1_bookstore_proto_view {
-	v := messageViews[fullName]
-	if fields, ok := views[fullName]; ok {
-		v.Fields = fields
+// BookstoreServiceDecoder decodes one source into request bodies.
+type BookstoreServiceDecoder = Cli_bookstore_annotated_v1_bookstore_proto_Decoder
+
+// BookstoreServiceView names the fields a printer shows.
+type BookstoreServiceView = Cli_bookstore_annotated_v1_bookstore_proto_View
+
+type BookstoreServiceViewList = Cli_bookstore_annotated_v1_bookstore_proto_ViewList
+
+type BookstoreServiceViewField = Cli_bookstore_annotated_v1_bookstore_proto_ViewField
+
+// The built-in decoders, in the order the CLI tries them.
+var (
+	BookstoreServiceDecoderJSON = Cli_bookstore_annotated_v1_bookstore_proto_DecoderJSON
+	BookstoreServiceDecoderYAML = Cli_bookstore_annotated_v1_bookstore_proto_DecoderYAML
+	BookstoreServiceDecoders    = Cli_bookstore_annotated_v1_bookstore_proto_Decoders
+)
+
+// NewBookstoreServiceCommand returns the "catalog" command tree.
+//
+// Browse and edit the shelves and their books.
+//
+// Later opts override earlier opts for each entry.
+func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...BookstoreServiceOptions) *cobra.Command {
+	client := NewBookstoreServiceClient(conn)
+	opt := cli_bookstore_annotated_v1_bookstore_proto_resolveOptions(opts)
+
+	cmd := &cobra.Command{
+		Use:     "catalog",
+		Short:   "Browse and edit the shelves and their books.",
+		Aliases: []string{"books"},
 	}
-	if len(views) > 0 && len(v.Lists) > 0 {
-		lists := slices.Clone(v.Lists)
-		for i, l := range lists {
-			if fields, ok := views[l.FullName]; ok {
-				lists[i].Fields = fields
-			}
-		}
-		v.Lists = lists
-	}
-	return v
-}
+	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {
+		return cli_bookstore_annotated_v1_bookstore_proto_exitError{cli_bookstore_annotated_v1_bookstore_proto_exitUsage, err}
+	})
 
-func cli_bookstore_annotated_v1_bookstore_proto_viewFields(message string, entries []string) []cli_bookstore_annotated_v1_bookstore_proto_viewField {
-	fields := make([]cli_bookstore_annotated_v1_bookstore_proto_viewField, 0, len(entries))
-	for _, entry := range entries {
-		label, path, ok := strings.Cut(entry, ":")
-		if !ok || label == "" || path == "" {
-			panic(fmt.Sprintf("Options.Views[%q]: %q is not \"Label:path\"", message, entry))
-		}
-		fields = append(fields, cli_bookstore_annotated_v1_bookstore_proto_viewField{Label: label, Path: path})
+	// ----- persistent flags -----
+	printers := slices.Sorted(maps.Keys(opt.Printers))
+	if _, ok := opt.Printers[opt.DefaultPrinter]; opt.DefaultPrinter != "" && !ok {
+		panic(fmt.Sprintf("Options.DefaultPrinter: unknown printer %q; use one of: %s", opt.DefaultPrinter, strings.Join(printers, ", ")))
 	}
-	return fields
-}
-
-// A fragment is one request document.
-type cli_bookstore_annotated_v1_bookstore_proto_fragment struct {
-	Source string
-	JSON   []byte
-}
-
-// A decoder is one input format. decode changes its document encoding into
-// JSON.
-type cli_bookstore_annotated_v1_bookstore_proto_decoder struct {
-	name   string
-	decode func([]byte) ([]byte, error)
-}
-
-// decoderFns returns the built-in -f and -i formats.
-func cli_bookstore_annotated_v1_bookstore_proto_decoderFns() map[string]func([]byte) ([]byte, error) {
-	return map[string]func([]byte) ([]byte, error){
-		"json": func(body []byte) ([]byte, error) {
-			if !json.Valid(body) {
-				return nil, errors.New("not JSON")
-			}
-			return body, nil
-		},
-		"yaml": yaml.YAMLToJSON,
+	defaultFormat := "json on a terminal, jsonl when piped"
+	if opt.DefaultPrinter != "" {
+		defaultFormat = opt.DefaultPrinter
 	}
-}
 
-// json comes before yaml because every JSON document is valid YAML.
-func cli_bookstore_annotated_v1_bookstore_proto_decoders(fns map[string]func([]byte) ([]byte, error)) []cli_bookstore_annotated_v1_bookstore_proto_decoder {
-	decoders := make([]cli_bookstore_annotated_v1_bookstore_proto_decoder, 0, len(fns))
-	for _, name := range []string{"json", "yaml"} {
-		if fn := fns[name]; fn != nil {
-			decoders = append(decoders, cli_bookstore_annotated_v1_bookstore_proto_decoder{name: name, decode: fn})
-			delete(fns, name)
-		}
-	}
-	for _, name := range slices.Sorted(maps.Keys(fns)) {
-		decoders = append(decoders, cli_bookstore_annotated_v1_bookstore_proto_decoder{name: name, decode: fns[name]})
-	}
-	return decoders
-}
+	fs := cmd.PersistentFlags()
+	fs.StringArrayP("filename", "f", nil, "Request bodies from a file, or '-' for stdin.")
+	_ = cobra.MarkFlagFilename(fs, "filename")
+	fs.StringArrayP("data", "d", nil, "A request body, inline.")
+	fs.Bool("dry-run", false, "Print the assembled requests without sending them.")
+	fs.StringP("output", "o", "", "Output format: "+strings.Join(printers, ", ")+".\nDefault: "+defaultFormat+".")
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(printers, cobra.ShellCompDirectiveNoFileComp))
+	fs.String("columns", "", "Table columns, as LABEL:path pairs into the JSON response.\nExample: --columns 'ID:$.id,NAME:$.name'.")
+	fs.Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
+	fs.Bool("example", false, "Print an example request body without sending it.")
 
-// marshalJSON returns m as compact JSON. The spacing of protojson is
-// unstable by design. json.Compact makes it stable.
-func cli_bookstore_annotated_v1_bookstore_proto_marshalJSON(m proto.Message) ([]byte, error) {
-	raw, err := protojson.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
-	var buf bytes.Buffer
-	if err := json.Compact(&buf, raw); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-// printJSON writes each record as one line of JSON.
-func cli_bookstore_annotated_v1_bookstore_proto_printJSON(indent bool) func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error {
-	return func(w io.Writer, _ cli_bookstore_annotated_v1_bookstore_proto_view, next func() ([]byte, error)) error {
-		for {
-			rec, err := next()
-			if errors.Is(err, io.EOF) {
-				return nil
-			}
-			if err != nil {
-				return err
-			}
-			if indent {
-				var buf bytes.Buffer
-				if err := json.Indent(&buf, rec, "", "  "); err != nil {
+	// ----- list-shelves — rpc ListShelves -----
+	// Returns a list of all shelves in the bookstore.
+	{
+		sub := &cobra.Command{
+			Use:     "list-shelves",
+			Short:   "Returns a list of all shelves in the bookstore.",
+			Aliases: []string{"shelves"},
+			Args:    cli_bookstore_annotated_v1_bookstore_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_bookstore_annotated_v1_bookstore_proto_resolveOutput(cmd.OutOrStdout(), "bookstore.annotated.v1.ListShelvesResponse", "bookstore.annotated.v1.BookstoreService.ListShelves", format, columns, opt)
+				if err != nil {
 					return err
 				}
-				rec = buf.Bytes()
-			}
-			if _, err := fmt.Fprintln(w, string(rec)); err != nil {
-				return err
-			}
-		}
-	}
-}
-
-// printYAML writes each record as one YAML document. "---" separates the
-// documents.
-func cli_bookstore_annotated_v1_bookstore_proto_printYAML(w io.Writer, _ cli_bookstore_annotated_v1_bookstore_proto_view, next func() ([]byte, error)) error {
-	first := true
-	for {
-		rec, err := next()
-		if errors.Is(err, io.EOF) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		if !first {
-			if _, err := io.WriteString(w, "---\n"); err != nil {
-				return err
-			}
-		}
-		first = false
-		doc, err := yaml.JSONToYAML(rec)
-		if err != nil {
-			return err
-		}
-		if _, err := w.Write(doc); err != nil {
-			return err
-		}
-	}
-}
-
-// cell renders a JSON value as one table cell. Top-level entries stack.
-// Deeper levels go inline.
-func cli_bookstore_annotated_v1_bookstore_proto_cell(v gjson.Result, sep string) string {
-	switch {
-	case v.IsArray():
-		items := v.Array()
-		parts := make([]string, len(items))
-		for i, item := range items {
-			parts[i] = cli_bookstore_annotated_v1_bookstore_proto_cell(item, ",")
-		}
-		return strings.Join(parts, sep)
-	case v.IsObject():
-		var parts []string
-		v.ForEach(func(k, val gjson.Result) bool {
-			parts = append(parts, k.String()+"="+cli_bookstore_annotated_v1_bookstore_proto_cell(val, ","))
-			return true
-		})
-		return strings.Join(parts, sep)
-	default:
-		return v.String()
-	}
-}
-
-// printTable renders each record as a table under its view.
-func cli_bookstore_annotated_v1_bookstore_proto_printTable(w io.Writer, v cli_bookstore_annotated_v1_bookstore_proto_view, next func() ([]byte, error)) error {
-	width := 0
-	if f, ok := w.(*os.File); ok {
-		if cols, _, err := term.GetSize(int(f.Fd())); err == nil {
-			width = cols
-		}
-	}
-	for i := 0; ; i++ {
-		rec, err := next()
-		if errors.Is(err, io.EOF) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-
-		titled := len(v.Fields) > 0 || len(v.Lists) > 1
-		first := i == 0
-		section := func(title string, fields []cli_bookstore_annotated_v1_bookstore_proto_viewField, rows []gjson.Result) error {
-			t := table.NewWriter()
-			if width > 0 {
-				t.Style().Size.WidthMax = width
-			}
-			header := make(table.Row, len(fields))
-			for j, f := range fields {
-				header[j] = f.Label
-			}
-			t.AppendHeader(header)
-			for _, src := range rows {
-				row := make(table.Row, len(fields))
-				for j, f := range fields {
-					c := cli_bookstore_annotated_v1_bookstore_proto_cell(src.Get(f.Path), "\n")
-					if strings.Contains(c, "\n") {
-						t.Style().Options.SeparateRows = true
-					}
-					row[j] = c
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_bookstore_annotated_v1_bookstore_proto_View{}, []byte("{}"))
 				}
-				t.AppendRow(row)
-			}
-			out := ""
-			if !first {
-				out += "\n"
-			}
-			first = false
-			if title != "" {
-				out += title + "\n"
-			}
-			out += strings.TrimRight(t.Render(), "\n") + "\n"
-			_, err := io.WriteString(w, out)
-			return err
+				var flagsJSON []byte
+				bodies := cli_bookstore_annotated_v1_bookstore_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &emptypb.Empty{}
+				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_bookstore_annotated_v1_bookstore_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.ListShelves)
+			},
 		}
+		cmd.AddCommand(sub)
+	}
 
-		if len(v.Fields) > 0 {
-			if err := section("", v.Fields, []gjson.Result{gjson.ParseBytes(rec)}); err != nil {
-				return err
-			}
+	// ----- create-shelf — rpc CreateShelf -----
+	// Creates a new shelf in the bookstore.
+	//
+	// Request message for CreateShelf method.
+	{
+		sub := &cobra.Command{
+			Use:   "create-shelf",
+			Short: "Creates a new shelf in the bookstore.",
+			Long:  "Creates a new shelf in the bookstore.\n\nRequest message for CreateShelf method.",
+			Args:  cli_bookstore_annotated_v1_bookstore_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_bookstore_annotated_v1_bookstore_proto_resolveOutput(cmd.OutOrStdout(), "bookstore.annotated.v1.Shelf", "bookstore.annotated.v1.BookstoreService.CreateShelf", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_bookstore_annotated_v1_bookstore_proto_View{}, []byte("{\"shelf\":{\"id\":\"998\",\"theme\":\"Aut et repudiandae.\"}}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("shelf") {
+					value, _ := cmd.Flags().GetString("shelf")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --shelf: %q is not valid JSON", value)
+					}
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "shelf", []byte(value))
+					if err != nil {
+						return fmt.Errorf("flag --shelf: %w", err)
+					}
+				}
+				bodies := cli_bookstore_annotated_v1_bookstore_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &CreateShelfRequest{}
+				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_bookstore_annotated_v1_bookstore_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.CreateShelf)
+			},
 		}
-		for _, list := range v.Lists {
-			rows := gjson.GetBytes(rec, list.Path).Array()
-			if len(rows) == 0 {
+		sub.Flags().String("shelf", "", "The shelf resource to create.")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- get-shelf — rpc GetShelf -----
+	// Returns a specific bookstore shelf.
+	//
+	// Request message for GetShelf method.
+	{
+		sub := &cobra.Command{
+			Use:   "get-shelf",
+			Short: "Returns a specific bookstore shelf.",
+			Long:  "Returns a specific bookstore shelf.\n\nRequest message for GetShelf method.",
+			Args:  cli_bookstore_annotated_v1_bookstore_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_bookstore_annotated_v1_bookstore_proto_resolveOutput(cmd.OutOrStdout(), "bookstore.annotated.v1.Shelf", "bookstore.annotated.v1.BookstoreService.GetShelf", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_bookstore_annotated_v1_bookstore_proto_View{}, []byte("{\"shelf\":\"998\"}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("shelf") {
+					value, _ := cmd.Flags().GetInt64("shelf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "shelf", value)
+					if err != nil {
+						return fmt.Errorf("flag --shelf: %w", err)
+					}
+				}
+				bodies := cli_bookstore_annotated_v1_bookstore_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &GetShelfRequest{}
+				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_bookstore_annotated_v1_bookstore_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.GetShelf)
+			},
+		}
+		sub.Flags().Int64("shelf", 0, "The ID of the shelf resource to retrieve.")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- delete-shelf — rpc DeleteShelf -----
+	// Deletes a shelf, including all books that are stored on the shelf.
+	//
+	// Request message for DeleteShelf method.
+	{
+		sub := &cobra.Command{
+			Use:        "delete-shelf",
+			Short:      "Deletes a shelf, including all books that are stored on the shelf.",
+			Long:       "Deletes a shelf, including all books that are stored on the shelf.\n\nRequest message for DeleteShelf method.",
+			Deprecated: "the API can remove it at any time.",
+			Args:       cli_bookstore_annotated_v1_bookstore_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_bookstore_annotated_v1_bookstore_proto_resolveOutput(cmd.OutOrStdout(), "google.protobuf.Empty", "bookstore.annotated.v1.BookstoreService.DeleteShelf", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_bookstore_annotated_v1_bookstore_proto_View{}, []byte("{\"shelf\":\"998\"}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("shelf") {
+					value, _ := cmd.Flags().GetInt64("shelf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "shelf", value)
+					if err != nil {
+						return fmt.Errorf("flag --shelf: %w", err)
+					}
+				}
+				bodies := cli_bookstore_annotated_v1_bookstore_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &DeleteShelfRequest{}
+				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_bookstore_annotated_v1_bookstore_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.DeleteShelf)
+			},
+		}
+		sub.Flags().Int64("shelf", 0, "The ID of the shelf to delete.")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- list — rpc ListBooks -----
+	// Returns a list of books on a shelf.
+	//
+	// Request message for ListBooks method.
+	{
+		sub := &cobra.Command{
+			Use:   "list",
+			Short: "Returns a list of books on a shelf.",
+			Long:  "Returns a list of books on a shelf.\n\nRequest message for ListBooks method.",
+			Args:  cli_bookstore_annotated_v1_bookstore_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_bookstore_annotated_v1_bookstore_proto_resolveOutput(cmd.OutOrStdout(), "bookstore.annotated.v1.ListBooksResponse", "bookstore.annotated.v1.BookstoreService.ListBooks", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_bookstore_annotated_v1_bookstore_proto_View{}, []byte("{\"shelf\":\"998\"}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("shelf") {
+					value, _ := cmd.Flags().GetInt64("shelf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "shelf", value)
+					if err != nil {
+						return fmt.Errorf("flag --shelf: %w", err)
+					}
+				}
+				bodies := cli_bookstore_annotated_v1_bookstore_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &ListBooksRequest{}
+				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_bookstore_annotated_v1_bookstore_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.ListBooks)
+			},
+		}
+		sub.Flags().Int64("shelf", 0, "ID of the shelf which books to list.")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- add — rpc CreateBook -----
+	// Put a new book on a shelf.
+	//
+	// Request message for CreateBook method.
+	{
+		sub := &cobra.Command{
+			Use:   "add",
+			Short: "Put a new book on a shelf.",
+			Long:  "Put a new book on a shelf.\n\nRequest message for CreateBook method.",
+			Args:  cli_bookstore_annotated_v1_bookstore_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_bookstore_annotated_v1_bookstore_proto_resolveOutput(cmd.OutOrStdout(), "bookstore.annotated.v1.Book", "bookstore.annotated.v1.BookstoreService.CreateBook", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_bookstore_annotated_v1_bookstore_proto_View{}, []byte("{\"shelf\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Et repudiandae quis.\",\"title\":\"Recusandae vel odit.\"}}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("shelf") {
+					value, _ := cmd.Flags().GetInt64("shelf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "shelf", value)
+					if err != nil {
+						return fmt.Errorf("flag --shelf: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("book") {
+					value, _ := cmd.Flags().GetString("book")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --book: %q is not valid JSON", value)
+					}
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "book", []byte(value))
+					if err != nil {
+						return fmt.Errorf("flag --book: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("book.author") {
+					value, _ := cmd.Flags().GetString("book.author")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "book.author", value)
+					if err != nil {
+						return fmt.Errorf("flag --book.author: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("book.title") {
+					value, _ := cmd.Flags().GetString("book.title")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "book.title", value)
+					if err != nil {
+						return fmt.Errorf("flag --book.title: %w", err)
+					}
+				}
+				bodies := cli_bookstore_annotated_v1_bookstore_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &CreateBookRequest{}
+				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_bookstore_annotated_v1_bookstore_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.CreateBook)
+			},
+		}
+		sub.Flags().Int64("shelf", 0, "The ID of the shelf on which to create a book.")
+		sub.Flags().String("book", "", "A book resource to create on the shelf.")
+		sub.Flags().StringP("book.author", "a", "", "An author of the book.")
+		sub.Flags().StringP("book.title", "t", "", "Title to print on the spine.")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- get — rpc GetBook -----
+	// Returns a specific book.
+	//
+	// Request message for GetBook method.
+	{
+		sub := &cobra.Command{
+			Use:   "get",
+			Short: "Returns a specific book.",
+			Long:  "Returns a specific book.\n\nRequest message for GetBook method.",
+			Args:  cli_bookstore_annotated_v1_bookstore_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_bookstore_annotated_v1_bookstore_proto_resolveOutput(cmd.OutOrStdout(), "bookstore.annotated.v1.Book", "bookstore.annotated.v1.BookstoreService.GetBook", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_bookstore_annotated_v1_bookstore_proto_View{}, []byte("{\"shelf\":\"998\",\"book\":\"103\"}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("shelf") {
+					value, _ := cmd.Flags().GetInt64("shelf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "shelf", value)
+					if err != nil {
+						return fmt.Errorf("flag --shelf: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("book") {
+					value, _ := cmd.Flags().GetInt64("book")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "book", value)
+					if err != nil {
+						return fmt.Errorf("flag --book: %w", err)
+					}
+				}
+				bodies := cli_bookstore_annotated_v1_bookstore_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &GetBookRequest{}
+				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_bookstore_annotated_v1_bookstore_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.GetBook)
+			},
+		}
+		sub.Flags().Int64("shelf", 0, "The ID of the shelf from which to retrieve a book.")
+		sub.Flags().Int64("book", 0, "The ID of the book to retrieve.")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- delete — rpc DeleteBook -----
+	// Deletes a book from a shelf.
+	//
+	// Request message for DeleteBook method.
+	{
+		sub := &cobra.Command{
+			Use:     "delete",
+			Short:   "Deletes a book from a shelf.",
+			Long:    "Deletes a book from a shelf.\n\nRequest message for DeleteBook method.",
+			Aliases: []string{"rm"},
+			Args:    cli_bookstore_annotated_v1_bookstore_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_bookstore_annotated_v1_bookstore_proto_resolveOutput(cmd.OutOrStdout(), "google.protobuf.Empty", "bookstore.annotated.v1.BookstoreService.DeleteBook", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_bookstore_annotated_v1_bookstore_proto_View{}, []byte("{\"shelf\":\"998\",\"book\":\"103\"}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("shelf") {
+					value, _ := cmd.Flags().GetInt64("shelf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "shelf", value)
+					if err != nil {
+						return fmt.Errorf("flag --shelf: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("book") {
+					value, _ := cmd.Flags().GetInt64("book")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "book", value)
+					if err != nil {
+						return fmt.Errorf("flag --book: %w", err)
+					}
+				}
+				bodies := cli_bookstore_annotated_v1_bookstore_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &DeleteBookRequest{}
+				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_bookstore_annotated_v1_bookstore_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.DeleteBook)
+			},
+		}
+		sub.Flags().Int64("shelf", 0, "The ID of the shelf from which to delete a book.")
+		sub.Flags().Int64("book", 0, "The ID of the book to delete.")
+		cmd.AddCommand(sub)
+	}
+
+	return cmd
+}
+
+// =============================================================================
+// bookstore.annotated.v1.AuctionsService — AuctionsService sells the store's rare books under the hammer.
+// =============================================================================
+
+// AuctionsServiceOptions configures NewAuctionsServiceCommand.
+// The zero value keeps every built-in default.
+type AuctionsServiceOptions = Cli_bookstore_annotated_v1_bookstore_proto_Options
+
+// AuctionsServicePrinter renders one body.
+type AuctionsServicePrinter = Cli_bookstore_annotated_v1_bookstore_proto_Printer
+
+// AuctionsServiceDecoder decodes one source into request bodies.
+type AuctionsServiceDecoder = Cli_bookstore_annotated_v1_bookstore_proto_Decoder
+
+// AuctionsServiceView names the fields a printer shows.
+type AuctionsServiceView = Cli_bookstore_annotated_v1_bookstore_proto_View
+
+type AuctionsServiceViewList = Cli_bookstore_annotated_v1_bookstore_proto_ViewList
+
+type AuctionsServiceViewField = Cli_bookstore_annotated_v1_bookstore_proto_ViewField
+
+// The built-in decoders, in the order the CLI tries them.
+var (
+	AuctionsServiceDecoderJSON = Cli_bookstore_annotated_v1_bookstore_proto_DecoderJSON
+	AuctionsServiceDecoderYAML = Cli_bookstore_annotated_v1_bookstore_proto_DecoderYAML
+	AuctionsServiceDecoders    = Cli_bookstore_annotated_v1_bookstore_proto_Decoders
+)
+
+// NewAuctionsServiceCommand returns the "auctions" command tree.
+//
+// AuctionsService sells the store's rare books under the hammer.
+//
+// Later opts override earlier opts for each entry.
+func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsServiceOptions) *cobra.Command {
+	client := NewAuctionsServiceClient(conn)
+	opt := cli_bookstore_annotated_v1_bookstore_proto_resolveOptions(opts)
+
+	cmd := &cobra.Command{
+		Use:   "auctions",
+		Short: "AuctionsService sells the store's rare books under the hammer.",
+	}
+	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {
+		return cli_bookstore_annotated_v1_bookstore_proto_exitError{cli_bookstore_annotated_v1_bookstore_proto_exitUsage, err}
+	})
+
+	// ----- persistent flags -----
+	printers := slices.Sorted(maps.Keys(opt.Printers))
+	if _, ok := opt.Printers[opt.DefaultPrinter]; opt.DefaultPrinter != "" && !ok {
+		panic(fmt.Sprintf("Options.DefaultPrinter: unknown printer %q; use one of: %s", opt.DefaultPrinter, strings.Join(printers, ", ")))
+	}
+	defaultFormat := "json on a terminal, jsonl when piped"
+	if opt.DefaultPrinter != "" {
+		defaultFormat = opt.DefaultPrinter
+	}
+
+	fs := cmd.PersistentFlags()
+	fs.StringArrayP("filename", "f", nil, "Request bodies from a file, or '-' for stdin.")
+	_ = cobra.MarkFlagFilename(fs, "filename")
+	fs.StringArrayP("data", "d", nil, "A request body, inline.")
+	fs.Bool("dry-run", false, "Print the assembled requests without sending them.")
+	fs.StringP("output", "o", "", "Output format: "+strings.Join(printers, ", ")+".\nDefault: "+defaultFormat+".")
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(printers, cobra.ShellCompDirectiveNoFileComp))
+	fs.String("columns", "", "Table columns, as LABEL:path pairs into the JSON response.\nExample: --columns 'ID:$.id,NAME:$.name'.")
+	fs.Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
+	fs.Bool("example", false, "Print an example request body without sending it.")
+
+	// ----- create — rpc CreateAuction -----
+	// CreateAuction consigns a lot and schedules its auction.
+	{
+		sub := &cobra.Command{
+			Use:   "create",
+			Short: "CreateAuction consigns a lot and schedules its auction.",
+			Args:  cli_bookstore_annotated_v1_bookstore_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_bookstore_annotated_v1_bookstore_proto_resolveOutput(cmd.OutOrStdout(), "bookstore.annotated.v1.Auction", "bookstore.annotated.v1.AuctionsService.CreateAuction", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_bookstore_annotated_v1_bookstore_proto_View{}, []byte("{\"lot\":{\"id\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Et repudiandae quis.\",\"title\":\"Recusandae vel odit.\"},\"condition\":\"CONDITION_FINE\",\"reservePrice\":553,\"provenance\":[\"Exercitationem vel maiores.\"],\"flaws\":[{\"kind\":\"Aliquid iusto consequatur.\",\"detail\":\"Vero consequuntur sequi.\"}],\"attributes\":{\"product\":\"Ea magnam minima.\"},\"consignor\":{\"name\":\"Qui aliquid cumque.\",\"address\":{\"street\":\"Non quia officia.\",\"city\":\"Dicta vel voluptatem.\",\"country\":{\"code\":\"Dicta eos iste.\",\"name\":\"Est suscipit quaerat.\"}}}},\"startsAt\":\"2026-02-21T12:14:50Z\"}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("lot") {
+					value, _ := cmd.Flags().GetString("lot")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --lot: %q is not valid JSON", value)
+					}
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "lot", []byte(value))
+					if err != nil {
+						return fmt.Errorf("flag --lot: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("book") {
+					value, _ := cmd.Flags().GetString("book")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --book: %q is not valid JSON", value)
+					}
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "lot.book", []byte(value))
+					if err != nil {
+						return fmt.Errorf("flag --book: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("book.author") {
+					value, _ := cmd.Flags().GetString("book.author")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "lot.book.author", value)
+					if err != nil {
+						return fmt.Errorf("flag --book.author: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("book.title") {
+					value, _ := cmd.Flags().GetString("book.title")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "lot.book.title", value)
+					if err != nil {
+						return fmt.Errorf("flag --book.title: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("condition") {
+					value, _ := cmd.Flags().GetString("condition")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "lot.condition", value)
+					if err != nil {
+						return fmt.Errorf("flag --condition: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("reserve") {
+					value, _ := cmd.Flags().GetFloat64("reserve")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "lot.reserve_price", value)
+					if err != nil {
+						return fmt.Errorf("flag --reserve: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("provenance") {
+					value, _ := cmd.Flags().GetStringArray("provenance")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "lot.provenance", value)
+					if err != nil {
+						return fmt.Errorf("flag --provenance: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("flaws") {
+					values, _ := cmd.Flags().GetStringArray("flaws")
+					for _, value := range values {
+						if !json.Valid([]byte(value)) {
+							return fmt.Errorf("flag --flaws: %q is not valid JSON", value)
+						}
+					}
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "lot.flaws", []byte("["+strings.Join(values, ",")+"]"))
+					if err != nil {
+						return fmt.Errorf("flag --flaws: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("attributes") {
+					values, _ := cmd.Flags().GetStringArray("attributes")
+					entries := map[string]string{}
+					for _, kv := range values {
+						k, v, ok := strings.Cut(kv, "=")
+						if !ok {
+							return fmt.Errorf("flag --attributes: %q is not key=value", kv)
+						}
+						entries[k] = v
+					}
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "lot.attributes", entries)
+					if err != nil {
+						return fmt.Errorf("flag --attributes: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("consignor") {
+					value, _ := cmd.Flags().GetString("consignor")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --consignor: %q is not valid JSON", value)
+					}
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "lot.consignor", []byte(value))
+					if err != nil {
+						return fmt.Errorf("flag --consignor: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("consignor.name") {
+					value, _ := cmd.Flags().GetString("consignor.name")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "lot.consignor.name", value)
+					if err != nil {
+						return fmt.Errorf("flag --consignor.name: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("consignor.address") {
+					value, _ := cmd.Flags().GetString("consignor.address")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --consignor.address: %q is not valid JSON", value)
+					}
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "lot.consignor.address", []byte(value))
+					if err != nil {
+						return fmt.Errorf("flag --consignor.address: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("starts-at") {
+					value, _ := cmd.Flags().GetString("starts-at")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "starts_at", value)
+					if err != nil {
+						return fmt.Errorf("flag --starts-at: %w", err)
+					}
+				}
+				bodies := cli_bookstore_annotated_v1_bookstore_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &CreateAuctionRequest{}
+				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_bookstore_annotated_v1_bookstore_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.CreateAuction)
+			},
+		}
+		sub.Flags().String("lot", "", "")
+		sub.Flags().String("book", "", "")
+		sub.Flags().StringP("book.author", "a", "", "An author of the book.")
+		sub.Flags().StringP("book.title", "t", "", "Title to print on the spine.")
+		sub.Flags().String("condition", "", "(values: CONDITION_UNSPECIFIED | CONDITION_FINE | CONDITION_VERY_GOOD | CONDITION_GOOD | CONDITION_FAIR | CONDITION_POOR)")
+		_ = sub.RegisterFlagCompletionFunc("condition", cobra.FixedCompletions([]string{"CONDITION_UNSPECIFIED", "CONDITION_FINE", "CONDITION_VERY_GOOD", "CONDITION_GOOD", "CONDITION_FAIR", "CONDITION_POOR"}, cobra.ShellCompDirectiveNoFileComp))
+		sub.Flags().Float64("reserve", 0, "")
+		sub.Flags().StringArray("provenance", nil, "Chain of custody, oldest first.")
+		sub.Flags().StringArray("flaws", nil, "")
+		sub.Flags().StringArray("attributes", nil, "Collector attributes, e.g.")
+		sub.Flags().String("consignor", "", "")
+		sub.Flags().String("consignor.name", "", "")
+		sub.Flags().String("consignor.address", "", "")
+		sub.Flags().String("starts-at", "", "")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- list — rpc ListAuctions -----
+	// ListAuctions lists auctions, optionally filtered by state.
+	{
+		sub := &cobra.Command{
+			Use:   "list",
+			Short: "ListAuctions lists auctions, optionally filtered by state.",
+			Args:  cli_bookstore_annotated_v1_bookstore_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_bookstore_annotated_v1_bookstore_proto_resolveOutput(cmd.OutOrStdout(), "bookstore.annotated.v1.ListAuctionsResponse", "bookstore.annotated.v1.AuctionsService.ListAuctions", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_bookstore_annotated_v1_bookstore_proto_View{}, []byte("{\"state\":\"AUCTION_STATE_SCHEDULED\"}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("state") {
+					value, _ := cmd.Flags().GetString("state")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "state", value)
+					if err != nil {
+						return fmt.Errorf("flag --state: %w", err)
+					}
+				}
+				bodies := cli_bookstore_annotated_v1_bookstore_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &ListAuctionsRequest{}
+				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_bookstore_annotated_v1_bookstore_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.ListAuctions)
+			},
+		}
+		sub.Flags().String("state", "", "(values: AUCTION_STATE_UNSPECIFIED | AUCTION_STATE_SCHEDULED | AUCTION_STATE_OPEN | AUCTION_STATE_HAMMERED | AUCTION_STATE_SETTLED)")
+		_ = sub.RegisterFlagCompletionFunc("state", cobra.FixedCompletions([]string{"AUCTION_STATE_UNSPECIFIED", "AUCTION_STATE_SCHEDULED", "AUCTION_STATE_OPEN", "AUCTION_STATE_HAMMERED", "AUCTION_STATE_SETTLED"}, cobra.ShellCompDirectiveNoFileComp))
+		cmd.AddCommand(sub)
+	}
+
+	// ----- watch — rpc WatchAuction -----
+	// WatchAuction streams bidding updates for the selected auctions as a live
+	// feed until the client cancels.
+	//
+	// WatchAuctionRequest selects auctions by exactly one of auction or author.
+	//
+	// The server can send multiple responses. Each prints as it arrives.
+	{
+		sub := &cobra.Command{
+			Use:   "watch",
+			Short: "WatchAuction streams bidding updates for the selected auctions as a live feed until the client cancels.",
+			Long:  "WatchAuction streams bidding updates for the selected auctions as a live\nfeed until the client cancels.\n\nWatchAuctionRequest selects auctions by exactly one of auction or author.\n\nThe server can send multiple responses. Each prints as it arrives.",
+			Args:  cli_bookstore_annotated_v1_bookstore_proto_noArgs,
+			PreRunE: func(cmd *cobra.Command, _ []string) error {
+				// cobra validates the groups after this hook, as a plain error.
+				// This call runs first, to add the usage exit code.
+				if err := cmd.ValidateFlagGroups(); err != nil {
+					return cli_bookstore_annotated_v1_bookstore_proto_exitError{cli_bookstore_annotated_v1_bookstore_proto_exitUsage, err}
+				}
+				return nil
+			},
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_bookstore_annotated_v1_bookstore_proto_resolveOutput(cmd.OutOrStdout(), "bookstore.annotated.v1.AuctionUpdate", "bookstore.annotated.v1.AuctionsService.WatchAuction", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_bookstore_annotated_v1_bookstore_proto_View{}, []byte("{\"auction\":\"103\",\"limit\":864}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("auction") {
+					value, _ := cmd.Flags().GetInt64("auction")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "auction", value)
+					if err != nil {
+						return fmt.Errorf("flag --auction: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("author") {
+					value, _ := cmd.Flags().GetString("author")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "author", value)
+					if err != nil {
+						return fmt.Errorf("flag --author: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("limit") {
+					value, _ := cmd.Flags().GetInt64("limit")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "limit", value)
+					if err != nil {
+						return fmt.Errorf("flag --limit: %w", err)
+					}
+				}
+				bodies := cli_bookstore_annotated_v1_bookstore_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &WatchAuctionRequest{}
+				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_bookstore_annotated_v1_bookstore_proto_runServerStream(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.WatchAuction)
+			},
+		}
+		sub.Flags().Int64("auction", 0, "")
+		sub.Flags().String("author", "", "")
+		sub.Flags().Int64("limit", 0, "Cap on the number of updates streamed back.")
+		_ = sub.Flags().MarkDeprecated("limit", "the API can remove it at any time.")
+		sub.MarkFlagsMutuallyExclusive("auction", "author")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- bid — rpc Bid -----
+	// Bid places bids and streams back every update on the bid's auction.
+	//
+	// Each request body becomes one request.
+	//
+	// The server can send multiple responses. Each prints as it arrives.
+	{
+		sub := &cobra.Command{
+			Use:   "bid",
+			Short: "Bid places bids and streams back every update on the bid's auction.",
+			Long:  "Bid places bids and streams back every update on the bid's auction.\n\nEach request body becomes one request.\n\nThe server can send multiple responses. Each prints as it arrives.",
+			Args:  cli_bookstore_annotated_v1_bookstore_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_bookstore_annotated_v1_bookstore_proto_resolveOutput(cmd.OutOrStdout(), "bookstore.annotated.v1.AuctionUpdate", "bookstore.annotated.v1.AuctionsService.Bid", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_bookstore_annotated_v1_bookstore_proto_View{}, []byte("{\"auction\":\"998\",\"amount\":103}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("auction") {
+					value, _ := cmd.Flags().GetInt64("auction")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "auction", value)
+					if err != nil {
+						return fmt.Errorf("flag --auction: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("amount") {
+					value, _ := cmd.Flags().GetFloat64("amount")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "amount", value)
+					if err != nil {
+						return fmt.Errorf("flag --amount: %w", err)
+					}
+				}
+				bodies := cli_bookstore_annotated_v1_bookstore_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				reqs := cli_bookstore_annotated_v1_bookstore_proto_buildRequests[PlaceBidRequest](bodies, flagsJSON)
+				return cli_bookstore_annotated_v1_bookstore_proto_runBidi(cmd.Context(), cmd.OutOrStdout(), printer, view, reqs, dryRun, timeout, client.Bid)
+			},
+		}
+		sub.Flags().Int64("auction", 0, "")
+		sub.Flags().Float64("amount", 0, "")
+		cmd.AddCommand(sub)
+	}
+
+	return cmd
+}
+
+// =============================================================================
+// bookstore.annotated.v1.InventoryService — InventoryService is the back office's stock system.
+// =============================================================================
+
+// InventoryServiceOptions configures NewInventoryServiceCommand.
+// The zero value keeps every built-in default.
+type InventoryServiceOptions = Cli_bookstore_annotated_v1_bookstore_proto_Options
+
+// InventoryServicePrinter renders one body.
+type InventoryServicePrinter = Cli_bookstore_annotated_v1_bookstore_proto_Printer
+
+// InventoryServiceDecoder decodes one source into request bodies.
+type InventoryServiceDecoder = Cli_bookstore_annotated_v1_bookstore_proto_Decoder
+
+// InventoryServiceView names the fields a printer shows.
+type InventoryServiceView = Cli_bookstore_annotated_v1_bookstore_proto_View
+
+type InventoryServiceViewList = Cli_bookstore_annotated_v1_bookstore_proto_ViewList
+
+type InventoryServiceViewField = Cli_bookstore_annotated_v1_bookstore_proto_ViewField
+
+// The built-in decoders, in the order the CLI tries them.
+var (
+	InventoryServiceDecoderJSON = Cli_bookstore_annotated_v1_bookstore_proto_DecoderJSON
+	InventoryServiceDecoderYAML = Cli_bookstore_annotated_v1_bookstore_proto_DecoderYAML
+	InventoryServiceDecoders    = Cli_bookstore_annotated_v1_bookstore_proto_Decoders
+)
+
+// NewInventoryServiceCommand returns the "inventory" command tree.
+//
+// InventoryService is the back office's stock system.
+//
+// Later opts override earlier opts for each entry.
+func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...InventoryServiceOptions) *cobra.Command {
+	client := NewInventoryServiceClient(conn)
+	opt := cli_bookstore_annotated_v1_bookstore_proto_resolveOptions(opts)
+
+	cmd := &cobra.Command{
+		Use:        "inventory",
+		Short:      "InventoryService is the back office's stock system.",
+		Deprecated: "the API can remove it at any time.",
+	}
+	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {
+		return cli_bookstore_annotated_v1_bookstore_proto_exitError{cli_bookstore_annotated_v1_bookstore_proto_exitUsage, err}
+	})
+
+	// ----- persistent flags -----
+	printers := slices.Sorted(maps.Keys(opt.Printers))
+	if _, ok := opt.Printers[opt.DefaultPrinter]; opt.DefaultPrinter != "" && !ok {
+		panic(fmt.Sprintf("Options.DefaultPrinter: unknown printer %q; use one of: %s", opt.DefaultPrinter, strings.Join(printers, ", ")))
+	}
+	defaultFormat := "json on a terminal, jsonl when piped"
+	if opt.DefaultPrinter != "" {
+		defaultFormat = opt.DefaultPrinter
+	}
+
+	fs := cmd.PersistentFlags()
+	fs.StringArrayP("filename", "f", nil, "Request bodies from a file, or '-' for stdin.")
+	_ = cobra.MarkFlagFilename(fs, "filename")
+	fs.StringArrayP("data", "d", nil, "A request body, inline.")
+	fs.Bool("dry-run", false, "Print the assembled requests without sending them.")
+	fs.StringP("output", "o", "", "Output format: "+strings.Join(printers, ", ")+".\nDefault: "+defaultFormat+".")
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(printers, cobra.ShellCompDirectiveNoFileComp))
+	fs.String("columns", "", "Table columns, as LABEL:path pairs into the JSON response.\nExample: --columns 'ID:$.id,NAME:$.name'.")
+	fs.Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
+	fs.Bool("example", false, "Print an example request body without sending it.")
+
+	// ----- import — rpc ImportBooks -----
+	// ImportBooks ingests a book catalogue as a stream of books.
+	//
+	// ImportBooksRequest is one book in a catalogue import.
+	//
+	// Each request body becomes one request.
+	{
+		sub := &cobra.Command{
+			Use:   "import",
+			Short: "ImportBooks ingests a book catalogue as a stream of books.",
+			Long:  "ImportBooks ingests a book catalogue as a stream of books.\n\nImportBooksRequest is one book in a catalogue import.\n\nEach request body becomes one request.",
+			Args:  cli_bookstore_annotated_v1_bookstore_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_bookstore_annotated_v1_bookstore_proto_resolveOutput(cmd.OutOrStdout(), "bookstore.annotated.v1.ImportSummary", "bookstore.annotated.v1.InventoryService.ImportBooks", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_bookstore_annotated_v1_bookstore_proto_View{}, []byte("{\"shelf\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Et repudiandae quis.\",\"title\":\"Recusandae vel odit.\"}}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("shelf") {
+					value, _ := cmd.Flags().GetInt64("shelf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "shelf", value)
+					if err != nil {
+						return fmt.Errorf("flag --shelf: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("book") {
+					value, _ := cmd.Flags().GetString("book")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --book: %q is not valid JSON", value)
+					}
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "book", []byte(value))
+					if err != nil {
+						return fmt.Errorf("flag --book: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("book.author") {
+					value, _ := cmd.Flags().GetString("book.author")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "book.author", value)
+					if err != nil {
+						return fmt.Errorf("flag --book.author: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("book.title") {
+					value, _ := cmd.Flags().GetString("book.title")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "book.title", value)
+					if err != nil {
+						return fmt.Errorf("flag --book.title: %w", err)
+					}
+				}
+				bodies := cli_bookstore_annotated_v1_bookstore_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				reqs := cli_bookstore_annotated_v1_bookstore_proto_buildRequests[ImportBooksRequest](bodies, flagsJSON)
+				return cli_bookstore_annotated_v1_bookstore_proto_runClientStream(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), printer, view, reqs, dryRun, timeout, client.ImportBooks)
+			},
+		}
+		sub.Flags().Int64("shelf", 0, "")
+		sub.Flags().String("book", "", "")
+		sub.Flags().StringP("book.author", "a", "", "An author of the book.")
+		sub.Flags().StringP("book.title", "t", "", "Title to print on the spine.")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- export — rpc ExportReport -----
+	// ExportReport renders a shelf's stock report and writes it to a file on
+	// the server.
+	//
+	// Request message for ExportReport method.
+	{
+		sub := &cobra.Command{
+			Use:   "export",
+			Short: "ExportReport renders a shelf's stock report and writes it to a file on the server.",
+			Long:  "ExportReport renders a shelf's stock report and writes it to a file on\nthe server.\n\nRequest message for ExportReport method.",
+			Args:  cli_bookstore_annotated_v1_bookstore_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_bookstore_annotated_v1_bookstore_proto_resolveOutput(cmd.OutOrStdout(), "bookstore.annotated.v1.Report", "bookstore.annotated.v1.InventoryService.ExportReport", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_bookstore_annotated_v1_bookstore_proto_View{}, []byte("{\"shelf\":\"998\",\"filename\":\"Aut et repudiandae.\"}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("shelf") {
+					value, _ := cmd.Flags().GetInt64("shelf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "shelf", value)
+					if err != nil {
+						return fmt.Errorf("flag --shelf: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("report-file") {
+					value, _ := cmd.Flags().GetString("report-file")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "filename", value)
+					if err != nil {
+						return fmt.Errorf("flag --report-file: %w", err)
+					}
+				}
+				bodies := cli_bookstore_annotated_v1_bookstore_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &ExportReportRequest{}
+				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_bookstore_annotated_v1_bookstore_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.ExportReport)
+			},
+		}
+		sub.Flags().Int64("shelf", 0, "The ID of the shelf to report on.")
+		sub.Flags().String("report-file", "", "The file to write the report to.")
+		cmd.AddCommand(sub)
+	}
+
+	return cmd
+}
+
+// =============================================================================
+// Options: what the caller configures.
+// =============================================================================
+
+// Cli_bookstore_annotated_v1_bookstore_proto_Options configures a service command. The zero value keeps every
+// built-in default.
+type Cli_bookstore_annotated_v1_bookstore_proto_Options struct {
+	// Printers adds a printer under the name -o takes. A nil printer removes
+	// the built-in of that name.
+	Printers map[string]Cli_bookstore_annotated_v1_bookstore_proto_Printer
+	// DefaultPrinter names the printer when -o is absent. An unknown one panics
+	// when the caller builds the command.
+	DefaultPrinter string
+	// Decoders replaces the built-in -f and -d decoders, in the order the CLI
+	// tries them.
+	Decoders []Cli_bookstore_annotated_v1_bookstore_proto_Decoder
+	// A Views entry replaces the derived view of a method, keyed by the
+	// method's full proto name.
+	Views map[string]Cli_bookstore_annotated_v1_bookstore_proto_View
+}
+
+func cli_bookstore_annotated_v1_bookstore_proto_resolveOptions(opts []Cli_bookstore_annotated_v1_bookstore_proto_Options) Cli_bookstore_annotated_v1_bookstore_proto_Options {
+	resolved := Cli_bookstore_annotated_v1_bookstore_proto_Options{
+		Printers: maps.Clone(Cli_bookstore_annotated_v1_bookstore_proto_Printers),
+		Decoders: Cli_bookstore_annotated_v1_bookstore_proto_Decoders,
+		Views:    map[string]Cli_bookstore_annotated_v1_bookstore_proto_View{},
+	}
+	for _, opt := range opts {
+		for name, printer := range opt.Printers {
+			if printer == nil {
+				delete(resolved.Printers, name)
 				continue
 			}
-			title := ""
-			if titled {
-				title = strings.ToUpper(list.Label)
+			resolved.Printers[name] = printer
+		}
+		if opt.DefaultPrinter != "" {
+			resolved.DefaultPrinter = opt.DefaultPrinter
+		}
+		if len(opt.Decoders) > 0 {
+			resolved.Decoders = opt.Decoders
+		}
+		for method, view := range opt.Views {
+			resolved.Views[method] = view
+		}
+	}
+	return resolved
+}
+
+// =============================================================================
+// Input: -f files, then -d values, then flags, in that order.
+// =============================================================================
+
+// A Decoder decodes one source into request bodies.
+type Cli_bookstore_annotated_v1_bookstore_proto_Decoder struct {
+	// Name identifies the decoder in an error.
+	Name string
+	// Decode yields one JSON body for each document in the source, in order.
+	// It yields an error, and nothing more, for a source it cannot read.
+	Decode func(r io.Reader) iter.Seq2[[]byte, error]
+}
+
+var (
+	Cli_bookstore_annotated_v1_bookstore_proto_DecoderJSON = Cli_bookstore_annotated_v1_bookstore_proto_Decoder{
+		Name: "json",
+		Decode: func(r io.Reader) iter.Seq2[[]byte, error] {
+			return func(yield func([]byte, error) bool) {
+				dec := json.NewDecoder(r)
+				for {
+					var raw json.RawMessage
+					if err := dec.Decode(&raw); err != nil {
+						if !errors.Is(err, io.EOF) {
+							yield(nil, err)
+						}
+						return
+					}
+					var items []json.RawMessage
+					if err := json.Unmarshal(raw, &items); err != nil {
+						if !yield(raw, nil) {
+							return
+						}
+						continue
+					}
+					for _, item := range items {
+						if !yield(item, nil) {
+							return
+						}
+					}
+				}
 			}
-			if err := section(title, list.Fields, rows); err != nil {
-				return err
+		},
+	}
+
+	Cli_bookstore_annotated_v1_bookstore_proto_DecoderYAML = Cli_bookstore_annotated_v1_bookstore_proto_Decoder{
+		Name: "yaml",
+		Decode: func(r io.Reader) iter.Seq2[[]byte, error] {
+			return func(yield func([]byte, error) bool) {
+				// yaml3 finds the document boundaries. yaml converts a
+				// document, including a map key that YAML allows and JSON
+				// does not.
+				dec := yaml3.NewDecoder(r)
+				for {
+					var node yaml3.Node
+					if err := dec.Decode(&node); err != nil {
+						if !errors.Is(err, io.EOF) {
+							yield(nil, err)
+						}
+						return
+					}
+					doc, err := yaml3.Marshal(&node)
+					if err != nil {
+						yield(nil, err)
+						return
+					}
+					body, err := yaml.YAMLToJSON(doc)
+					if err != nil {
+						yield(nil, err)
+						return
+					}
+					// An empty document converts to null, which is no body.
+					if bytes.Equal(bytes.TrimSpace(body), []byte("null")) {
+						continue
+					}
+					if !yield(body, nil) {
+						return
+					}
+				}
+			}
+		},
+	}
+
+	// The built-in decoders, in the order the CLI tries them.
+	Cli_bookstore_annotated_v1_bookstore_proto_Decoders = []Cli_bookstore_annotated_v1_bookstore_proto_Decoder{Cli_bookstore_annotated_v1_bookstore_proto_DecoderJSON, Cli_bookstore_annotated_v1_bookstore_proto_DecoderYAML}
+)
+
+// The first decoder to read a body takes the source.
+func cli_bookstore_annotated_v1_bookstore_proto_decodeSource(decoders []Cli_bookstore_annotated_v1_bookstore_proto_Decoder, source string, r io.Reader) iter.Seq2[[]byte, error] {
+	for _, dec := range decoders {
+		// A decoder reads as far as it needs to. The bytes a failed decoder
+		// read go to the next one, because stdin cannot replay them.
+		var seen bytes.Buffer
+		next, stop := iter.Pull2(dec.Decode(io.TeeReader(r, &seen)))
+		body, err, read := next()
+		stop()
+		r = io.MultiReader(bytes.NewReader(seen.Bytes()), r)
+		if err != nil {
+			continue
+		}
+		if read {
+			// A body fills a request message, so it is a JSON object. A
+			// source that reads as anything else belongs to another decoder.
+			opening, err := json.NewDecoder(bytes.NewReader(body)).Token()
+			if err != nil || opening != json.Delim('{') {
+				continue
+			}
+		}
+
+		return func(yield func([]byte, error) bool) {
+			for body, err := range dec.Decode(r) {
+				if err != nil {
+					yield(nil, fmt.Errorf("read %s as %s: %w", source, dec.Name, err))
+					return
+				}
+				if !yield(body, nil) {
+					return
+				}
+			}
+		}
+	}
+
+	names := make([]string, len(decoders))
+	for i, dec := range decoders {
+		names[i] = dec.Name
+	}
+	return func(yield func([]byte, error) bool) {
+		yield(nil, fmt.Errorf("cannot read %s as any of: %s", source, strings.Join(names, ", ")))
+	}
+}
+
+// cli_bookstore_annotated_v1_bookstore_proto_readBodies opens nothing until a caller ranges the sequence.
+func cli_bookstore_annotated_v1_bookstore_proto_readBodies(
+	decoders []Cli_bookstore_annotated_v1_bookstore_proto_Decoder,
+	filenames, data []string,
+	stdin io.Reader,
+	stderr io.Writer,
+) iter.Seq2[[]byte, error] {
+	if f, ok := stdin.(*os.File); ok && term.IsTerminal(int(f.Fd())) &&
+		slices.ContainsFunc(filenames, func(name string) bool {
+			return strings.TrimSpace(name) == "-"
+		}) {
+		fmt.Fprintln(stderr, "reading request bodies from the terminal; Ctrl-D to finish")
+	}
+
+	return func(yield func([]byte, error) bool) {
+		// read reports whether the caller wants more bodies.
+		read := func(source string, r io.Reader) bool {
+			for body, err := range cli_bookstore_annotated_v1_bookstore_proto_decodeSource(decoders, source, r) {
+				if !yield(body, err) || err != nil {
+					return false
+				}
+			}
+			return true
+		}
+
+		for _, filename := range filenames {
+			filename = strings.TrimSpace(filename)
+
+			var r io.Reader
+			source := filename
+			switch {
+			case filename == "":
+				continue
+			case filename == "-":
+				source, r = "stdin", stdin
+			default:
+				f, err := os.Open(filename)
+				if err != nil {
+					yield(nil, err)
+					return
+				}
+				defer f.Close()
+				r = f
+			}
+
+			if !read(source, r) {
+				return
+			}
+		}
+
+		for i, body := range data {
+			if !read(fmt.Sprintf("-d value %d", i+1), strings.NewReader(body)) {
+				return
 			}
 		}
 	}
 }
 
-// printers returns the built-in -o formats.
-func cli_bookstore_annotated_v1_bookstore_proto_printers() map[string]func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error {
-	return map[string]func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error{
-		"json":        cli_bookstore_annotated_v1_bookstore_proto_printJSON(false),
-		"json-pretty": cli_bookstore_annotated_v1_bookstore_proto_printJSON(true),
-		"table":       cli_bookstore_annotated_v1_bookstore_proto_printTable,
-		"yaml":        cli_bookstore_annotated_v1_bookstore_proto_printYAML,
+func cli_bookstore_annotated_v1_bookstore_proto_applyJSON(msg proto.Message, body []byte) error {
+	// protojson clears the message it fills, so the body decodes into a fresh
+	// partial.
+	partial := msg.ProtoReflect().New().Interface()
+	if err := (protojson.UnmarshalOptions{AllowPartial: true}).Unmarshal(body, partial); err != nil {
+		return err
 	}
-}
-
-func cli_bookstore_annotated_v1_bookstore_proto_checkDefaultOutput(printers map[string]func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error, defaultOutput string) {
-	if defaultOutput == "" {
-		return
-	}
-	if _, ok := printers[defaultOutput]; !ok {
-		panic(fmt.Sprintf("Options.DefaultOutput: unknown format %q; use one of: %s",
-			defaultOutput, strings.Join(slices.Sorted(maps.Keys(printers)), ", ")))
-	}
-}
-
-// outputPrinter resolves -o to its print function. An empty -o means the
-// configured default, or JSON. JSON is pretty on a terminal and compact in
-// a pipe.
-func cli_bookstore_annotated_v1_bookstore_proto_outputPrinter(cmd *cobra.Command, printers map[string]func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error, defaultOutput string) (func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error, error) {
-	format, _ := cmd.Flags().GetString("output")
-	if format == "" {
-		format = defaultOutput
-	}
-	if format == "" {
-		pretty := false
-		if f, ok := cmd.OutOrStdout().(*os.File); ok {
-			pretty = term.IsTerminal(int(f.Fd()))
-		}
-		return cli_bookstore_annotated_v1_bookstore_proto_printJSON(pretty), nil
-	}
-	p, ok := printers[format]
-	if !ok {
-		return nil, fmt.Errorf("unknown output format %q; use one of: %s",
-			format, strings.Join(slices.Sorted(maps.Keys(printers)), ", "))
-	}
-	return p, nil
-}
-
-// outputHelp returns the -o usage text.
-func cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers map[string]func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error, defaultOutput string) string {
-	help := "Output format: " + strings.Join(slices.Sorted(maps.Keys(printers)), ", ") + ".\n"
-	if defaultOutput != "" {
-		return help + "Default: " + defaultOutput + "."
-	}
-	return help + "Default: pretty JSON on a terminal, compact when piped."
-}
-
-// oneRecord yields m once and then io.EOF.
-func cli_bookstore_annotated_v1_bookstore_proto_oneRecord(m proto.Message) func() ([]byte, error) {
-	done := false
-	return func() ([]byte, error) {
-		if done {
-			return nil, io.EOF
-		}
-		done = true
-		return cli_bookstore_annotated_v1_bookstore_proto_marshalJSON(m)
-	}
-}
-
-// callContext returns the call context, with a --timeout deadline when set.
-func cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd *cobra.Command) (context.Context, context.CancelFunc) {
-	if d, _ := cmd.Flags().GetDuration("timeout"); d > 0 {
-		return context.WithTimeout(cmd.Context(), d)
-	}
-	return context.WithCancel(cmd.Context())
-}
-
-// An exitError is an error with a process exit code. Error removes the gRPC
-// "rpc error: ..." wrapper.
-type cli_bookstore_annotated_v1_bookstore_proto_exitError struct {
-	code int
-	err  error
-}
-
-func (e cli_bookstore_annotated_v1_bookstore_proto_exitError) Error() string {
-	if msg := status.Convert(e.err).Message(); msg != "" {
-		return msg
-	}
-	return e.err.Error()
-}
-func (e cli_bookstore_annotated_v1_bookstore_proto_exitError) Unwrap() error { return e.err }
-func (e cli_bookstore_annotated_v1_bookstore_proto_exitError) ExitCode() int { return e.code }
-
-func cli_bookstore_annotated_v1_bookstore_proto_usage(err error) error {
-	return cli_bookstore_annotated_v1_bookstore_proto_exitError{2, err}
-}
-
-// callErr maps a failed call to an exit code from its context.
-func cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx context.Context, err error) error {
-	if err == nil {
-		return nil
-	}
-	switch ctx.Err() {
-	case context.DeadlineExceeded:
-		return cli_bookstore_annotated_v1_bookstore_proto_exitError{124, err}
-	case context.Canceled:
-		return cli_bookstore_annotated_v1_bookstore_proto_exitError{130, err}
-	}
-	return cli_bookstore_annotated_v1_bookstore_proto_exitError{1, err}
-}
-
-// exclusiveFlags returns a usage error when the caller sets more than one flag.
-func cli_bookstore_annotated_v1_bookstore_proto_exclusiveFlags(fs *pflag.FlagSet, names ...string) error {
-	var set []string
-	for _, n := range names {
-		if fs.Changed(n) {
-			set = append(set, "--"+n)
-		}
-	}
-	if len(set) > 1 {
-		return cli_bookstore_annotated_v1_bookstore_proto_usage(fmt.Errorf("%s are mutually exclusive", strings.Join(set, ", ")))
-	}
+	proto.Merge(msg, partial)
 	return nil
 }
 
-// loadInputs returns the request fragments for the -f and -i values.
-// The fragments come in merge order. The -f documents come first, in
-// argument order. The -i values follow. A "-" filename reads stdin.
-// Content selects the format of each input. loadInputs skips empty inputs.
-func cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders []cli_bookstore_annotated_v1_bookstore_proto_decoder, cmd *cobra.Command) ([]cli_bookstore_annotated_v1_bookstore_proto_fragment, error) {
-	files, _ := cmd.Flags().GetStringArray("filename")
-	inline, _ := cmd.Flags().GetStringArray("input")
-	var out []cli_bookstore_annotated_v1_bookstore_proto_fragment
-	add := func(source string, raw []byte) error {
-		if len(bytes.TrimSpace(raw)) == 0 {
-			return nil
+// A flag overrides a body.
+func cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req proto.Message, bodies iter.Seq2[[]byte, error], flagsJSON []byte) error {
+	n := 0
+	for body, err := range bodies {
+		if err != nil {
+			return err
 		}
-		for _, d := range decoders {
-			body, err := d.decode(raw)
-			if err == nil && bytes.HasPrefix(bytes.TrimSpace(body), []byte("{")) {
-				out = append(out, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: source, JSON: body})
-				return nil
-			}
-		}
-		names := make([]string, len(decoders))
-		for i, d := range decoders {
-			names[i] = d.name
-		}
-		return fmt.Errorf("parse %s: not an object in any input format (%s)",
-			source, strings.Join(names, ", "))
-	}
-	for _, name := range files {
-		name = strings.TrimSpace(name)
-		switch {
-		case name == "":
-		case name == "-":
-			body, err := io.ReadAll(cmd.InOrStdin())
-			if err != nil {
-				return nil, fmt.Errorf("read stdin: %w", err)
-			}
-			if err := add("stdin", body); err != nil {
-				return nil, err
-			}
-		default:
-			body, err := os.ReadFile(name)
-			if err != nil {
-				return nil, err
-			}
-			if err := add(name, body); err != nil {
-				return nil, err
-			}
+		n++
+		if err := cli_bookstore_annotated_v1_bookstore_proto_applyJSON(req, body); err != nil {
+			return fmt.Errorf("request body %d: %w", n, err)
 		}
 	}
-	for i, s := range inline {
-		if err := add(fmt.Sprintf("-i value %d", i+1), []byte(s)); err != nil {
-			return nil, err
+	if flagsJSON != nil {
+		if err := cli_bookstore_annotated_v1_bookstore_proto_applyJSON(req, flagsJSON); err != nil {
+			return fmt.Errorf("flags: %w", err)
 		}
-	}
-	return out, nil
-}
-
-// buildRequest merges the fragments into req in order, with proto.Merge
-// semantics.
-func cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req proto.Message, frags []cli_bookstore_annotated_v1_bookstore_proto_fragment) error {
-	// Required fields are a property of the assembled request. The check
-	// comes after the merge.
-	for _, frag := range frags {
-		next := req.ProtoReflect().New().Interface()
-		if err := (protojson.UnmarshalOptions{AllowPartial: true}).Unmarshal(frag.JSON, next); err != nil {
-			return fmt.Errorf("decode %s: %w", frag.Source, err)
-		}
-		proto.Merge(req, next)
 	}
 	if err := proto.CheckInitialized(req); err != nil {
 		return fmt.Errorf("request: %w", err)
@@ -477,1421 +1383,591 @@ func cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req proto.Message, 
 	return nil
 }
 
-func cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(fs *pflag.FlagSet, decoders []cli_bookstore_annotated_v1_bookstore_proto_decoder) {
-	names := make([]string, len(decoders))
-	for i, d := range decoders {
-		names[i] = d.name
+// With no body, the flags alone are one request. With neither, the sequence
+// is empty.
+func cli_bookstore_annotated_v1_bookstore_proto_buildRequests[Req any, PReq interface {
+	proto.Message
+	*Req
+}](
+	bodies iter.Seq2[[]byte, error],
+	flagsJSON []byte,
+) iter.Seq2[PReq, error] {
+	return func(yield func(PReq, error) bool) {
+		build := func(body []byte) (PReq, error) {
+			req := PReq(new(Req))
+			if body != nil {
+				if err := cli_bookstore_annotated_v1_bookstore_proto_applyJSON(req, body); err != nil {
+					return nil, err
+				}
+			}
+			if flagsJSON != nil {
+				if err := cli_bookstore_annotated_v1_bookstore_proto_applyJSON(req, flagsJSON); err != nil {
+					return nil, fmt.Errorf("flags: %w", err)
+				}
+			}
+			if err := proto.CheckInitialized(req); err != nil {
+				return nil, fmt.Errorf("request: %w", err)
+			}
+			return req, nil
+		}
+
+		n := 0
+		for body, err := range bodies {
+			if err != nil {
+				yield(nil, err)
+				return
+			}
+			n++
+			req, err := build(body)
+			if err != nil {
+				yield(nil, fmt.Errorf("request body %d: %w", n, err))
+				return
+			}
+			if !yield(req, nil) {
+				return
+			}
+		}
+		if n > 0 || flagsJSON == nil {
+			return
+		}
+
+		req, err := build(nil)
+		if err != nil {
+			yield(nil, err)
+			return
+		}
+		yield(req, nil)
 	}
-	formats := strings.Join(names, ", ")
-	fs.StringArrayP("filename", "f", nil,
-		"Request body from a file ("+formats+"), or '-' for stdin.\n"+
-			"Repeatable; -f files, -i values, and flags merge in that order.")
-	_ = cobra.MarkFlagFilename(fs, "filename", "json", "yaml", "yml")
-	fs.StringArrayP("input", "i", nil,
-		"Request body inline ("+formats+").\n"+
-			"Repeatable; merges after -f files and before flags.")
 }
 
-// pumpRequests decodes JSON requests from in, one after another, and sends
-// each request.
-func cli_bookstore_annotated_v1_bookstore_proto_pumpRequests(ctx context.Context, in io.Reader, errW io.Writer, send func(n int, raw json.RawMessage) error) error {
-	if f, ok := in.(*os.File); ok && term.IsTerminal(int(f.Fd())) {
-		fmt.Fprintln(errW,
-			"reading JSON requests from the terminal, one after another; Ctrl-D to finish")
+// =============================================================================
+// Output: -o picks a printer, and a view names the fields of a response.
+// =============================================================================
+
+type Cli_bookstore_annotated_v1_bookstore_proto_ViewField struct {
+	Label string
+	Path  string // RFC 9535 JSONPath into the response.
+}
+
+type Cli_bookstore_annotated_v1_bookstore_proto_ViewList struct {
+	Label  string
+	Path   string
+	Fields []Cli_bookstore_annotated_v1_bookstore_proto_ViewField
+}
+
+type Cli_bookstore_annotated_v1_bookstore_proto_View struct {
+	Lists  []Cli_bookstore_annotated_v1_bookstore_proto_ViewList
+	Fields []Cli_bookstore_annotated_v1_bookstore_proto_ViewField
+}
+
+// A Printer renders one body. A streaming command calls it once for each
+// response. --dry-run and --example give it a request body and an empty view.
+type Cli_bookstore_annotated_v1_bookstore_proto_Printer func(w io.Writer, view Cli_bookstore_annotated_v1_bookstore_proto_View, body []byte) error
+
+// The built-in printers, keyed by the name -o takes.
+var Cli_bookstore_annotated_v1_bookstore_proto_Printers = map[string]Cli_bookstore_annotated_v1_bookstore_proto_Printer{
+	"json": func(w io.Writer, _ Cli_bookstore_annotated_v1_bookstore_proto_View, body []byte) error {
+		return cli_bookstore_annotated_v1_bookstore_proto_printJSON(w, body, true)
+	},
+	"jsonl": func(w io.Writer, _ Cli_bookstore_annotated_v1_bookstore_proto_View, body []byte) error {
+		return cli_bookstore_annotated_v1_bookstore_proto_printJSON(w, body, false)
+	},
+	"table": cli_bookstore_annotated_v1_bookstore_proto_printTable,
+	"yaml":  cli_bookstore_annotated_v1_bookstore_proto_printYAML,
+}
+
+// The view derived for each response message.
+var cli_bookstore_annotated_v1_bookstore_proto_messageViews = map[string]Cli_bookstore_annotated_v1_bookstore_proto_View{
+	"bookstore.annotated.v1.Auction": {Fields: []Cli_bookstore_annotated_v1_bookstore_proto_ViewField{
+		{Label: "ID", Path: "$[\"id\"]"},
+		{Label: "TITLE", Path: "$[\"lot\"][\"book\"][\"title\"]"},
+		{Label: "AUTHOR", Path: "$[\"lot\"][\"book\"][\"author\"]"},
+		{Label: "CONDITION", Path: "$[\"lot\"][\"condition\"]"},
+		{Label: "HIGH BID", Path: "$[\"highBid\"]"},
+		{Label: "BIDDER", Path: "$[\"highBidder\"]"},
+		{Label: "ENDS", Path: "$[\"endsAt\"]"},
+	}},
+	"bookstore.annotated.v1.AuctionUpdate": {Fields: []Cli_bookstore_annotated_v1_bookstore_proto_ViewField{
+		{Label: "auction", Path: "$[\"auction\"]"},
+		{Label: "high_bid", Path: "$[\"highBid\"]"},
+		{Label: "bidder", Path: "$[\"bidder\"]"},
+		{Label: "state", Path: "$[\"state\"]"},
+		{Label: "at", Path: "$[\"at\"]"},
+	}},
+	"bookstore.annotated.v1.Book": {Fields: []Cli_bookstore_annotated_v1_bookstore_proto_ViewField{
+		{Label: "id", Path: "$[\"id\"]"},
+		{Label: "author", Path: "$[\"author\"]"},
+		{Label: "title", Path: "$[\"title\"]"},
+	}},
+	"bookstore.annotated.v1.ImportSummary": {Fields: []Cli_bookstore_annotated_v1_bookstore_proto_ViewField{
+		{Label: "created", Path: "$[\"created\"]"},
+	}},
+	"bookstore.annotated.v1.ListAuctionsResponse": {Fields: []Cli_bookstore_annotated_v1_bookstore_proto_ViewField{
+		{Label: "next_page_token", Path: "$[\"nextPageToken\"]"},
+		{Label: "total_size", Path: "$[\"totalSize\"]"},
+	}, Lists: []Cli_bookstore_annotated_v1_bookstore_proto_ViewList{
+		{Label: "auctions", Path: "$[\"auctions\"][*]", Fields: []Cli_bookstore_annotated_v1_bookstore_proto_ViewField{
+			{Label: "ID", Path: "$[\"id\"]"},
+			{Label: "TITLE", Path: "$[\"lot\"][\"book\"][\"title\"]"},
+			{Label: "AUTHOR", Path: "$[\"lot\"][\"book\"][\"author\"]"},
+			{Label: "CONDITION", Path: "$[\"lot\"][\"condition\"]"},
+			{Label: "HIGH BID", Path: "$[\"highBid\"]"},
+			{Label: "BIDDER", Path: "$[\"highBidder\"]"},
+			{Label: "ENDS", Path: "$[\"endsAt\"]"},
+		}},
+	}},
+	"bookstore.annotated.v1.ListBooksResponse": {Fields: []Cli_bookstore_annotated_v1_bookstore_proto_ViewField{}, Lists: []Cli_bookstore_annotated_v1_bookstore_proto_ViewList{
+		{Label: "books", Path: "$[\"books\"][*]", Fields: []Cli_bookstore_annotated_v1_bookstore_proto_ViewField{
+			{Label: "id", Path: "$[\"id\"]"},
+			{Label: "author", Path: "$[\"author\"]"},
+			{Label: "title", Path: "$[\"title\"]"},
+		}},
+	}},
+	"bookstore.annotated.v1.ListShelvesResponse": {Fields: []Cli_bookstore_annotated_v1_bookstore_proto_ViewField{}, Lists: []Cli_bookstore_annotated_v1_bookstore_proto_ViewList{
+		{Label: "shelves", Path: "$[\"shelves\"][*]", Fields: []Cli_bookstore_annotated_v1_bookstore_proto_ViewField{
+			{Label: "id", Path: "$[\"id\"]"},
+			{Label: "theme", Path: "$[\"theme\"]"},
+		}},
+	}},
+	"bookstore.annotated.v1.Report": {Fields: []Cli_bookstore_annotated_v1_bookstore_proto_ViewField{
+		{Label: "filename", Path: "$[\"filename\"]"},
+		{Label: "books", Path: "$[\"books\"]"},
+	}},
+	"bookstore.annotated.v1.Shelf": {Fields: []Cli_bookstore_annotated_v1_bookstore_proto_ViewField{
+		{Label: "id", Path: "$[\"id\"]"},
+		{Label: "theme", Path: "$[\"theme\"]"},
+	}},
+}
+
+func cli_bookstore_annotated_v1_bookstore_proto_printMessage(
+	w io.Writer,
+	printer Cli_bookstore_annotated_v1_bookstore_proto_Printer,
+	view Cli_bookstore_annotated_v1_bookstore_proto_View,
+	msg proto.Message,
+) error {
+	body, err := protojson.Marshal(msg)
+	if err != nil {
+		return err
 	}
-	dec := json.NewDecoder(in)
-	for n := 1; ; n++ {
+	return printer(w, view, body)
+}
+
+func cli_bookstore_annotated_v1_bookstore_proto_printJSON(w io.Writer, body []byte, indent bool) error {
+	// Indent and Compact both pin the spacing, which protojson varies
+	// between runs on purpose.
+	var buf bytes.Buffer
+	if indent {
+		if err := json.Indent(&buf, body, "", "  "); err != nil {
+			return err
+		}
+	} else if err := json.Compact(&buf, body); err != nil {
+		return err
+	}
+	_, err := fmt.Fprintln(w, buf.String())
+	return err
+}
+
+// cli_bookstore_annotated_v1_bookstore_proto_printYAML starts the document with ---, so bodies render as one
+// valid YAML stream.
+func cli_bookstore_annotated_v1_bookstore_proto_printYAML(w io.Writer, _ Cli_bookstore_annotated_v1_bookstore_proto_View, body []byte) error {
+	doc, err := yaml.JSONToYAML(body)
+	if err != nil {
+		return err
+	}
+	if _, err := io.WriteString(w, "---\n"); err != nil {
+		return err
+	}
+	_, err = w.Write(doc)
+	return err
+}
+
+func cli_bookstore_annotated_v1_bookstore_proto_printTable(w io.Writer, view Cli_bookstore_annotated_v1_bookstore_proto_View, body []byte) error {
+	// UseNumber keeps a number's own spelling. The default renders a large
+	// integer in exponent form.
+	dec := json.NewDecoder(bytes.NewReader(body))
+	dec.UseNumber()
+	var doc any
+	if err := dec.Decode(&doc); err != nil {
+		return err
+	}
+
+	var cell func(value any) string
+	cell = func(value any) string {
+		switch v := value.(type) {
+		case nil:
+			return ""
+		case string:
+			return v
+		case []any:
+			parts := make([]string, len(v))
+			for i, item := range v {
+				parts[i] = cell(item)
+			}
+			return strings.Join(parts, ",")
+		case map[string]any:
+			parts := make([]string, 0, len(v))
+			for _, k := range slices.Sorted(maps.Keys(v)) {
+				parts = append(parts, k+"="+cell(v[k]))
+			}
+			return strings.Join(parts, ",")
+		}
+		return fmt.Sprint(value)
+	}
+
+	width := 0
+	if f, ok := w.(*os.File); ok {
+		if cols, _, err := term.GetSize(int(f.Fd())); err == nil && cols > 0 {
+			width = cols
+		}
+	}
+	render := func(title string, fields []Cli_bookstore_annotated_v1_bookstore_proto_ViewField, rows []any) error {
+		if len(rows) == 0 {
+			return nil
+		}
+		columns := make([]*jsonpath.Path, len(fields))
+		for i, f := range fields {
+			path, err := jsonpath.Parse(f.Path)
+			if err != nil {
+				return fmt.Errorf("column %s: %w", f.Label, err)
+			}
+			columns[i] = path
+		}
+
+		t := table.NewWriter()
+		t.Style().Size.WidthMax = width
+		if title != "" {
+			t.SetTitle(title)
+		}
+		header := make(table.Row, len(fields))
+		for j, f := range fields {
+			header[j] = f.Label
+		}
+		t.AppendHeader(header)
+		for _, row := range rows {
+			line := make(table.Row, len(fields))
+			for j, path := range columns {
+				found := path.Select(row)
+				if len(found) == 1 {
+					line[j] = cell(found[0])
+					continue
+				}
+				line[j] = cell([]any(found))
+			}
+			t.AppendRow(line)
+		}
+		_, err := fmt.Fprintln(w, t.Render())
+		return err
+	}
+
+	if len(view.Fields) > 0 {
+		if err := render("", view.Fields, []any{doc}); err != nil {
+			return err
+		}
+	}
+	for _, list := range view.Lists {
+		path, err := jsonpath.Parse(list.Path)
+		if err != nil {
+			return fmt.Errorf("list %s: %w", list.Label, err)
+		}
+		if err := render(strings.ToUpper(list.Label), list.Fields, path.Select(doc)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func cli_bookstore_annotated_v1_bookstore_proto_resolveOutput(
+	out io.Writer,
+	response, method, format, columns string,
+	opt Cli_bookstore_annotated_v1_bookstore_proto_Options,
+) (Cli_bookstore_annotated_v1_bookstore_proto_Printer, Cli_bookstore_annotated_v1_bookstore_proto_View, error) {
+	if format == "" {
+		format = opt.DefaultPrinter
+	}
+
+	printer, found := opt.Printers[format]
+	if format != "" && !found {
+		return nil, Cli_bookstore_annotated_v1_bookstore_proto_View{}, cli_bookstore_annotated_v1_bookstore_proto_exitError{cli_bookstore_annotated_v1_bookstore_proto_exitUsage, fmt.Errorf(
+			"unknown output format %q; use one of: %s",
+			format, strings.Join(slices.Sorted(maps.Keys(opt.Printers)), ", "))}
+	}
+	if format == "" {
+		// A removed printer cannot break the no-flag default.
+		tty := false
+		if f, ok := out.(*os.File); ok {
+			tty = term.IsTerminal(int(f.Fd()))
+		}
+		switch {
+		case columns != "":
+			printer = Cli_bookstore_annotated_v1_bookstore_proto_Printers["table"]
+		case tty:
+			printer = Cli_bookstore_annotated_v1_bookstore_proto_Printers["json"]
+		default:
+			printer = Cli_bookstore_annotated_v1_bookstore_proto_Printers["jsonl"]
+		}
+	}
+
+	if columns != "" {
+		parts := strings.Split(columns, ",")
+		fields := make([]Cli_bookstore_annotated_v1_bookstore_proto_ViewField, len(parts))
+		for i, part := range parts {
+			label, path, ok := strings.Cut(part, ":")
+			if !ok {
+				return nil, Cli_bookstore_annotated_v1_bookstore_proto_View{}, cli_bookstore_annotated_v1_bookstore_proto_exitError{cli_bookstore_annotated_v1_bookstore_proto_exitUsage, fmt.Errorf(
+					"--columns entry %q has no colon; write LABEL:path", part)}
+			}
+			if _, err := jsonpath.Parse(path); err != nil {
+				return nil, Cli_bookstore_annotated_v1_bookstore_proto_View{}, cli_bookstore_annotated_v1_bookstore_proto_exitError{cli_bookstore_annotated_v1_bookstore_proto_exitUsage, fmt.Errorf(
+					"--columns entry %q: %w", part, err)}
+			}
+			fields[i] = Cli_bookstore_annotated_v1_bookstore_proto_ViewField{Label: label, Path: path}
+		}
+		return printer, Cli_bookstore_annotated_v1_bookstore_proto_View{Fields: fields}, nil
+	}
+	if override, ok := opt.Views[method]; ok {
+		return printer, override, nil
+	}
+	return printer, cli_bookstore_annotated_v1_bookstore_proto_messageViews[response], nil
+}
+
+// =============================================================================
+// Call: each rpc shape runs its call, or prints the requests instead.
+// =============================================================================
+
+func cli_bookstore_annotated_v1_bookstore_proto_callContext(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
+	if timeout > 0 {
+		return context.WithTimeout(ctx, timeout)
+	}
+	return context.WithCancel(ctx)
+}
+
+func cli_bookstore_annotated_v1_bookstore_proto_printResponses[Res any, PRes interface {
+	proto.Message
+	*Res
+}](w io.Writer, printer Cli_bookstore_annotated_v1_bookstore_proto_Printer, view Cli_bookstore_annotated_v1_bookstore_proto_View, recv func() (*Res, error)) error {
+	for {
+		resp, err := recv()
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if err := cli_bookstore_annotated_v1_bookstore_proto_printMessage(w, printer, view, PRes(resp)); err != nil {
+			return err
+		}
+	}
+}
+
+func cli_bookstore_annotated_v1_bookstore_proto_runUnary[Req, Res proto.Message](ctx context.Context, out io.Writer, printer Cli_bookstore_annotated_v1_bookstore_proto_Printer, view Cli_bookstore_annotated_v1_bookstore_proto_View, req Req, dryRun bool, timeout time.Duration, call func(context.Context, Req, ...grpc.CallOption) (Res, error)) (err error) {
+	if dryRun {
+		return cli_bookstore_annotated_v1_bookstore_proto_printMessage(out, printer, Cli_bookstore_annotated_v1_bookstore_proto_View{}, req)
+	}
+	ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(ctx, timeout)
+	defer cancel()
+	defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_withExitCode(ctx, err) }()
+
+	resp, err := call(ctx, req)
+	if err != nil {
+		return err
+	}
+	return cli_bookstore_annotated_v1_bookstore_proto_printMessage(out, printer, view, resp)
+}
+
+func cli_bookstore_annotated_v1_bookstore_proto_runServerStream[Req proto.Message, Res any, PRes interface {
+	proto.Message
+	*Res
+}](ctx context.Context, out io.Writer, printer Cli_bookstore_annotated_v1_bookstore_proto_Printer, view Cli_bookstore_annotated_v1_bookstore_proto_View, req Req, dryRun bool, timeout time.Duration, open func(context.Context, Req, ...grpc.CallOption) (grpc.ServerStreamingClient[Res], error)) (err error) {
+	if dryRun {
+		return cli_bookstore_annotated_v1_bookstore_proto_printMessage(out, printer, Cli_bookstore_annotated_v1_bookstore_proto_View{}, req)
+	}
+	ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(ctx, timeout)
+	defer cancel()
+	defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_withExitCode(ctx, err) }()
+
+	stream, err := open(ctx, req)
+	if err != nil {
+		return err
+	}
+	return cli_bookstore_annotated_v1_bookstore_proto_printResponses[Res, PRes](out, printer, view, stream.Recv)
+}
+
+func cli_bookstore_annotated_v1_bookstore_proto_runClientStream[Req, Res any, PReq interface {
+	proto.Message
+	*Req
+}, PRes interface {
+	proto.Message
+	*Res
+}](ctx context.Context, out, stderr io.Writer, printer Cli_bookstore_annotated_v1_bookstore_proto_Printer, view Cli_bookstore_annotated_v1_bookstore_proto_View, reqs iter.Seq2[PReq, error], dryRun bool, timeout time.Duration, open func(context.Context, ...grpc.CallOption) (grpc.ClientStreamingClient[Req, Res], error)) (err error) {
+	if dryRun {
+		for req, err := range reqs {
+			if err != nil {
+				return err
+			}
+			if err := cli_bookstore_annotated_v1_bookstore_proto_printMessage(out, printer, Cli_bookstore_annotated_v1_bookstore_proto_View{}, req); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(ctx, timeout)
+	defer cancel()
+	defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_withExitCode(ctx, err) }()
+
+	if f, ok := stderr.(*os.File); ok && term.IsTerminal(int(f.Fd())) {
+		fmt.Fprintln(stderr, "sending requests; the server replies when it has them all")
+	}
+
+	stream, err := open(ctx)
+	if err != nil {
+		return err
+	}
+	for req, err := range reqs {
+		if err != nil {
+			return err
+		}
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		var raw json.RawMessage
-		if err := dec.Decode(&raw); err != nil {
-			if errors.Is(err, io.EOF) {
-				return nil
+		if err := stream.Send(req); err != nil {
+			if !errors.Is(err, io.EOF) {
+				return err
 			}
-			return fmt.Errorf("stdin request %d: %w", n, err)
-		}
-		if err := send(n, raw); err != nil {
-			return err
+			// The server ended the stream. CloseAndRecv has the reason.
+			break
 		}
 	}
+	resp, err := stream.CloseAndRecv()
+	if err != nil {
+		return err
+	}
+	return cli_bookstore_annotated_v1_bookstore_proto_printMessage(out, printer, view, PRes(resp))
 }
 
-// runBidi renders responses while a goroutine pumps stdin requests over the
-// stream's ctx. runBidi never joins the pump, because the pump can stay
-// blocked on stdin. A pump failure cancels the stream. Thus the pump error
-// wins over the canceled render.
-func cli_bookstore_annotated_v1_bookstore_proto_runBidi(ctx context.Context, cancel context.CancelFunc, cmd *cobra.Command, print func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error, v cli_bookstore_annotated_v1_bookstore_proto_view, send func(int, json.RawMessage) error, closeSend func() error, next func() ([]byte, error)) error {
-	sendErr := make(chan error, 1)
+// cli_bookstore_annotated_v1_bookstore_proto_runBidi does not join the send side, which can block on stdin
+// forever. A send error outranks the canceled receive loop.
+func cli_bookstore_annotated_v1_bookstore_proto_runBidi[Req, Res any, PReq interface {
+	proto.Message
+	*Req
+}, PRes interface {
+	proto.Message
+	*Res
+}](ctx context.Context, out io.Writer, printer Cli_bookstore_annotated_v1_bookstore_proto_Printer, view Cli_bookstore_annotated_v1_bookstore_proto_View, reqs iter.Seq2[PReq, error], dryRun bool, timeout time.Duration, open func(context.Context, ...grpc.CallOption) (grpc.BidiStreamingClient[Req, Res], error)) (err error) {
+	if dryRun {
+		for req, err := range reqs {
+			if err != nil {
+				return err
+			}
+			if err := cli_bookstore_annotated_v1_bookstore_proto_printMessage(out, printer, Cli_bookstore_annotated_v1_bookstore_proto_View{}, req); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	callCtx, callCancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(ctx, timeout)
+	defer callCancel()
+	defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_withExitCode(callCtx, err) }()
+
+	// The child context ends the exchange without canceling callCtx, which
+	// classifies the exit code.
+	sendCtx, cancel := context.WithCancel(callCtx)
+	defer cancel()
+	stream, err := open(sendCtx)
+	if err != nil {
+		return err
+	}
+
+	sent := make(chan error, 1)
 	go func() {
-		err := cli_bookstore_annotated_v1_bookstore_proto_pumpRequests(ctx, cmd.InOrStdin(), cmd.ErrOrStderr(), send)
-		if closeErr := closeSend(); err == nil {
+		var err error
+		for req, reqErr := range reqs {
+			if reqErr != nil {
+				err = reqErr
+				break
+			}
+			if err = sendCtx.Err(); err != nil {
+				break
+			}
+			if err = stream.Send(req); err != nil {
+				if errors.Is(err, io.EOF) {
+					// The server ended the stream. Recv has the reason.
+					err = nil
+				}
+				break
+			}
+		}
+		if closeErr := stream.CloseSend(); err == nil {
 			err = closeErr
 		}
-		sendErr <- err
-		if err != nil && !errors.Is(err, io.EOF) && !errors.Is(err, context.Canceled) {
+		if errors.Is(err, context.Canceled) {
+			err = nil
+		}
+		sent <- err
+		if err != nil {
 			cancel()
 		}
 	}()
 
-	renderErr := print(cmd.OutOrStdout(), v, next)
+	recvErr := cli_bookstore_annotated_v1_bookstore_proto_printResponses[Res, PRes](out, printer, view, stream.Recv)
 	cancel()
 	select {
-	case err := <-sendErr:
-		if err != nil && !errors.Is(err, io.EOF) && !errors.Is(err, context.Canceled) {
+	case err := <-sent:
+		if err != nil {
 			return err
 		}
 	default:
 	}
-	return renderErr
+	return recvErr
 }
 
-// BookstoreServiceOptions configures the BookstoreService commands.
-type BookstoreServiceOptions struct {
-	// Printers adds -o formats. A print function pulls JSON records from
-	// next until io.EOF. A nil function removes the named format.
-	Printers map[string]func(w io.Writer, next func() ([]byte, error)) error
-	// DefaultOutput is the format for an empty -o.
-	DefaultOutput string
-	// Decoders adds -f and -i input formats. The content test tries them
-	// after json and yaml, in name order. A nil function removes the named
-	// format. Stdin for streaming RPCs is JSON only.
-	Decoders map[string]func([]byte) ([]byte, error)
-	// Views maps a message's full proto name to its "Label:path" fields
-	// (gjson paths). These fields replace the message's derived fields in
-	// all of its views. A malformed entry panics. A name that never displays
-	// has no effect.
-	Views map[string][]string
+// =============================================================================
+// Exit: every failure contains the code the shell sees.
+// =============================================================================
+
+const (
+	cli_bookstore_annotated_v1_bookstore_proto_exitFailure   = 1
+	cli_bookstore_annotated_v1_bookstore_proto_exitUsage     = 2
+	cli_bookstore_annotated_v1_bookstore_proto_exitTimeout   = 124
+	cli_bookstore_annotated_v1_bookstore_proto_exitInterrupt = 130
+)
+
+type cli_bookstore_annotated_v1_bookstore_proto_exitError struct {
+	code int
+	err  error
 }
 
-// NewBookstoreServiceCommand returns the BookstoreService command with
-// one subcommand for each RPC. Later opts override earlier opts for each
-// entry.
-func NewBookstoreServiceCommand(conn grpc.ClientConnInterface, opts ...BookstoreServiceOptions) *cobra.Command {
-	client := NewBookstoreServiceClient(conn)
-
-	printers := cli_bookstore_annotated_v1_bookstore_proto_printers()
-	defaultOutput := ""
-	decoderFns := cli_bookstore_annotated_v1_bookstore_proto_decoderFns()
-	views := map[string][]cli_bookstore_annotated_v1_bookstore_proto_viewField{}
-	for _, o := range opts {
-		for name, fn := range o.Printers {
-			if fn == nil {
-				delete(printers, name)
-				continue
-			}
-			printers[name] = func(w io.Writer, _ cli_bookstore_annotated_v1_bookstore_proto_view, next func() ([]byte, error)) error {
-				return fn(w, next)
-			}
-		}
-		if o.DefaultOutput != "" {
-			defaultOutput = o.DefaultOutput
-		}
-		for name, fn := range o.Decoders {
-			if fn == nil {
-				delete(decoderFns, name)
-				continue
-			}
-			decoderFns[name] = fn
-		}
-		for message, entries := range o.Views {
-			views[message] = cli_bookstore_annotated_v1_bookstore_proto_viewFields(message, entries)
-		}
+// Error removes the gRPC "rpc error: ..." wrapper.
+func (e cli_bookstore_annotated_v1_bookstore_proto_exitError) Error() string {
+	if msg := status.Convert(e.err).Message(); msg != "" {
+		return msg
 	}
-	cli_bookstore_annotated_v1_bookstore_proto_checkDefaultOutput(printers, defaultOutput)
-	decoders := cli_bookstore_annotated_v1_bookstore_proto_decoders(decoderFns)
-
-	// messageViews contains the derived views. Options.Views entries
-	// override them.
-	messageViews := map[string]cli_bookstore_annotated_v1_bookstore_proto_view{
-		"bookstore.annotated.v1.Book": {Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{
-			{Label: "id", Path: "id"},
-			{Label: "author", Path: "author"},
-			{Label: "title", Path: "title"},
-		}},
-		"bookstore.annotated.v1.ListBooksResponse": {Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{}, Lists: []cli_bookstore_annotated_v1_bookstore_proto_viewList{
-			{FullName: "bookstore.annotated.v1.Book", Label: "books", Path: "books", Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{
-				{Label: "id", Path: "id"},
-				{Label: "author", Path: "author"},
-				{Label: "title", Path: "title"},
-			}},
-		}},
-		"bookstore.annotated.v1.ListShelvesResponse": {Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{}, Lists: []cli_bookstore_annotated_v1_bookstore_proto_viewList{
-			{FullName: "bookstore.annotated.v1.Shelf", Label: "shelves", Path: "shelves", Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{
-				{Label: "id", Path: "id"},
-				{Label: "theme", Path: "theme"},
-			}},
-		}},
-		"bookstore.annotated.v1.Shelf": {Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{
-			{Label: "id", Path: "id"},
-			{Label: "theme", Path: "theme"},
-		}},
-		"google.protobuf.Empty": {Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{}},
-	}
-
-	viewFor := func(fullName string) cli_bookstore_annotated_v1_bookstore_proto_view {
-		return cli_bookstore_annotated_v1_bookstore_proto_viewFor(fullName, messageViews, views)
-	}
-	outputPrinter := func(cmd *cobra.Command) (func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error, error) {
-		return cli_bookstore_annotated_v1_bookstore_proto_outputPrinter(cmd, printers, defaultOutput)
-	}
-
-	cmd := &cobra.Command{
-		Use:     "catalog",
-		Short:   "A simple Bookstore API.",
-		Long:    "A simple Bookstore API.\n\nThe API manages shelves and books resources. Shelves contain books.",
-		Aliases: []string{"books"},
-	}
-	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
-	cmd.PersistentFlags().StringP("output", "o", "", cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers, defaultOutput))
-	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(slices.Sorted(maps.Keys(printers)), cobra.ShellCompDirectiveNoFileComp))
-	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
-	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
-	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_bookstore_annotated_v1_bookstore_proto_usage(err) })
-	cmd.AddCommand(func() *cobra.Command {
-		sub := &cobra.Command{
-			Use:     "list-shelves",
-			Short:   "Returns a list of all shelves in the bookstore.",
-			Long:    "Returns a list of all shelves in the bookstore.\n\nA generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:\n\n    service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }",
-			Aliases: []string{"shelves"},
-			Args:    cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &emptypb.Empty{}
-					if err := protojson.Unmarshal([]byte("{}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
-				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				req := &emptypb.Empty{}
-				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				resp, err := client.ListShelves(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListShelvesResponse"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
-			},
-		}
-		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagShelf string
-		sub := &cobra.Command{
-			Use:   "create-shelf",
-			Short: "Creates a new shelf in the bookstore.",
-			Long:  "Creates a new shelf in the bookstore.\n\nRequest message for CreateShelf method.",
-			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &CreateShelfRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":{\"id\":\"998\",\"theme\":\"Protect the number under uninterested load.\"}}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
-				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("shelf") {
-					if !json.Valid([]byte(flagShelf)) {
-						return fmt.Errorf("flag --shelf: %q is not valid JSON", flagShelf)
-					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "shelf", []byte(flagShelf))
-					if err != nil {
-						return fmt.Errorf("flag --shelf: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --shelf", JSON: doc})
-				}
-				req := &CreateShelfRequest{}
-				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				resp, err := client.CreateShelf(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.Shelf"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
-			},
-		}
-		sub.Flags().StringVar(&flagShelf, "shelf", flagShelf, "The shelf resource to create.")
-		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagShelf int64
-		sub := &cobra.Command{
-			Use:   "get-shelf",
-			Short: "Returns a specific bookstore shelf.",
-			Long:  "Returns a specific bookstore shelf.\n\nRequest message for GetShelf method.",
-			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &GetShelfRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.GetShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
-				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("shelf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "shelf", flagShelf)
-					if err != nil {
-						return fmt.Errorf("flag --shelf: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --shelf", JSON: doc})
-				}
-				req := &GetShelfRequest{}
-				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.GetShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				resp, err := client.GetShelf(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.Shelf"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
-			},
-		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf resource to retrieve.")
-		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagShelf int64
-		sub := &cobra.Command{
-			Use:    "delete-shelf",
-			Short:  "Deletes a shelf, including all books that are stored on the shelf.",
-			Long:   "Deletes a shelf, including all books that are stored on the shelf.\n\nRequest message for DeleteShelf method.",
-			Hidden: true,
-			Args:   cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &DeleteShelfRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.DeleteShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
-				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("shelf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "shelf", flagShelf)
-					if err != nil {
-						return fmt.Errorf("flag --shelf: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --shelf", JSON: doc})
-				}
-				req := &DeleteShelfRequest{}
-				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.DeleteShelfRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				resp, err := client.DeleteShelf(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
-			},
-		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf to delete.")
-		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagShelf int64
-		sub := &cobra.Command{
-			Use:   "list",
-			Short: "Returns a list of books on a shelf.",
-			Long:  "Returns a list of books on a shelf.\n\nRequest message for ListBooks method.",
-			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &ListBooksRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListBooksRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
-				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("shelf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "shelf", flagShelf)
-					if err != nil {
-						return fmt.Errorf("flag --shelf: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --shelf", JSON: doc})
-				}
-				req := &ListBooksRequest{}
-				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListBooksRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				resp, err := client.ListBooks(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListBooksResponse"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
-			},
-		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "ID of the shelf which books to list.")
-		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagShelf int64
-		var flagBook string
-		var flagBookAuthor string
-		var flagBookTitle string
-		sub := &cobra.Command{
-			Use:   "add",
-			Short: "Creates a new book.",
-			Long:  "Creates a new book.\n\nRequest message for CreateBook method.",
-			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &CreateBookRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Celebrate wins tied to the group.\",\"title\":\"Up to the company, we chase a smaller woman.\"}}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); !dryRun {
-					var missing []string
-					if !cmd.Flags().Changed("shelf") {
-						missing = append(missing, "--shelf")
-					}
-					if !cmd.Flags().Changed("book.title") {
-						missing = append(missing, "--book.title")
-					}
-					if missing != nil {
-						return cli_bookstore_annotated_v1_bookstore_proto_usage(fmt.Errorf("missing required flags: %s", strings.Join(missing, ", ")))
-					}
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
-				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("shelf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "shelf", flagShelf)
-					if err != nil {
-						return fmt.Errorf("flag --shelf: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --shelf", JSON: doc})
-				}
-				if cmd.Flags().Changed("book") {
-					if !json.Valid([]byte(flagBook)) {
-						return fmt.Errorf("flag --book: %q is not valid JSON", flagBook)
-					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "book", []byte(flagBook))
-					if err != nil {
-						return fmt.Errorf("flag --book: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --book", JSON: doc})
-				}
-				if cmd.Flags().Changed("book.author") {
-					doc, err := sjson.SetBytes([]byte("{}"), "book.author", flagBookAuthor)
-					if err != nil {
-						return fmt.Errorf("flag --book.author: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --book.author", JSON: doc})
-				}
-				if cmd.Flags().Changed("book.title") {
-					doc, err := sjson.SetBytes([]byte("{}"), "book.title", flagBookTitle)
-					if err != nil {
-						return fmt.Errorf("flag --book.title: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --book.title", JSON: doc})
-				}
-				req := &CreateBookRequest{}
-				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				resp, err := client.CreateBook(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.Book"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
-			},
-		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf on which to create a book. (required)")
-		sub.Flags().StringVar(&flagBook, "book", flagBook, "A book resource to create on the shelf.")
-		sub.Flags().StringVarP(&flagBookAuthor, "book.author", "a", flagBookAuthor, "An author of the book.")
-		sub.Flags().StringVarP(&flagBookTitle, "book.title", "t", flagBookTitle, "A book title. (required)")
-		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagShelf int64
-		var flagBook int64
-		sub := &cobra.Command{
-			Use:   "get",
-			Short: "Returns a specific book.",
-			Long:  "Returns a specific book.\n\nRequest message for GetBook method.",
-			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &GetBookRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\",\"book\":\"103\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.GetBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); !dryRun {
-					var missing []string
-					if !cmd.Flags().Changed("shelf") {
-						missing = append(missing, "--shelf")
-					}
-					if !cmd.Flags().Changed("book") {
-						missing = append(missing, "--book")
-					}
-					if missing != nil {
-						return cli_bookstore_annotated_v1_bookstore_proto_usage(fmt.Errorf("missing required flags: %s", strings.Join(missing, ", ")))
-					}
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
-				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("shelf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "shelf", flagShelf)
-					if err != nil {
-						return fmt.Errorf("flag --shelf: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --shelf", JSON: doc})
-				}
-				if cmd.Flags().Changed("book") {
-					doc, err := sjson.SetBytes([]byte("{}"), "book", flagBook)
-					if err != nil {
-						return fmt.Errorf("flag --book: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --book", JSON: doc})
-				}
-				req := &GetBookRequest{}
-				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.GetBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				resp, err := client.GetBook(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.Book"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
-			},
-		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf from which to retrieve a book. (required)")
-		sub.Flags().Int64Var(&flagBook, "book", flagBook, "The ID of the book to retrieve. (required)")
-		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagShelf int64
-		var flagBook int64
-		sub := &cobra.Command{
-			Use:     "delete",
-			Short:   "Deletes a book from a shelf.",
-			Long:    "Deletes a book from a shelf.\n\nRequest message for DeleteBook method.",
-			Aliases: []string{"rm"},
-			Args:    cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &DeleteBookRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\",\"book\":\"103\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.DeleteBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
-				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("shelf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "shelf", flagShelf)
-					if err != nil {
-						return fmt.Errorf("flag --shelf: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --shelf", JSON: doc})
-				}
-				if cmd.Flags().Changed("book") {
-					doc, err := sjson.SetBytes([]byte("{}"), "book", flagBook)
-					if err != nil {
-						return fmt.Errorf("flag --book: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --book", JSON: doc})
-				}
-				req := &DeleteBookRequest{}
-				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.DeleteBookRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				resp, err := client.DeleteBook(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
-			},
-		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf from which to delete a book.")
-		sub.Flags().Int64Var(&flagBook, "book", flagBook, "The ID of the book to delete.")
-		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	return cmd
+	return e.err.Error()
 }
 
-// AuctionsServiceOptions configures the AuctionsService commands.
-type AuctionsServiceOptions struct {
-	// Printers adds -o formats. A print function pulls JSON records from
-	// next until io.EOF. A nil function removes the named format.
-	Printers map[string]func(w io.Writer, next func() ([]byte, error)) error
-	// DefaultOutput is the format for an empty -o.
-	DefaultOutput string
-	// Decoders adds -f and -i input formats. The content test tries them
-	// after json and yaml, in name order. A nil function removes the named
-	// format. Stdin for streaming RPCs is JSON only.
-	Decoders map[string]func([]byte) ([]byte, error)
-	// Views maps a message's full proto name to its "Label:path" fields
-	// (gjson paths). These fields replace the message's derived fields in
-	// all of its views. A malformed entry panics. A name that never displays
-	// has no effect.
-	Views map[string][]string
+func (e cli_bookstore_annotated_v1_bookstore_proto_exitError) Unwrap() error { return e.err }
+func (e cli_bookstore_annotated_v1_bookstore_proto_exitError) ExitCode() int { return e.code }
+
+// The context, not the gRPC status, decides the exit code.
+func cli_bookstore_annotated_v1_bookstore_proto_withExitCode(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+	var coded cli_bookstore_annotated_v1_bookstore_proto_exitError
+	if errors.As(err, &coded) {
+		return err
+	}
+	switch ctx.Err() {
+	case context.DeadlineExceeded:
+		return cli_bookstore_annotated_v1_bookstore_proto_exitError{cli_bookstore_annotated_v1_bookstore_proto_exitTimeout, err}
+	case context.Canceled:
+		return cli_bookstore_annotated_v1_bookstore_proto_exitError{cli_bookstore_annotated_v1_bookstore_proto_exitInterrupt, err}
+	}
+	return cli_bookstore_annotated_v1_bookstore_proto_exitError{cli_bookstore_annotated_v1_bookstore_proto_exitFailure, err}
 }
 
-// NewAuctionsServiceCommand returns the AuctionsService command with
-// one subcommand for each RPC. Later opts override earlier opts for each
-// entry.
-func NewAuctionsServiceCommand(conn grpc.ClientConnInterface, opts ...AuctionsServiceOptions) *cobra.Command {
-	client := NewAuctionsServiceClient(conn)
-
-	printers := cli_bookstore_annotated_v1_bookstore_proto_printers()
-	defaultOutput := ""
-	decoderFns := cli_bookstore_annotated_v1_bookstore_proto_decoderFns()
-	views := map[string][]cli_bookstore_annotated_v1_bookstore_proto_viewField{}
-	for _, o := range opts {
-		for name, fn := range o.Printers {
-			if fn == nil {
-				delete(printers, name)
-				continue
-			}
-			printers[name] = func(w io.Writer, _ cli_bookstore_annotated_v1_bookstore_proto_view, next func() ([]byte, error)) error {
-				return fn(w, next)
-			}
-		}
-		if o.DefaultOutput != "" {
-			defaultOutput = o.DefaultOutput
-		}
-		for name, fn := range o.Decoders {
-			if fn == nil {
-				delete(decoderFns, name)
-				continue
-			}
-			decoderFns[name] = fn
-		}
-		for message, entries := range o.Views {
-			views[message] = cli_bookstore_annotated_v1_bookstore_proto_viewFields(message, entries)
-		}
+func cli_bookstore_annotated_v1_bookstore_proto_noArgs(cmd *cobra.Command, args []string) error {
+	if err := cobra.NoArgs(cmd, args); err != nil {
+		return cli_bookstore_annotated_v1_bookstore_proto_exitError{cli_bookstore_annotated_v1_bookstore_proto_exitUsage, err}
 	}
-	cli_bookstore_annotated_v1_bookstore_proto_checkDefaultOutput(printers, defaultOutput)
-	decoders := cli_bookstore_annotated_v1_bookstore_proto_decoders(decoderFns)
-
-	// messageViews contains the derived views. Options.Views entries
-	// override them.
-	messageViews := map[string]cli_bookstore_annotated_v1_bookstore_proto_view{
-		"bookstore.annotated.v1.Auction": {Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{
-			{Label: "ID", Path: "id"},
-			{Label: "TITLE", Path: "lot.book.title"},
-			{Label: "AUTHOR", Path: "lot.book.author"},
-			{Label: "CONDITION", Path: "lot.condition"},
-			{Label: "HIGH BID", Path: "highBid"},
-			{Label: "BIDDER", Path: "highBidder"},
-			{Label: "ENDS", Path: "endsAt"},
-		}},
-		"bookstore.annotated.v1.AuctionUpdate": {Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{
-			{Label: "auction", Path: "auction"},
-			{Label: "high_bid", Path: "highBid"},
-			{Label: "bidder", Path: "bidder"},
-			{Label: "state", Path: "state"},
-			{Label: "at", Path: "at"},
-		}},
-		"bookstore.annotated.v1.ListAuctionsResponse": {Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{
-			{Label: "next_page_token", Path: "nextPageToken"},
-			{Label: "total_size", Path: "totalSize"},
-		}, Lists: []cli_bookstore_annotated_v1_bookstore_proto_viewList{
-			{FullName: "bookstore.annotated.v1.Auction", Label: "auctions", Path: "auctions", Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{
-				{Label: "ID", Path: "id"},
-				{Label: "TITLE", Path: "lot.book.title"},
-				{Label: "AUTHOR", Path: "lot.book.author"},
-				{Label: "CONDITION", Path: "lot.condition"},
-				{Label: "HIGH BID", Path: "highBid"},
-				{Label: "BIDDER", Path: "highBidder"},
-				{Label: "ENDS", Path: "endsAt"},
-			}},
-		}},
-	}
-
-	viewFor := func(fullName string) cli_bookstore_annotated_v1_bookstore_proto_view {
-		return cli_bookstore_annotated_v1_bookstore_proto_viewFor(fullName, messageViews, views)
-	}
-	outputPrinter := func(cmd *cobra.Command) (func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error, error) {
-		return cli_bookstore_annotated_v1_bookstore_proto_outputPrinter(cmd, printers, defaultOutput)
-	}
-
-	cmd := &cobra.Command{
-		Use:   "auctions",
-		Short: "AuctionsService sells the store's rare books under the hammer.",
-	}
-	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
-	cmd.PersistentFlags().StringP("output", "o", "", cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers, defaultOutput))
-	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(slices.Sorted(maps.Keys(printers)), cobra.ShellCompDirectiveNoFileComp))
-	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
-	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
-	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_bookstore_annotated_v1_bookstore_proto_usage(err) })
-	cmd.AddCommand(func() *cobra.Command {
-		var flagLot string
-		var flagLotBook string
-		var flagLotBookAuthor string
-		var flagLotBookTitle string
-		var flagLotCondition string
-		var flagLotReservePrice float64
-		var flagLotProvenance []string
-		var flagLotFlaws []string
-		var flagLotAttributes []string
-		var flagLotConsignor string
-		var flagLotConsignorName string
-		var flagLotConsignorAddress string
-		var flagStartsAt string
-		sub := &cobra.Command{
-			Use:   "create",
-			Short: "CreateAuction consigns a lot and schedules its auction.",
-			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &CreateAuctionRequest{}
-					if err := protojson.Unmarshal([]byte("{\"lot\":{\"id\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Celebrate wins tied to the group.\",\"title\":\"Up to the company, we chase a smaller woman.\"},\"condition\":\"CONDITION_FINE\",\"reservePrice\":297,\"provenance\":[\"Theirs life has ready for fiction.\"],\"flaws\":[{\"kind\":\"Publish a changelog entry for the way.\",\"detail\":\"Consistent hand being the foundation of thrill.\"}],\"attributes\":{\"in\":\"Sample government at 9s intervals.\"},\"consignor\":{\"name\":\"Subtle MediumAquaMarine accents is effective somewhat.\",\"address\":{\"street\":\"Carefully carry the bakery painfully.\",\"city\":\"Share the decision record for the life.\",\"country\":{\"code\":\"Nevertheless, keep the thing simple.\",\"name\":\"Nobody float when the thing spikes.\"}}}},\"startsAt\":\"2029-03-15T22:28:26Z\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateAuctionRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); !dryRun {
-					var missing []string
-					if !cmd.Flags().Changed("book.title") {
-						missing = append(missing, "--book.title")
-					}
-					if missing != nil {
-						return cli_bookstore_annotated_v1_bookstore_proto_usage(fmt.Errorf("missing required flags: %s", strings.Join(missing, ", ")))
-					}
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
-				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("lot") {
-					if !json.Valid([]byte(flagLot)) {
-						return fmt.Errorf("flag --lot: %q is not valid JSON", flagLot)
-					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "lot", []byte(flagLot))
-					if err != nil {
-						return fmt.Errorf("flag --lot: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --lot", JSON: doc})
-				}
-				if cmd.Flags().Changed("book") {
-					if !json.Valid([]byte(flagLotBook)) {
-						return fmt.Errorf("flag --book: %q is not valid JSON", flagLotBook)
-					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "lot.book", []byte(flagLotBook))
-					if err != nil {
-						return fmt.Errorf("flag --book: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --book", JSON: doc})
-				}
-				if cmd.Flags().Changed("book.author") {
-					doc, err := sjson.SetBytes([]byte("{}"), "lot.book.author", flagLotBookAuthor)
-					if err != nil {
-						return fmt.Errorf("flag --book.author: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --book.author", JSON: doc})
-				}
-				if cmd.Flags().Changed("book.title") {
-					doc, err := sjson.SetBytes([]byte("{}"), "lot.book.title", flagLotBookTitle)
-					if err != nil {
-						return fmt.Errorf("flag --book.title: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --book.title", JSON: doc})
-				}
-				if cmd.Flags().Changed("condition") {
-					doc, err := sjson.SetBytes([]byte("{}"), "lot.condition", flagLotCondition)
-					if err != nil {
-						return fmt.Errorf("flag --condition: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --condition", JSON: doc})
-				}
-				if cmd.Flags().Changed("reserve") {
-					doc, err := sjson.SetBytes([]byte("{}"), "lot.reserve_price", flagLotReservePrice)
-					if err != nil {
-						return fmt.Errorf("flag --reserve: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --reserve", JSON: doc})
-				}
-				if cmd.Flags().Changed("provenance") {
-					doc, err := sjson.SetBytes([]byte("{}"), "lot.provenance", flagLotProvenance)
-					if err != nil {
-						return fmt.Errorf("flag --provenance: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --provenance", JSON: doc})
-				}
-				if cmd.Flags().Changed("flaws") {
-					for _, v := range flagLotFlaws {
-						if !json.Valid([]byte(v)) {
-							return fmt.Errorf("flag --flaws: %q is not valid JSON", v)
-						}
-					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "lot.flaws", []byte("["+strings.Join(flagLotFlaws, ",")+"]"))
-					if err != nil {
-						return fmt.Errorf("flag --flaws: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --flaws", JSON: doc})
-				}
-				if cmd.Flags().Changed("attributes") {
-					m := map[string]string{}
-					for _, kv := range flagLotAttributes {
-						k, v, ok := strings.Cut(kv, "=")
-						if !ok {
-							return fmt.Errorf("flag --attributes: %q is not key=value", kv)
-						}
-						m[k] = v
-					}
-					doc, err := sjson.SetBytes([]byte("{}"), "lot.attributes", m)
-					if err != nil {
-						return fmt.Errorf("flag --attributes: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --attributes", JSON: doc})
-				}
-				if cmd.Flags().Changed("consignor") {
-					if !json.Valid([]byte(flagLotConsignor)) {
-						return fmt.Errorf("flag --consignor: %q is not valid JSON", flagLotConsignor)
-					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "lot.consignor", []byte(flagLotConsignor))
-					if err != nil {
-						return fmt.Errorf("flag --consignor: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --consignor", JSON: doc})
-				}
-				if cmd.Flags().Changed("consignor.name") {
-					doc, err := sjson.SetBytes([]byte("{}"), "lot.consignor.name", flagLotConsignorName)
-					if err != nil {
-						return fmt.Errorf("flag --consignor.name: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --consignor.name", JSON: doc})
-				}
-				if cmd.Flags().Changed("consignor.address") {
-					if !json.Valid([]byte(flagLotConsignorAddress)) {
-						return fmt.Errorf("flag --consignor.address: %q is not valid JSON", flagLotConsignorAddress)
-					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "lot.consignor.address", []byte(flagLotConsignorAddress))
-					if err != nil {
-						return fmt.Errorf("flag --consignor.address: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --consignor.address", JSON: doc})
-				}
-				if cmd.Flags().Changed("starts-at") {
-					doc, err := sjson.SetBytes([]byte("{}"), "starts_at", flagStartsAt)
-					if err != nil {
-						return fmt.Errorf("flag --starts-at: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --starts-at", JSON: doc})
-				}
-				req := &CreateAuctionRequest{}
-				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.CreateAuctionRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				resp, err := client.CreateAuction(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.Auction"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
-			},
-		}
-		sub.Flags().StringVar(&flagLot, "lot", flagLot, "")
-		sub.Flags().StringVar(&flagLotBook, "book", flagLotBook, "")
-		sub.Flags().StringVarP(&flagLotBookAuthor, "book.author", "a", flagLotBookAuthor, "An author of the book.")
-		sub.Flags().StringVarP(&flagLotBookTitle, "book.title", "t", flagLotBookTitle, "A book title. (required)")
-		sub.Flags().StringVar(&flagLotCondition, "condition", flagLotCondition, "(values: CONDITION_UNSPECIFIED | CONDITION_FINE | CONDITION_VERY_GOOD | CONDITION_GOOD | CONDITION_FAIR | CONDITION_POOR)")
-		_ = sub.RegisterFlagCompletionFunc("condition", cobra.FixedCompletions([]string{"CONDITION_UNSPECIFIED", "CONDITION_FINE", "CONDITION_VERY_GOOD", "CONDITION_GOOD", "CONDITION_FAIR", "CONDITION_POOR"}, cobra.ShellCompDirectiveNoFileComp))
-		sub.Flags().Float64Var(&flagLotReservePrice, "reserve", flagLotReservePrice, "")
-		sub.Flags().StringArrayVar(&flagLotProvenance, "provenance", flagLotProvenance, "Chain of custody, oldest first.")
-		sub.Flags().StringArrayVar(&flagLotFlaws, "flaws", flagLotFlaws, "")
-		sub.Flags().StringArrayVar(&flagLotAttributes, "attributes", flagLotAttributes, "Collector attributes, e.g.")
-		sub.Flags().StringVar(&flagLotConsignor, "consignor", flagLotConsignor, "")
-		sub.Flags().StringVar(&flagLotConsignorName, "consignor.name", flagLotConsignorName, "")
-		sub.Flags().StringVar(&flagLotConsignorAddress, "consignor.address", flagLotConsignorAddress, "")
-		sub.Flags().StringVar(&flagStartsAt, "starts-at", flagStartsAt, "")
-		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagState string
-		sub := &cobra.Command{
-			Use:   "list",
-			Short: "ListAuctions lists auctions, optionally filtered by state.",
-			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &ListAuctionsRequest{}
-					if err := protojson.Unmarshal([]byte("{\"state\":\"AUCTION_STATE_SCHEDULED\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListAuctionsRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
-				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("state") {
-					doc, err := sjson.SetBytes([]byte("{}"), "state", flagState)
-					if err != nil {
-						return fmt.Errorf("flag --state: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --state", JSON: doc})
-				}
-				req := &ListAuctionsRequest{}
-				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListAuctionsRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				resp, err := client.ListAuctions(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ListAuctionsResponse"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
-			},
-		}
-		sub.Flags().StringVar(&flagState, "state", flagState, "(values: AUCTION_STATE_UNSPECIFIED | AUCTION_STATE_SCHEDULED | AUCTION_STATE_OPEN | AUCTION_STATE_HAMMERED | AUCTION_STATE_SETTLED)")
-		_ = sub.RegisterFlagCompletionFunc("state", cobra.FixedCompletions([]string{"AUCTION_STATE_UNSPECIFIED", "AUCTION_STATE_SCHEDULED", "AUCTION_STATE_OPEN", "AUCTION_STATE_HAMMERED", "AUCTION_STATE_SETTLED"}, cobra.ShellCompDirectiveNoFileComp))
-		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagAuction int64
-		var flagAuthor string
-		var flagLimit int64
-		sub := &cobra.Command{
-			Use:   "watch",
-			Short: "WatchAuction streams bidding updates for the selected auctions as a live feed until the client cancels.",
-			Long:  "WatchAuction streams bidding updates for the selected auctions as a live\nfeed until the client cancels.\n\nWatchAuctionRequest selects auctions by exactly one of auction or author.\n\nThe server may send multiple responses; each prints as it arrives.",
-			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &WatchAuctionRequest{}
-					if err := protojson.Unmarshal([]byte("{\"auction\":\"103\",\"limit\":864}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.WatchAuctionRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				if err := cli_bookstore_annotated_v1_bookstore_proto_exclusiveFlags(cmd.Flags(), "auction", "author"); err != nil {
-					return err
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
-				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("auction") {
-					doc, err := sjson.SetBytes([]byte("{}"), "auction", flagAuction)
-					if err != nil {
-						return fmt.Errorf("flag --auction: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --auction", JSON: doc})
-				}
-				if cmd.Flags().Changed("author") {
-					doc, err := sjson.SetBytes([]byte("{}"), "author", flagAuthor)
-					if err != nil {
-						return fmt.Errorf("flag --author: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --author", JSON: doc})
-				}
-				if cmd.Flags().Changed("limit") {
-					doc, err := sjson.SetBytes([]byte("{}"), "limit", flagLimit)
-					if err != nil {
-						return fmt.Errorf("flag --limit: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --limit", JSON: doc})
-				}
-				req := &WatchAuctionRequest{}
-				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.WatchAuctionRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				stream, err := client.WatchAuction(ctx, req)
-				if err != nil {
-					return err
-				}
-				next := func() ([]byte, error) {
-					m, err := stream.Recv()
-					if err != nil {
-						return nil, err
-					}
-					return cli_bookstore_annotated_v1_bookstore_proto_marshalJSON(m)
-				}
-				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.AuctionUpdate"), next)
-			},
-		}
-		sub.Flags().Int64Var(&flagAuction, "auction", flagAuction, "")
-		sub.Flags().StringVar(&flagAuthor, "author", flagAuthor, "")
-		sub.Flags().Int64Var(&flagLimit, "limit", flagLimit, "Cap on the number of updates streamed back.")
-		_ = sub.Flags().MarkHidden("limit")
-		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		sub := &cobra.Command{
-			Use:   "bid",
-			Short: "Bid places bids and streams back every update on the bid's auction.",
-			Long:  "Bid places bids and streams back every update on the bid's auction.\n\nReads JSON requests from stdin, one after another.\n\nThe server may send multiple responses; each prints as it arrives.",
-			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &PlaceBidRequest{}
-					if err := protojson.Unmarshal([]byte("{\"auction\":\"998\",\"amount\":103}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.PlaceBidRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
-				stream, err := client.Bid(ctx)
-				if err != nil {
-					return err
-				}
-				send := func(n int, raw json.RawMessage) error {
-					req := &PlaceBidRequest{}
-					if err := protojson.Unmarshal(raw, req); err != nil {
-						return fmt.Errorf("stdin request %d: %w", n, err)
-					}
-					return stream.Send(req)
-				}
-				next := func() ([]byte, error) {
-					m, err := stream.Recv()
-					if err != nil {
-						return nil, err
-					}
-					return cli_bookstore_annotated_v1_bookstore_proto_marshalJSON(m)
-				}
-				return cli_bookstore_annotated_v1_bookstore_proto_runBidi(ctx, cancel, cmd, print, viewFor("bookstore.annotated.v1.AuctionUpdate"), send, stream.CloseSend, next)
-			},
-		}
-		return sub
-	}())
-	return cmd
-}
-
-// InventoryServiceOptions configures the InventoryService commands.
-type InventoryServiceOptions struct {
-	// Printers adds -o formats. A print function pulls JSON records from
-	// next until io.EOF. A nil function removes the named format.
-	Printers map[string]func(w io.Writer, next func() ([]byte, error)) error
-	// DefaultOutput is the format for an empty -o.
-	DefaultOutput string
-	// Decoders adds -f and -i input formats. The content test tries them
-	// after json and yaml, in name order. A nil function removes the named
-	// format. Stdin for streaming RPCs is JSON only.
-	Decoders map[string]func([]byte) ([]byte, error)
-	// Views maps a message's full proto name to its "Label:path" fields
-	// (gjson paths). These fields replace the message's derived fields in
-	// all of its views. A malformed entry panics. A name that never displays
-	// has no effect.
-	Views map[string][]string
-}
-
-// NewInventoryServiceCommand returns the InventoryService command with
-// one subcommand for each RPC. Later opts override earlier opts for each
-// entry.
-func NewInventoryServiceCommand(conn grpc.ClientConnInterface, opts ...InventoryServiceOptions) *cobra.Command {
-	client := NewInventoryServiceClient(conn)
-
-	printers := cli_bookstore_annotated_v1_bookstore_proto_printers()
-	defaultOutput := ""
-	decoderFns := cli_bookstore_annotated_v1_bookstore_proto_decoderFns()
-	views := map[string][]cli_bookstore_annotated_v1_bookstore_proto_viewField{}
-	for _, o := range opts {
-		for name, fn := range o.Printers {
-			if fn == nil {
-				delete(printers, name)
-				continue
-			}
-			printers[name] = func(w io.Writer, _ cli_bookstore_annotated_v1_bookstore_proto_view, next func() ([]byte, error)) error {
-				return fn(w, next)
-			}
-		}
-		if o.DefaultOutput != "" {
-			defaultOutput = o.DefaultOutput
-		}
-		for name, fn := range o.Decoders {
-			if fn == nil {
-				delete(decoderFns, name)
-				continue
-			}
-			decoderFns[name] = fn
-		}
-		for message, entries := range o.Views {
-			views[message] = cli_bookstore_annotated_v1_bookstore_proto_viewFields(message, entries)
-		}
-	}
-	cli_bookstore_annotated_v1_bookstore_proto_checkDefaultOutput(printers, defaultOutput)
-	decoders := cli_bookstore_annotated_v1_bookstore_proto_decoders(decoderFns)
-
-	// messageViews contains the derived views. Options.Views entries
-	// override them.
-	messageViews := map[string]cli_bookstore_annotated_v1_bookstore_proto_view{
-		"bookstore.annotated.v1.ImportSummary": {Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{
-			{Label: "created", Path: "created"},
-		}},
-		"bookstore.annotated.v1.Report": {Fields: []cli_bookstore_annotated_v1_bookstore_proto_viewField{
-			{Label: "filename", Path: "filename"},
-			{Label: "books", Path: "books"},
-		}},
-	}
-
-	viewFor := func(fullName string) cli_bookstore_annotated_v1_bookstore_proto_view {
-		return cli_bookstore_annotated_v1_bookstore_proto_viewFor(fullName, messageViews, views)
-	}
-	outputPrinter := func(cmd *cobra.Command) (func(io.Writer, cli_bookstore_annotated_v1_bookstore_proto_view, func() ([]byte, error)) error, error) {
-		return cli_bookstore_annotated_v1_bookstore_proto_outputPrinter(cmd, printers, defaultOutput)
-	}
-
-	cmd := &cobra.Command{
-		Use:    "inventory",
-		Short:  "InventoryService is the back office's stock system.",
-		Hidden: true,
-	}
-	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
-	cmd.PersistentFlags().StringP("output", "o", "", cli_bookstore_annotated_v1_bookstore_proto_outputHelp(printers, defaultOutput))
-	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(slices.Sorted(maps.Keys(printers)), cobra.ShellCompDirectiveNoFileComp))
-	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
-	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
-	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_bookstore_annotated_v1_bookstore_proto_usage(err) })
-	cmd.AddCommand(func() *cobra.Command {
-		sub := &cobra.Command{
-			Use:   "import",
-			Short: "ImportBooks ingests a book catalogue as a stream of records.",
-			Long:  "ImportBooks ingests a book catalogue as a stream of records.\n\nImportBooksRequest is one record of a catalogue import.\n\nReads JSON requests from stdin, one after another.",
-			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &ImportBooksRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Celebrate wins tied to the group.\",\"title\":\"Up to the company, we chase a smaller woman.\"}}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ImportBooksRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
-				stream, err := client.ImportBooks(ctx)
-				if err != nil {
-					return err
-				}
-				send := func(n int, raw json.RawMessage) error {
-					req := &ImportBooksRequest{}
-					if err := protojson.Unmarshal(raw, req); err != nil {
-						return fmt.Errorf("stdin request %d: %w", n, err)
-					}
-					return stream.Send(req)
-				}
-				// Send returns io.EOF when the server ends the stream early.
-				// The status comes from CloseAndRecv.
-				if err := cli_bookstore_annotated_v1_bookstore_proto_pumpRequests(ctx, cmd.InOrStdin(), cmd.ErrOrStderr(), send); err != nil && !errors.Is(err, io.EOF) {
-					return err
-				}
-				resp, err := stream.CloseAndRecv()
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ImportSummary"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
-			},
-		}
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagShelf int64
-		var flagFilename string
-		sub := &cobra.Command{
-			Use:   "export",
-			Short: "ExportReport renders a shelf's stock report and writes it to a file on the server.",
-			Long:  "ExportReport renders a shelf's stock report and writes it to a file on\nthe server.\n\nRequest message for ExportReport method.",
-			Args:  cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &ExportReportRequest{}
-					if err := protojson.Unmarshal([]byte("{\"shelf\":\"998\",\"filename\":\"Protect the number under uninterested load.\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ExportReportRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_bookstore_annotated_v1_bookstore_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_bookstore_annotated_v1_bookstore_proto_callErr(ctx, err) }()
-				frags, err := cli_bookstore_annotated_v1_bookstore_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("shelf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "shelf", flagShelf)
-					if err != nil {
-						return fmt.Errorf("flag --shelf: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --shelf", JSON: doc})
-				}
-				if cmd.Flags().Changed("report-file") {
-					doc, err := sjson.SetBytes([]byte("{}"), "filename", flagFilename)
-					if err != nil {
-						return fmt.Errorf("flag --report-file: %w", err)
-					}
-					frags = append(frags, cli_bookstore_annotated_v1_bookstore_proto_fragment{Source: "flag --report-file", JSON: doc})
-				}
-				req := &ExportReportRequest{}
-				if err := cli_bookstore_annotated_v1_bookstore_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.ExportReportRequest"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(req))
-				}
-				resp, err := client.ExportReport(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("bookstore.annotated.v1.Report"), cli_bookstore_annotated_v1_bookstore_proto_oneRecord(resp))
-			},
-		}
-		sub.Flags().Int64Var(&flagShelf, "shelf", flagShelf, "The ID of the shelf to report on.")
-		sub.Flags().StringVar(&flagFilename, "report-file", flagFilename, "The file to write the report to.")
-		cli_bookstore_annotated_v1_bookstore_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	return cmd
+	return nil
 }

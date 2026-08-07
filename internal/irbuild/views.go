@@ -6,76 +6,79 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/braveokafor/proto-to-cli/internal/ir"
-	cliv1 "github.com/braveokafor/proto-to-cli/proto/cli/v1"
-	"github.com/tidwall/gjson"
+	"github.com/braveokafor/protoc-gen-cli/internal/ir"
+	cliv1 "github.com/braveokafor/protoc-gen-cli/proto/cli/v1"
+	"github.com/theory/jsonpath"
+	"github.com/theory/jsonpath/spec"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
-// buildView builds the view of a message. An annotated message gets its
-// declared fields. Other messages get derived fields.
+// buildView builds the view of a message.
+// An annotated message gets its declared fields. Other messages get derived fields.
 func buildView(md protoreflect.MessageDescriptor, opts Options) *ir.View {
 	view := &ir.View{FullName: string(md.FullName())}
 
-	var walk func(md protoreflect.MessageDescriptor, protoPrefix, jsonPrefix string, budget int, ancestors []protoreflect.FullName, top bool) []*ir.ViewField
-	walk = func(md protoreflect.MessageDescriptor, protoPrefix, jsonPrefix string, budget int, ancestors []protoreflect.FullName, top bool) []*ir.ViewField {
+	const skipLists, keepLists = true, false
+
+	var walk func(md protoreflect.MessageDescriptor, protoPrefix string, jsonPrefix []*spec.Segment, depth int, ancestors []protoreflect.FullName, skip bool) []*ir.ViewField
+	walk = func(md protoreflect.MessageDescriptor, protoPrefix string, jsonPrefix []*spec.Segment, depth int, ancestors []protoreflect.FullName, skip bool) []*ir.ViewField {
 		var cols []*ir.ViewField
 		fields := md.Fields()
 		for i := range fields.Len() {
 			fd := fields.Get(i)
 			protoPath := protoPrefix + string(fd.Name())
-			// A json_name can contain gjson syntax characters. Escape them so
-			// that the path points to the emitted key exactly.
-			jsonPath := jsonPrefix + gjson.Escape(fd.JSONName())
+			jsonPath := append(slices.Clone(jsonPrefix), spec.Child(spec.Name(fd.JSONName())))
 
-			if top && fd.IsList() && fd.Kind() == protoreflect.MessageKind {
-				if _, wellKnown := messageBinds[fd.Message().FullName()]; !wellKnown {
-					// This field becomes a sub-table below, not a view field.
-					continue
-				}
-			}
-			if isExpandable(fd) && budget > 0 &&
-				!slices.Contains(ancestors, fd.Message().FullName()) {
-				cols = append(cols, walk(fd.Message(), protoPath+".", jsonPath+".", budget-1,
-					append(ancestors, fd.Message().FullName()), false)...)
+			if skip && fd.IsList() && isNested(fd) {
 				continue
 			}
-			cols = append(cols, &ir.ViewField{Label: protoPath, Path: jsonPath})
+			if isExpandable(fd) && depth > 0 &&
+				!slices.Contains(ancestors, fd.Message().FullName()) {
+				cols = append(cols, walk(fd.Message(), protoPath+".", jsonPath, depth-1,
+					append(ancestors, fd.Message().FullName()), keepLists)...)
+				continue
+			}
+			cols = append(cols, &ir.ViewField{
+				Label: protoPath,
+				Path:  jsonpath.New(spec.Query(true, jsonPath...)).String(),
+			})
 		}
 		return cols
 	}
 
 	// The declared (cli.v1.view) fields of a message replace its derived
 	// fields in all of its views. Its expand_depth tunes the derived walk.
-	fieldsFor := func(md protoreflect.MessageDescriptor, top bool) []*ir.ViewField {
+	fieldsFor := func(md protoreflect.MessageDescriptor, skip bool) []*ir.ViewField {
 		vo := viewOptions(md)
 		if declared := vo.GetFields(); len(declared) > 0 {
 			return declaredFields(md, declared, opts.Warn)
 		}
-		budget := opts.ResponseExpandDepth
+		depth := opts.ResponseExpandDepth
 		if vo.HasExpandDepth() {
-			budget = int(vo.GetExpandDepth())
+			depth = int(vo.GetExpandDepth())
 		}
-		return walk(md, "", "", budget, []protoreflect.FullName{md.FullName()}, top)
+		return walk(md, "", nil, depth, []protoreflect.FullName{md.FullName()}, skip)
 	}
 
-	view.Fields = fieldsFor(md, true)
+	view.Fields = fieldsFor(md, skipLists)
 
-	// Top-level repeated message fields become sub-tables of their element.
 	fields := md.Fields()
 	for i := range fields.Len() {
 		fd := fields.Get(i)
-		if !fd.IsList() || fd.Kind() != protoreflect.MessageKind {
+		if !fd.IsList() || !isNested(fd) {
 			continue
 		}
-		if _, wellKnown := messageBinds[fd.Message().FullName()]; wellKnown {
-			continue
-		}
+		// The list path selects the elements, so the fields below read one.
+		elements := spec.Query(
+			true,
+			spec.Child(spec.Name(fd.JSONName())),
+			spec.Child(spec.Wildcard()),
+		)
 		view.Lists = append(view.Lists, &ir.ViewList{
 			FullName: string(fd.Message().FullName()),
 			Label:    string(fd.Name()),
-			Path:     gjson.Escape(fd.JSONName()),
-			Fields:   fieldsFor(fd.Message(), false),
+			Path:     jsonpath.New(elements).String(),
+			Fields:   fieldsFor(fd.Message(), keepLists),
 		})
 	}
 
@@ -106,7 +109,7 @@ func declaredFields(
 // viewPath makes the protojson path for a dotted proto-name path. The path
 // can go through only singular message fields that expand.
 func viewPath(md protoreflect.MessageDescriptor, path string) (string, bool) {
-	var parts []string
+	var segments []*spec.Segment
 	for _, seg := range strings.Split(path, ".") {
 		if md == nil {
 			return "", false
@@ -115,11 +118,11 @@ func viewPath(md protoreflect.MessageDescriptor, path string) (string, bool) {
 		if fd == nil {
 			return "", false
 		}
-		parts = append(parts, gjson.Escape(fd.JSONName()))
+		segments = append(segments, spec.Child(spec.Name(fd.JSONName())))
 		md = nil
 		if isExpandable(fd) {
 			md = fd.Message()
 		}
 	}
-	return strings.Join(parts, "."), true
+	return jsonpath.New(spec.Query(true, segments...)).String(), true
 }

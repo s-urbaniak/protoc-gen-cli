@@ -60,6 +60,7 @@ type BookstoreServiceClient interface {
 	CreateShelf(ctx context.Context, in *CreateShelfRequest, opts ...grpc.CallOption) (*Shelf, error)
 	// Returns a specific bookstore shelf.
 	GetShelf(ctx context.Context, in *GetShelfRequest, opts ...grpc.CallOption) (*Shelf, error)
+	// Deprecated: Do not use.
 	// Deletes a shelf, including all books that are stored on the shelf.
 	DeleteShelf(ctx context.Context, in *DeleteShelfRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Returns a list of books on a shelf.
@@ -110,6 +111,7 @@ func (c *bookstoreServiceClient) GetShelf(ctx context.Context, in *GetShelfReque
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *bookstoreServiceClient) DeleteShelf(ctx context.Context, in *DeleteShelfRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(emptypb.Empty)
@@ -174,6 +176,7 @@ type BookstoreServiceServer interface {
 	CreateShelf(context.Context, *CreateShelfRequest) (*Shelf, error)
 	// Returns a specific bookstore shelf.
 	GetShelf(context.Context, *GetShelfRequest) (*Shelf, error)
+	// Deprecated: Do not use.
 	// Deletes a shelf, including all books that are stored on the shelf.
 	DeleteShelf(context.Context, *DeleteShelfRequest) (*emptypb.Empty, error)
 	// Returns a list of books on a shelf.
@@ -665,8 +668,10 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
 // InventoryService is the back office's stock system.
+//
+// Deprecated: Do not use.
 type InventoryServiceClient interface {
-	// ImportBooks ingests a book catalogue as a stream of records.
+	// ImportBooks ingests a book catalogue as a stream of books.
 	ImportBooks(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[ImportBooksRequest, ImportSummary], error)
 	// ExportReport renders a shelf's stock report and writes it to a file on
 	// the server.
@@ -677,6 +682,7 @@ type inventoryServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
+// Deprecated: Do not use.
 func NewInventoryServiceClient(cc grpc.ClientConnInterface) InventoryServiceClient {
 	return &inventoryServiceClient{cc}
 }
@@ -709,8 +715,10 @@ func (c *inventoryServiceClient) ExportReport(ctx context.Context, in *ExportRep
 // for forward compatibility.
 //
 // InventoryService is the back office's stock system.
+//
+// Deprecated: Do not use.
 type InventoryServiceServer interface {
-	// ImportBooks ingests a book catalogue as a stream of records.
+	// ImportBooks ingests a book catalogue as a stream of books.
 	ImportBooks(grpc.ClientStreamingServer[ImportBooksRequest, ImportSummary]) error
 	// ExportReport renders a shelf's stock report and writes it to a file on
 	// the server.
@@ -741,6 +749,7 @@ type UnsafeInventoryServiceServer interface {
 	mustEmbedUnimplementedInventoryServiceServer()
 }
 
+// Deprecated: Do not use.
 func RegisterInventoryServiceServer(s grpc.ServiceRegistrar, srv InventoryServiceServer) {
 	// If the following call panics, it indicates UnimplementedInventoryServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an

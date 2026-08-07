@@ -21,7 +21,7 @@ package bookstore.v1;
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1;bookstorev1";
+option go_package = "github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1;bookstorev1";
 
 // A simple Bookstore API.
 //
@@ -248,7 +248,7 @@ message AuctionUpdate {
 
 // InventoryService is the back office's stock system.
 service InventoryService {
-  // ImportBooks ingests a book catalogue as a stream of records.
+  // ImportBooks ingests a book catalogue as a stream of books.
   rpc ImportBooks(stream ImportBooksRequest) returns (ImportSummary);
 
   // ExportReport renders a shelf's stock report and writes it to a file on
@@ -272,7 +272,7 @@ message Report {
   int64 books = 2;
 }
 
-// ImportBooksRequest is one record of a catalogue import.
+// ImportBooksRequest is one book in a catalogue import.
 message ImportBooksRequest {
   int64 shelf = 1;
   Book book = 2;

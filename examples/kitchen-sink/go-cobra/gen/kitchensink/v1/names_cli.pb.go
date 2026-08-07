@@ -10,18 +10,20 @@ import (
 	errors "errors"
 	fmt "fmt"
 	io "io"
+	iter "iter"
 	maps "maps"
 	os "os"
 	slices "slices"
 	strings "strings"
+	time "time"
 
-	v1 "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/imported/v1"
-	v12 "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/second/v1"
+	v1 "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/imported/v1"
+	v12 "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/second/v1"
 	table "github.com/jedib0t/go-pretty/v6/table"
 	cobra "github.com/spf13/cobra"
-	pflag "github.com/spf13/pflag"
-	gjson "github.com/tidwall/gjson"
+	jsonpath "github.com/theory/jsonpath"
 	sjson "github.com/tidwall/sjson"
+	yaml3 "go.yaml.in/yaml/v3"
 	term "golang.org/x/term"
 	grpc "google.golang.org/grpc"
 	status "google.golang.org/grpc/status"
@@ -31,433 +33,979 @@ import (
 	yaml "sigs.k8s.io/yaml"
 )
 
-type cli_kitchensink_v1_names_proto_viewField struct {
-	Label string
-	Path  string
-}
+// =============================================================================
+// kitchensink.v1.NamesService — NamesService's RPCs echo their requests.
+// =============================================================================
 
-type cli_kitchensink_v1_names_proto_viewList struct {
-	FullName string
-	Label    string
-	Path     string
-	Fields   []cli_kitchensink_v1_names_proto_viewField
-}
+// NamesServiceOptions configures NewNamesServiceCommand.
+// The zero value keeps every built-in default.
+type NamesServiceOptions = Cli_kitchensink_v1_names_proto_Options
 
-// A view is the display projection of a message.
-type cli_kitchensink_v1_names_proto_view struct {
-	Lists  []cli_kitchensink_v1_names_proto_viewList
-	Fields []cli_kitchensink_v1_names_proto_viewField
-}
+// NamesServicePrinter renders one body.
+type NamesServicePrinter = Cli_kitchensink_v1_names_proto_Printer
 
-// viewFor returns the view of fullName. Configured fields replace the
-// derived fields.
-func cli_kitchensink_v1_names_proto_viewFor(fullName string, messageViews map[string]cli_kitchensink_v1_names_proto_view, views map[string][]cli_kitchensink_v1_names_proto_viewField) cli_kitchensink_v1_names_proto_view {
-	v := messageViews[fullName]
-	if fields, ok := views[fullName]; ok {
-		v.Fields = fields
+// NamesServiceDecoder decodes one source into request bodies.
+type NamesServiceDecoder = Cli_kitchensink_v1_names_proto_Decoder
+
+// NamesServiceView names the fields a printer shows.
+type NamesServiceView = Cli_kitchensink_v1_names_proto_View
+
+type NamesServiceViewList = Cli_kitchensink_v1_names_proto_ViewList
+
+type NamesServiceViewField = Cli_kitchensink_v1_names_proto_ViewField
+
+// The built-in decoders, in the order the CLI tries them.
+var (
+	NamesServiceDecoderJSON = Cli_kitchensink_v1_names_proto_DecoderJSON
+	NamesServiceDecoderYAML = Cli_kitchensink_v1_names_proto_DecoderYAML
+	NamesServiceDecoders    = Cli_kitchensink_v1_names_proto_Decoders
+)
+
+// NewNamesServiceCommand returns the "names" command tree.
+//
+// NamesService's RPCs echo their requests.
+//
+// Later opts override earlier opts for each entry.
+func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceOptions) *cobra.Command {
+	client := NewNamesServiceClient(conn)
+	opt := cli_kitchensink_v1_names_proto_resolveOptions(opts)
+
+	cmd := &cobra.Command{
+		Use:   "names",
+		Short: "NamesService's RPCs echo their requests.",
 	}
-	if len(views) > 0 && len(v.Lists) > 0 {
-		lists := slices.Clone(v.Lists)
-		for i, l := range lists {
-			if fields, ok := views[l.FullName]; ok {
-				lists[i].Fields = fields
-			}
-		}
-		v.Lists = lists
-	}
-	return v
-}
+	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {
+		return cli_kitchensink_v1_names_proto_exitError{cli_kitchensink_v1_names_proto_exitUsage, err}
+	})
 
-func cli_kitchensink_v1_names_proto_viewFields(message string, entries []string) []cli_kitchensink_v1_names_proto_viewField {
-	fields := make([]cli_kitchensink_v1_names_proto_viewField, 0, len(entries))
-	for _, entry := range entries {
-		label, path, ok := strings.Cut(entry, ":")
-		if !ok || label == "" || path == "" {
-			panic(fmt.Sprintf("Options.Views[%q]: %q is not \"Label:path\"", message, entry))
-		}
-		fields = append(fields, cli_kitchensink_v1_names_proto_viewField{Label: label, Path: path})
+	// ----- persistent flags -----
+	printers := slices.Sorted(maps.Keys(opt.Printers))
+	if _, ok := opt.Printers[opt.DefaultPrinter]; opt.DefaultPrinter != "" && !ok {
+		panic(fmt.Sprintf("Options.DefaultPrinter: unknown printer %q; use one of: %s", opt.DefaultPrinter, strings.Join(printers, ", ")))
 	}
-	return fields
-}
-
-// A fragment is one request document.
-type cli_kitchensink_v1_names_proto_fragment struct {
-	Source string
-	JSON   []byte
-}
-
-// A decoder is one input format. decode changes its document encoding into
-// JSON.
-type cli_kitchensink_v1_names_proto_decoder struct {
-	name   string
-	decode func([]byte) ([]byte, error)
-}
-
-// decoderFns returns the built-in -f and -i formats.
-func cli_kitchensink_v1_names_proto_decoderFns() map[string]func([]byte) ([]byte, error) {
-	return map[string]func([]byte) ([]byte, error){
-		"json": func(body []byte) ([]byte, error) {
-			if !json.Valid(body) {
-				return nil, errors.New("not JSON")
-			}
-			return body, nil
-		},
-		"yaml": yaml.YAMLToJSON,
+	defaultFormat := "json on a terminal, jsonl when piped"
+	if opt.DefaultPrinter != "" {
+		defaultFormat = opt.DefaultPrinter
 	}
-}
 
-// json comes before yaml because every JSON document is valid YAML.
-func cli_kitchensink_v1_names_proto_decoders(fns map[string]func([]byte) ([]byte, error)) []cli_kitchensink_v1_names_proto_decoder {
-	decoders := make([]cli_kitchensink_v1_names_proto_decoder, 0, len(fns))
-	for _, name := range []string{"json", "yaml"} {
-		if fn := fns[name]; fn != nil {
-			decoders = append(decoders, cli_kitchensink_v1_names_proto_decoder{name: name, decode: fn})
-			delete(fns, name)
-		}
-	}
-	for _, name := range slices.Sorted(maps.Keys(fns)) {
-		decoders = append(decoders, cli_kitchensink_v1_names_proto_decoder{name: name, decode: fns[name]})
-	}
-	return decoders
-}
+	fs := cmd.PersistentFlags()
+	fs.StringArrayP("filename", "f", nil, "Request bodies from a file, or '-' for stdin.")
+	_ = cobra.MarkFlagFilename(fs, "filename")
+	fs.StringArrayP("data", "d", nil, "A request body, inline.")
+	fs.Bool("dry-run", false, "Print the assembled requests without sending them.")
+	fs.StringP("output", "o", "", "Output format: "+strings.Join(printers, ", ")+".\nDefault: "+defaultFormat+".")
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(printers, cobra.ShellCompDirectiveNoFileComp))
+	fs.String("columns", "", "Table columns, as LABEL:path pairs into the JSON response.\nExample: --columns 'ID:$.id,NAME:$.name'.")
+	fs.Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
+	fs.Bool("example", false, "Print an example request body without sending it.")
 
-// marshalJSON returns m as compact JSON. The spacing of protojson is
-// unstable by design. json.Compact makes it stable.
-func cli_kitchensink_v1_names_proto_marshalJSON(m proto.Message) ([]byte, error) {
-	raw, err := protojson.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
-	var buf bytes.Buffer
-	if err := json.Compact(&buf, raw); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-// printJSON writes each record as one line of JSON.
-func cli_kitchensink_v1_names_proto_printJSON(indent bool) func(io.Writer, cli_kitchensink_v1_names_proto_view, func() ([]byte, error)) error {
-	return func(w io.Writer, _ cli_kitchensink_v1_names_proto_view, next func() ([]byte, error)) error {
-		for {
-			rec, err := next()
-			if errors.Is(err, io.EOF) {
-				return nil
-			}
-			if err != nil {
-				return err
-			}
-			if indent {
-				var buf bytes.Buffer
-				if err := json.Indent(&buf, rec, "", "  "); err != nil {
+	// ----- collisions — rpc Collisions -----
+	{
+		sub := &cobra.Command{
+			Use:  "collisions",
+			Args: cli_kitchensink_v1_names_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_kitchensink_v1_names_proto_resolveOutput(cmd.OutOrStdout(), "kitchensink.v1.CollisionsRequest", "kitchensink.v1.NamesService.Collisions", format, columns, opt)
+				if err != nil {
 					return err
 				}
-				rec = buf.Bytes()
-			}
-			if _, err := fmt.Fprintln(w, string(rec)); err != nil {
-				return err
-			}
-		}
-	}
-}
-
-// printYAML writes each record as one YAML document. "---" separates the
-// documents.
-func cli_kitchensink_v1_names_proto_printYAML(w io.Writer, _ cli_kitchensink_v1_names_proto_view, next func() ([]byte, error)) error {
-	first := true
-	for {
-		rec, err := next()
-		if errors.Is(err, io.EOF) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		if !first {
-			if _, err := io.WriteString(w, "---\n"); err != nil {
-				return err
-			}
-		}
-		first = false
-		doc, err := yaml.JSONToYAML(rec)
-		if err != nil {
-			return err
-		}
-		if _, err := w.Write(doc); err != nil {
-			return err
-		}
-	}
-}
-
-// cell renders a JSON value as one table cell. Top-level entries stack.
-// Deeper levels go inline.
-func cli_kitchensink_v1_names_proto_cell(v gjson.Result, sep string) string {
-	switch {
-	case v.IsArray():
-		items := v.Array()
-		parts := make([]string, len(items))
-		for i, item := range items {
-			parts[i] = cli_kitchensink_v1_names_proto_cell(item, ",")
-		}
-		return strings.Join(parts, sep)
-	case v.IsObject():
-		var parts []string
-		v.ForEach(func(k, val gjson.Result) bool {
-			parts = append(parts, k.String()+"="+cli_kitchensink_v1_names_proto_cell(val, ","))
-			return true
-		})
-		return strings.Join(parts, sep)
-	default:
-		return v.String()
-	}
-}
-
-// printTable renders each record as a table under its view.
-func cli_kitchensink_v1_names_proto_printTable(w io.Writer, v cli_kitchensink_v1_names_proto_view, next func() ([]byte, error)) error {
-	width := 0
-	if f, ok := w.(*os.File); ok {
-		if cols, _, err := term.GetSize(int(f.Fd())); err == nil {
-			width = cols
-		}
-	}
-	for i := 0; ; i++ {
-		rec, err := next()
-		if errors.Is(err, io.EOF) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-
-		titled := len(v.Fields) > 0 || len(v.Lists) > 1
-		first := i == 0
-		section := func(title string, fields []cli_kitchensink_v1_names_proto_viewField, rows []gjson.Result) error {
-			t := table.NewWriter()
-			if width > 0 {
-				t.Style().Size.WidthMax = width
-			}
-			header := make(table.Row, len(fields))
-			for j, f := range fields {
-				header[j] = f.Label
-			}
-			t.AppendHeader(header)
-			for _, src := range rows {
-				row := make(table.Row, len(fields))
-				for j, f := range fields {
-					c := cli_kitchensink_v1_names_proto_cell(src.Get(f.Path), "\n")
-					if strings.Contains(c, "\n") {
-						t.Style().Options.SeparateRows = true
-					}
-					row[j] = c
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_kitchensink_v1_names_proto_View{}, []byte("{\"req\":\"Repellat aut et.\",\"err\":\"Repudiandae quis recusandae.\",\"cmd\":\"Vel odit omnis.\",\"resp\":\"Exercitationem vel maiores.\",\"out\":\"Aliquid iusto consequatur.\",\"frags\":\"Vero consequuntur sequi.\",\"type\":\"Ea magnam minima.\",\"func\":\"Animi omnis qui.\",\"return\":\"Aliquid cumque non.\",\"import\":\"Quia officia dicta.\"}"))
 				}
-				t.AppendRow(row)
-			}
-			out := ""
-			if !first {
-				out += "\n"
-			}
-			first = false
-			if title != "" {
-				out += title + "\n"
-			}
-			out += strings.TrimRight(t.Render(), "\n") + "\n"
-			_, err := io.WriteString(w, out)
-			return err
+				var flagsJSON []byte
+				if cmd.Flags().Changed("req") {
+					value, _ := cmd.Flags().GetString("req")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "req", value)
+					if err != nil {
+						return fmt.Errorf("flag --req: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("err") {
+					value, _ := cmd.Flags().GetString("err")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "err", value)
+					if err != nil {
+						return fmt.Errorf("flag --err: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("cmd") {
+					value, _ := cmd.Flags().GetString("cmd")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "cmd", value)
+					if err != nil {
+						return fmt.Errorf("flag --cmd: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("resp") {
+					value, _ := cmd.Flags().GetString("resp")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "resp", value)
+					if err != nil {
+						return fmt.Errorf("flag --resp: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("out") {
+					value, _ := cmd.Flags().GetString("out")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "out", value)
+					if err != nil {
+						return fmt.Errorf("flag --out: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("frags") {
+					value, _ := cmd.Flags().GetString("frags")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "frags", value)
+					if err != nil {
+						return fmt.Errorf("flag --frags: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("type") {
+					value, _ := cmd.Flags().GetString("type")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "type", value)
+					if err != nil {
+						return fmt.Errorf("flag --type: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("func") {
+					value, _ := cmd.Flags().GetString("func")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "func", value)
+					if err != nil {
+						return fmt.Errorf("flag --func: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("return") {
+					value, _ := cmd.Flags().GetString("return")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "return", value)
+					if err != nil {
+						return fmt.Errorf("flag --return: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("import") {
+					value, _ := cmd.Flags().GetString("import")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "import", value)
+					if err != nil {
+						return fmt.Errorf("flag --import: %w", err)
+					}
+				}
+				bodies := cli_kitchensink_v1_names_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &CollisionsRequest{}
+				if err := cli_kitchensink_v1_names_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_kitchensink_v1_names_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.Collisions)
+			},
 		}
+		sub.Flags().String("req", "", "")
+		sub.Flags().String("err", "", "")
+		sub.Flags().String("cmd", "", "")
+		sub.Flags().String("resp", "", "")
+		sub.Flags().String("out", "", "")
+		sub.Flags().String("frags", "", "")
+		sub.Flags().String("type", "", "")
+		sub.Flags().String("func", "", "")
+		sub.Flags().String("return", "", "")
+		sub.Flags().String("import", "", "")
+		cmd.AddCommand(sub)
+	}
 
-		if len(v.Fields) > 0 {
-			if err := section("", v.Fields, []gjson.Result{gjson.ParseBytes(rec)}); err != nil {
-				return err
-			}
+	// ----- imported — rpc Imported -----
+	{
+		sub := &cobra.Command{
+			Use:  "imported",
+			Args: cli_kitchensink_v1_names_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_kitchensink_v1_names_proto_resolveOutput(cmd.OutOrStdout(), "imported.v1.ImportedRequest", "kitchensink.v1.NamesService.Imported", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_kitchensink_v1_names_proto_View{}, []byte("{\"id\":\"Repellat aut et.\"}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("id") {
+					value, _ := cmd.Flags().GetString("id")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "id", value)
+					if err != nil {
+						return fmt.Errorf("flag --id: %w", err)
+					}
+				}
+				bodies := cli_kitchensink_v1_names_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &v1.ImportedRequest{}
+				if err := cli_kitchensink_v1_names_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_kitchensink_v1_names_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.Imported)
+			},
 		}
-		for _, list := range v.Lists {
-			rows := gjson.GetBytes(rec, list.Path).Array()
-			if len(rows) == 0 {
+		sub.Flags().String("id", "", "")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- second — rpc Second -----
+	{
+		sub := &cobra.Command{
+			Use:  "second",
+			Args: cli_kitchensink_v1_names_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_kitchensink_v1_names_proto_resolveOutput(cmd.OutOrStdout(), "second.v1.PingRequest", "kitchensink.v1.NamesService.Second", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_kitchensink_v1_names_proto_View{}, []byte("{\"text\":\"Repellat aut et.\"}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("text") {
+					value, _ := cmd.Flags().GetString("text")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "text", value)
+					if err != nil {
+						return fmt.Errorf("flag --text: %w", err)
+					}
+				}
+				bodies := cli_kitchensink_v1_names_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &v12.PingRequest{}
+				if err := cli_kitchensink_v1_names_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_kitchensink_v1_names_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.Second)
+			},
+		}
+		sub.Flags().String("text", "", "")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- reserved — rpc Reserved -----
+	{
+		sub := &cobra.Command{
+			Use:  "reserved",
+			Args: cli_kitchensink_v1_names_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_kitchensink_v1_names_proto_resolveOutput(cmd.OutOrStdout(), "kitchensink.v1.ReservedRequest", "kitchensink.v1.NamesService.Reserved", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_kitchensink_v1_names_proto_View{}, []byte("{\"filename\":\"Repellat aut et.\",\"data\":\"Repudiandae quis recusandae.\",\"help\":\"Vel odit omnis.\",\"output\":\"Exercitationem vel maiores.\",\"timeout\":\"Aliquid iusto consequatur.\",\"example\":\"Vero consequuntur sequi.\",\"dryRun\":\"Ea magnam minima.\",\"columns\":\"Animi omnis qui.\"}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("arg-filename") {
+					value, _ := cmd.Flags().GetString("arg-filename")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "filename", value)
+					if err != nil {
+						return fmt.Errorf("flag --arg-filename: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("arg-data") {
+					value, _ := cmd.Flags().GetString("arg-data")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "data", value)
+					if err != nil {
+						return fmt.Errorf("flag --arg-data: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("arg-help") {
+					value, _ := cmd.Flags().GetString("arg-help")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "help", value)
+					if err != nil {
+						return fmt.Errorf("flag --arg-help: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("arg-output") {
+					value, _ := cmd.Flags().GetString("arg-output")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "output", value)
+					if err != nil {
+						return fmt.Errorf("flag --arg-output: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("arg-timeout") {
+					value, _ := cmd.Flags().GetString("arg-timeout")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "timeout", value)
+					if err != nil {
+						return fmt.Errorf("flag --arg-timeout: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("arg-example") {
+					value, _ := cmd.Flags().GetString("arg-example")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "example", value)
+					if err != nil {
+						return fmt.Errorf("flag --arg-example: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("arg-dry-run") {
+					value, _ := cmd.Flags().GetString("arg-dry-run")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "dry_run", value)
+					if err != nil {
+						return fmt.Errorf("flag --arg-dry-run: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("arg-columns") {
+					value, _ := cmd.Flags().GetString("arg-columns")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "columns", value)
+					if err != nil {
+						return fmt.Errorf("flag --arg-columns: %w", err)
+					}
+				}
+				bodies := cli_kitchensink_v1_names_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &ReservedRequest{}
+				if err := cli_kitchensink_v1_names_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_kitchensink_v1_names_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.Reserved)
+			},
+		}
+		sub.Flags().String("arg-filename", "", "")
+		sub.Flags().String("arg-data", "", "")
+		sub.Flags().String("arg-help", "", "")
+		sub.Flags().String("arg-output", "", "")
+		sub.Flags().String("arg-timeout", "", "")
+		sub.Flags().String("arg-example", "", "")
+		sub.Flags().String("arg-dry-run", "", "")
+		sub.Flags().String("arg-columns", "", "")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- empty — rpc Empty -----
+	{
+		sub := &cobra.Command{
+			Use:  "empty",
+			Args: cli_kitchensink_v1_names_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_kitchensink_v1_names_proto_resolveOutput(cmd.OutOrStdout(), "google.protobuf.Empty", "kitchensink.v1.NamesService.Empty", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_kitchensink_v1_names_proto_View{}, []byte("{}"))
+				}
+				var flagsJSON []byte
+				bodies := cli_kitchensink_v1_names_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &emptypb.Empty{}
+				if err := cli_kitchensink_v1_names_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_kitchensink_v1_names_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.Empty)
+			},
+		}
+		cmd.AddCommand(sub)
+	}
+
+	// ----- http-call — rpc HTTPCall -----
+	{
+		sub := &cobra.Command{
+			Use:  "http-call",
+			Args: cli_kitchensink_v1_names_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_kitchensink_v1_names_proto_resolveOutput(cmd.OutOrStdout(), "kitchensink.v1.CasingRequest", "kitchensink.v1.NamesService.HTTPCall", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_kitchensink_v1_names_proto_View{}, []byte("{\"HTTPHeader\":\"Repellat aut et.\",\"camelField\":\"Repudiandae quis recusandae.\",\"customName\":\"Vel odit omnis.\",\"weird.name\":\"Exercitationem vel maiores.\"}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("http-header") {
+					value, _ := cmd.Flags().GetString("http-header")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "HTTPHeader", value)
+					if err != nil {
+						return fmt.Errorf("flag --http-header: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("camel-field") {
+					value, _ := cmd.Flags().GetString("camel-field")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "camelField", value)
+					if err != nil {
+						return fmt.Errorf("flag --camel-field: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("with-json-name") {
+					value, _ := cmd.Flags().GetString("with-json-name")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "with_json_name", value)
+					if err != nil {
+						return fmt.Errorf("flag --with-json-name: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("dotted") {
+					value, _ := cmd.Flags().GetString("dotted")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "dotted", value)
+					if err != nil {
+						return fmt.Errorf("flag --dotted: %w", err)
+					}
+				}
+				bodies := cli_kitchensink_v1_names_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &CasingRequest{}
+				if err := cli_kitchensink_v1_names_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_kitchensink_v1_names_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.HTTPCall)
+			},
+		}
+		sub.Flags().String("http-header", "", "")
+		sub.Flags().String("camel-field", "", "")
+		sub.Flags().String("with-json-name", "", "")
+		sub.Flags().String("dotted", "", "")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- lower-snake — rpc lower_snake -----
+	{
+		sub := &cobra.Command{
+			Use:  "lower-snake",
+			Args: cli_kitchensink_v1_names_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_kitchensink_v1_names_proto_resolveOutput(cmd.OutOrStdout(), "kitchensink.v1.CasingRequest", "kitchensink.v1.NamesService.lower_snake", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_kitchensink_v1_names_proto_View{}, []byte("{\"HTTPHeader\":\"Repellat aut et.\",\"camelField\":\"Repudiandae quis recusandae.\",\"customName\":\"Vel odit omnis.\",\"weird.name\":\"Exercitationem vel maiores.\"}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("http-header") {
+					value, _ := cmd.Flags().GetString("http-header")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "HTTPHeader", value)
+					if err != nil {
+						return fmt.Errorf("flag --http-header: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("camel-field") {
+					value, _ := cmd.Flags().GetString("camel-field")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "camelField", value)
+					if err != nil {
+						return fmt.Errorf("flag --camel-field: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("with-json-name") {
+					value, _ := cmd.Flags().GetString("with-json-name")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "with_json_name", value)
+					if err != nil {
+						return fmt.Errorf("flag --with-json-name: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("dotted") {
+					value, _ := cmd.Flags().GetString("dotted")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "dotted", value)
+					if err != nil {
+						return fmt.Errorf("flag --dotted: %w", err)
+					}
+				}
+				bodies := cli_kitchensink_v1_names_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &CasingRequest{}
+				if err := cli_kitchensink_v1_names_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_kitchensink_v1_names_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.LowerSnake)
+			},
+		}
+		sub.Flags().String("http-header", "", "")
+		sub.Flags().String("camel-field", "", "")
+		sub.Flags().String("with-json-name", "", "")
+		sub.Flags().String("dotted", "", "")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- borrow — rpc Borrow -----
+	{
+		sub := &cobra.Command{
+			Use:  "borrow",
+			Args: cli_kitchensink_v1_names_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_kitchensink_v1_names_proto_resolveOutput(cmd.OutOrStdout(), "kitchensink.v1.Outer", "kitchensink.v1.NamesService.Borrow", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_kitchensink_v1_names_proto_View{}, []byte("{\"stringLeaf\":\"Repellat aut et.\",\"int64Leaf\":\"913\",\"middle\":{\"leaf\":\"Quis recusandae vel.\",\"inner\":{\"leaf\":\"Odit omnis exercitationem.\",\"deep\":{\"leaf\":\"Vel maiores aliquid.\",\"deeper\":{\"leaf\":\"Iusto consequatur vero.\",\"deepest\":{\"leaf\":\"Consequuntur sequi ea.\"}}}}}}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("string-leaf") {
+					value, _ := cmd.Flags().GetString("string-leaf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "string_leaf", value)
+					if err != nil {
+						return fmt.Errorf("flag --string-leaf: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("int64-leaf") {
+					value, _ := cmd.Flags().GetInt64("int64-leaf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "int64_leaf", value)
+					if err != nil {
+						return fmt.Errorf("flag --int64-leaf: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("middle") {
+					value, _ := cmd.Flags().GetString("middle")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --middle: %q is not valid JSON", value)
+					}
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "middle", []byte(value))
+					if err != nil {
+						return fmt.Errorf("flag --middle: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("middle.leaf") {
+					value, _ := cmd.Flags().GetString("middle.leaf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "middle.leaf", value)
+					if err != nil {
+						return fmt.Errorf("flag --middle.leaf: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("middle.inner") {
+					value, _ := cmd.Flags().GetString("middle.inner")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --middle.inner: %q is not valid JSON", value)
+					}
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "middle.inner", []byte(value))
+					if err != nil {
+						return fmt.Errorf("flag --middle.inner: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("middle.inner.leaf") {
+					value, _ := cmd.Flags().GetString("middle.inner.leaf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "middle.inner.leaf", value)
+					if err != nil {
+						return fmt.Errorf("flag --middle.inner.leaf: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("middle.inner.deep") {
+					value, _ := cmd.Flags().GetString("middle.inner.deep")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --middle.inner.deep: %q is not valid JSON", value)
+					}
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "middle.inner.deep", []byte(value))
+					if err != nil {
+						return fmt.Errorf("flag --middle.inner.deep: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("middle.inner.deep.leaf") {
+					value, _ := cmd.Flags().GetString("middle.inner.deep.leaf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "middle.inner.deep.leaf", value)
+					if err != nil {
+						return fmt.Errorf("flag --middle.inner.deep.leaf: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("middle.inner.deep.deeper") {
+					value, _ := cmd.Flags().GetString("middle.inner.deep.deeper")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --middle.inner.deep.deeper: %q is not valid JSON", value)
+					}
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "middle.inner.deep.deeper", []byte(value))
+					if err != nil {
+						return fmt.Errorf("flag --middle.inner.deep.deeper: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("middle.inner.deep.deeper.leaf") {
+					value, _ := cmd.Flags().GetString("middle.inner.deep.deeper.leaf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "middle.inner.deep.deeper.leaf", value)
+					if err != nil {
+						return fmt.Errorf("flag --middle.inner.deep.deeper.leaf: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("middle.inner.deep.deeper.deepest") {
+					value, _ := cmd.Flags().GetString("middle.inner.deep.deeper.deepest")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --middle.inner.deep.deeper.deepest: %q is not valid JSON", value)
+					}
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "middle.inner.deep.deeper.deepest", []byte(value))
+					if err != nil {
+						return fmt.Errorf("flag --middle.inner.deep.deeper.deepest: %w", err)
+					}
+				}
+				if cmd.Flags().Changed("middle.inner.deep.deeper.deepest.leaf") {
+					value, _ := cmd.Flags().GetString("middle.inner.deep.deeper.deepest.leaf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "middle.inner.deep.deeper.deepest.leaf", value)
+					if err != nil {
+						return fmt.Errorf("flag --middle.inner.deep.deeper.deepest.leaf: %w", err)
+					}
+				}
+				bodies := cli_kitchensink_v1_names_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &Outer{}
+				if err := cli_kitchensink_v1_names_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_kitchensink_v1_names_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.Borrow)
+			},
+		}
+		sub.Flags().String("string-leaf", "", "")
+		sub.Flags().Int64("int64-leaf", 0, "")
+		sub.Flags().String("middle", "", "")
+		sub.Flags().String("middle.leaf", "", "")
+		sub.Flags().String("middle.inner", "", "")
+		sub.Flags().String("middle.inner.leaf", "", "")
+		sub.Flags().String("middle.inner.deep", "", "")
+		sub.Flags().String("middle.inner.deep.leaf", "", "")
+		sub.Flags().String("middle.inner.deep.deeper", "", "")
+		sub.Flags().String("middle.inner.deep.deeper.leaf", "", "")
+		sub.Flags().String("middle.inner.deep.deeper.deepest", "", "")
+		sub.Flags().String("middle.inner.deep.deeper.deepest.leaf", "", "")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- nested — rpc Nested -----
+	{
+		sub := &cobra.Command{
+			Use:  "nested",
+			Args: cli_kitchensink_v1_names_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_kitchensink_v1_names_proto_resolveOutput(cmd.OutOrStdout(), "kitchensink.v1.Envelope.Letter", "kitchensink.v1.NamesService.Nested", format, columns, opt)
+				if err != nil {
+					return err
+				}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_kitchensink_v1_names_proto_View{}, []byte("{\"body\":\"Repellat aut et.\"}"))
+				}
+				var flagsJSON []byte
+				if cmd.Flags().Changed("body") {
+					value, _ := cmd.Flags().GetString("body")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "body", value)
+					if err != nil {
+						return fmt.Errorf("flag --body: %w", err)
+					}
+				}
+				bodies := cli_kitchensink_v1_names_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+				req := &Envelope_Letter{}
+				if err := cli_kitchensink_v1_names_proto_buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+				return cli_kitchensink_v1_names_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.Nested)
+			},
+		}
+		sub.Flags().String("body", "", "")
+		cmd.AddCommand(sub)
+	}
+
+	return cmd
+}
+
+// =============================================================================
+// Options: what the caller configures.
+// =============================================================================
+
+// Cli_kitchensink_v1_names_proto_Options configures a service command. The zero value keeps every
+// built-in default.
+type Cli_kitchensink_v1_names_proto_Options struct {
+	// Printers adds a printer under the name -o takes. A nil printer removes
+	// the built-in of that name.
+	Printers map[string]Cli_kitchensink_v1_names_proto_Printer
+	// DefaultPrinter names the printer when -o is absent. An unknown one panics
+	// when the caller builds the command.
+	DefaultPrinter string
+	// Decoders replaces the built-in -f and -d decoders, in the order the CLI
+	// tries them.
+	Decoders []Cli_kitchensink_v1_names_proto_Decoder
+	// A Views entry replaces the derived view of a method, keyed by the
+	// method's full proto name.
+	Views map[string]Cli_kitchensink_v1_names_proto_View
+}
+
+func cli_kitchensink_v1_names_proto_resolveOptions(opts []Cli_kitchensink_v1_names_proto_Options) Cli_kitchensink_v1_names_proto_Options {
+	resolved := Cli_kitchensink_v1_names_proto_Options{
+		Printers: maps.Clone(Cli_kitchensink_v1_names_proto_Printers),
+		Decoders: Cli_kitchensink_v1_names_proto_Decoders,
+		Views:    map[string]Cli_kitchensink_v1_names_proto_View{},
+	}
+	for _, opt := range opts {
+		for name, printer := range opt.Printers {
+			if printer == nil {
+				delete(resolved.Printers, name)
 				continue
 			}
-			title := ""
-			if titled {
-				title = strings.ToUpper(list.Label)
-			}
-			if err := section(title, list.Fields, rows); err != nil {
-				return err
-			}
+			resolved.Printers[name] = printer
+		}
+		if opt.DefaultPrinter != "" {
+			resolved.DefaultPrinter = opt.DefaultPrinter
+		}
+		if len(opt.Decoders) > 0 {
+			resolved.Decoders = opt.Decoders
+		}
+		for method, view := range opt.Views {
+			resolved.Views[method] = view
 		}
 	}
+	return resolved
 }
 
-// printers returns the built-in -o formats.
-func cli_kitchensink_v1_names_proto_printers() map[string]func(io.Writer, cli_kitchensink_v1_names_proto_view, func() ([]byte, error)) error {
-	return map[string]func(io.Writer, cli_kitchensink_v1_names_proto_view, func() ([]byte, error)) error{
-		"json":        cli_kitchensink_v1_names_proto_printJSON(false),
-		"json-pretty": cli_kitchensink_v1_names_proto_printJSON(true),
-		"table":       cli_kitchensink_v1_names_proto_printTable,
-		"yaml":        cli_kitchensink_v1_names_proto_printYAML,
-	}
+// =============================================================================
+// Input: -f files, then -d values, then flags, in that order.
+// =============================================================================
+
+// A Decoder decodes one source into request bodies.
+type Cli_kitchensink_v1_names_proto_Decoder struct {
+	// Name identifies the decoder in an error.
+	Name string
+	// Decode yields one JSON body for each document in the source, in order.
+	// It yields an error, and nothing more, for a source it cannot read.
+	Decode func(r io.Reader) iter.Seq2[[]byte, error]
 }
 
-func cli_kitchensink_v1_names_proto_checkDefaultOutput(printers map[string]func(io.Writer, cli_kitchensink_v1_names_proto_view, func() ([]byte, error)) error, defaultOutput string) {
-	if defaultOutput == "" {
-		return
+var (
+	Cli_kitchensink_v1_names_proto_DecoderJSON = Cli_kitchensink_v1_names_proto_Decoder{
+		Name: "json",
+		Decode: func(r io.Reader) iter.Seq2[[]byte, error] {
+			return func(yield func([]byte, error) bool) {
+				dec := json.NewDecoder(r)
+				for {
+					var raw json.RawMessage
+					if err := dec.Decode(&raw); err != nil {
+						if !errors.Is(err, io.EOF) {
+							yield(nil, err)
+						}
+						return
+					}
+					var items []json.RawMessage
+					if err := json.Unmarshal(raw, &items); err != nil {
+						if !yield(raw, nil) {
+							return
+						}
+						continue
+					}
+					for _, item := range items {
+						if !yield(item, nil) {
+							return
+						}
+					}
+				}
+			}
+		},
 	}
-	if _, ok := printers[defaultOutput]; !ok {
-		panic(fmt.Sprintf("Options.DefaultOutput: unknown format %q; use one of: %s",
-			defaultOutput, strings.Join(slices.Sorted(maps.Keys(printers)), ", ")))
-	}
-}
 
-// outputPrinter resolves -o to its print function. An empty -o means the
-// configured default, or JSON. JSON is pretty on a terminal and compact in
-// a pipe.
-func cli_kitchensink_v1_names_proto_outputPrinter(cmd *cobra.Command, printers map[string]func(io.Writer, cli_kitchensink_v1_names_proto_view, func() ([]byte, error)) error, defaultOutput string) (func(io.Writer, cli_kitchensink_v1_names_proto_view, func() ([]byte, error)) error, error) {
-	format, _ := cmd.Flags().GetString("output")
-	if format == "" {
-		format = defaultOutput
+	Cli_kitchensink_v1_names_proto_DecoderYAML = Cli_kitchensink_v1_names_proto_Decoder{
+		Name: "yaml",
+		Decode: func(r io.Reader) iter.Seq2[[]byte, error] {
+			return func(yield func([]byte, error) bool) {
+				// yaml3 finds the document boundaries. yaml converts a
+				// document, including a map key that YAML allows and JSON
+				// does not.
+				dec := yaml3.NewDecoder(r)
+				for {
+					var node yaml3.Node
+					if err := dec.Decode(&node); err != nil {
+						if !errors.Is(err, io.EOF) {
+							yield(nil, err)
+						}
+						return
+					}
+					doc, err := yaml3.Marshal(&node)
+					if err != nil {
+						yield(nil, err)
+						return
+					}
+					body, err := yaml.YAMLToJSON(doc)
+					if err != nil {
+						yield(nil, err)
+						return
+					}
+					// An empty document converts to null, which is no body.
+					if bytes.Equal(bytes.TrimSpace(body), []byte("null")) {
+						continue
+					}
+					if !yield(body, nil) {
+						return
+					}
+				}
+			}
+		},
 	}
-	if format == "" {
-		pretty := false
-		if f, ok := cmd.OutOrStdout().(*os.File); ok {
-			pretty = term.IsTerminal(int(f.Fd()))
+
+	// The built-in decoders, in the order the CLI tries them.
+	Cli_kitchensink_v1_names_proto_Decoders = []Cli_kitchensink_v1_names_proto_Decoder{Cli_kitchensink_v1_names_proto_DecoderJSON, Cli_kitchensink_v1_names_proto_DecoderYAML}
+)
+
+// The first decoder to read a body takes the source.
+func cli_kitchensink_v1_names_proto_decodeSource(decoders []Cli_kitchensink_v1_names_proto_Decoder, source string, r io.Reader) iter.Seq2[[]byte, error] {
+	for _, dec := range decoders {
+		// A decoder reads as far as it needs to. The bytes a failed decoder
+		// read go to the next one, because stdin cannot replay them.
+		var seen bytes.Buffer
+		next, stop := iter.Pull2(dec.Decode(io.TeeReader(r, &seen)))
+		body, err, read := next()
+		stop()
+		r = io.MultiReader(bytes.NewReader(seen.Bytes()), r)
+		if err != nil {
+			continue
 		}
-		return cli_kitchensink_v1_names_proto_printJSON(pretty), nil
-	}
-	p, ok := printers[format]
-	if !ok {
-		return nil, fmt.Errorf("unknown output format %q; use one of: %s",
-			format, strings.Join(slices.Sorted(maps.Keys(printers)), ", "))
-	}
-	return p, nil
-}
-
-// outputHelp returns the -o usage text.
-func cli_kitchensink_v1_names_proto_outputHelp(printers map[string]func(io.Writer, cli_kitchensink_v1_names_proto_view, func() ([]byte, error)) error, defaultOutput string) string {
-	help := "Output format: " + strings.Join(slices.Sorted(maps.Keys(printers)), ", ") + ".\n"
-	if defaultOutput != "" {
-		return help + "Default: " + defaultOutput + "."
-	}
-	return help + "Default: pretty JSON on a terminal, compact when piped."
-}
-
-// oneRecord yields m once and then io.EOF.
-func cli_kitchensink_v1_names_proto_oneRecord(m proto.Message) func() ([]byte, error) {
-	done := false
-	return func() ([]byte, error) {
-		if done {
-			return nil, io.EOF
-		}
-		done = true
-		return cli_kitchensink_v1_names_proto_marshalJSON(m)
-	}
-}
-
-// callContext returns the call context, with a --timeout deadline when set.
-func cli_kitchensink_v1_names_proto_callContext(cmd *cobra.Command) (context.Context, context.CancelFunc) {
-	if d, _ := cmd.Flags().GetDuration("timeout"); d > 0 {
-		return context.WithTimeout(cmd.Context(), d)
-	}
-	return context.WithCancel(cmd.Context())
-}
-
-// An exitError is an error with a process exit code. Error removes the gRPC
-// "rpc error: ..." wrapper.
-type cli_kitchensink_v1_names_proto_exitError struct {
-	code int
-	err  error
-}
-
-func (e cli_kitchensink_v1_names_proto_exitError) Error() string {
-	if msg := status.Convert(e.err).Message(); msg != "" {
-		return msg
-	}
-	return e.err.Error()
-}
-func (e cli_kitchensink_v1_names_proto_exitError) Unwrap() error { return e.err }
-func (e cli_kitchensink_v1_names_proto_exitError) ExitCode() int { return e.code }
-
-func cli_kitchensink_v1_names_proto_usage(err error) error {
-	return cli_kitchensink_v1_names_proto_exitError{2, err}
-}
-
-// callErr maps a failed call to an exit code from its context.
-func cli_kitchensink_v1_names_proto_callErr(ctx context.Context, err error) error {
-	if err == nil {
-		return nil
-	}
-	switch ctx.Err() {
-	case context.DeadlineExceeded:
-		return cli_kitchensink_v1_names_proto_exitError{124, err}
-	case context.Canceled:
-		return cli_kitchensink_v1_names_proto_exitError{130, err}
-	}
-	return cli_kitchensink_v1_names_proto_exitError{1, err}
-}
-
-// loadInputs returns the request fragments for the -f and -i values.
-// The fragments come in merge order. The -f documents come first, in
-// argument order. The -i values follow. A "-" filename reads stdin.
-// Content selects the format of each input. loadInputs skips empty inputs.
-func cli_kitchensink_v1_names_proto_loadInputs(decoders []cli_kitchensink_v1_names_proto_decoder, cmd *cobra.Command) ([]cli_kitchensink_v1_names_proto_fragment, error) {
-	files, _ := cmd.Flags().GetStringArray("filename")
-	inline, _ := cmd.Flags().GetStringArray("input")
-	var out []cli_kitchensink_v1_names_proto_fragment
-	add := func(source string, raw []byte) error {
-		if len(bytes.TrimSpace(raw)) == 0 {
-			return nil
-		}
-		for _, d := range decoders {
-			body, err := d.decode(raw)
-			if err == nil && bytes.HasPrefix(bytes.TrimSpace(body), []byte("{")) {
-				out = append(out, cli_kitchensink_v1_names_proto_fragment{Source: source, JSON: body})
-				return nil
+		if read {
+			// A body fills a request message, so it is a JSON object. A
+			// source that reads as anything else belongs to another decoder.
+			opening, err := json.NewDecoder(bytes.NewReader(body)).Token()
+			if err != nil || opening != json.Delim('{') {
+				continue
 			}
 		}
-		names := make([]string, len(decoders))
-		for i, d := range decoders {
-			names[i] = d.name
-		}
-		return fmt.Errorf("parse %s: not an object in any input format (%s)",
-			source, strings.Join(names, ", "))
-	}
-	for _, name := range files {
-		name = strings.TrimSpace(name)
-		switch {
-		case name == "":
-		case name == "-":
-			body, err := io.ReadAll(cmd.InOrStdin())
-			if err != nil {
-				return nil, fmt.Errorf("read stdin: %w", err)
-			}
-			if err := add("stdin", body); err != nil {
-				return nil, err
-			}
-		default:
-			body, err := os.ReadFile(name)
-			if err != nil {
-				return nil, err
-			}
-			if err := add(name, body); err != nil {
-				return nil, err
+
+		return func(yield func([]byte, error) bool) {
+			for body, err := range dec.Decode(r) {
+				if err != nil {
+					yield(nil, fmt.Errorf("read %s as %s: %w", source, dec.Name, err))
+					return
+				}
+				if !yield(body, nil) {
+					return
+				}
 			}
 		}
 	}
-	for i, s := range inline {
-		if err := add(fmt.Sprintf("-i value %d", i+1), []byte(s)); err != nil {
-			return nil, err
-		}
+
+	names := make([]string, len(decoders))
+	for i, dec := range decoders {
+		names[i] = dec.Name
 	}
-	return out, nil
+	return func(yield func([]byte, error) bool) {
+		yield(nil, fmt.Errorf("cannot read %s as any of: %s", source, strings.Join(names, ", ")))
+	}
 }
 
-// buildRequest merges the fragments into req in order, with proto.Merge
-// semantics.
-func cli_kitchensink_v1_names_proto_buildRequest(req proto.Message, frags []cli_kitchensink_v1_names_proto_fragment) error {
-	// Required fields are a property of the assembled request. The check
-	// comes after the merge.
-	for _, frag := range frags {
-		next := req.ProtoReflect().New().Interface()
-		if err := (protojson.UnmarshalOptions{AllowPartial: true}).Unmarshal(frag.JSON, next); err != nil {
-			return fmt.Errorf("decode %s: %w", frag.Source, err)
+// cli_kitchensink_v1_names_proto_readBodies opens nothing until a caller ranges the sequence.
+func cli_kitchensink_v1_names_proto_readBodies(
+	decoders []Cli_kitchensink_v1_names_proto_Decoder,
+	filenames, data []string,
+	stdin io.Reader,
+	stderr io.Writer,
+) iter.Seq2[[]byte, error] {
+	if f, ok := stdin.(*os.File); ok && term.IsTerminal(int(f.Fd())) &&
+		slices.ContainsFunc(filenames, func(name string) bool {
+			return strings.TrimSpace(name) == "-"
+		}) {
+		fmt.Fprintln(stderr, "reading request bodies from the terminal; Ctrl-D to finish")
+	}
+
+	return func(yield func([]byte, error) bool) {
+		// read reports whether the caller wants more bodies.
+		read := func(source string, r io.Reader) bool {
+			for body, err := range cli_kitchensink_v1_names_proto_decodeSource(decoders, source, r) {
+				if !yield(body, err) || err != nil {
+					return false
+				}
+			}
+			return true
 		}
-		proto.Merge(req, next)
+
+		for _, filename := range filenames {
+			filename = strings.TrimSpace(filename)
+
+			var r io.Reader
+			source := filename
+			switch {
+			case filename == "":
+				continue
+			case filename == "-":
+				source, r = "stdin", stdin
+			default:
+				f, err := os.Open(filename)
+				if err != nil {
+					yield(nil, err)
+					return
+				}
+				defer f.Close()
+				r = f
+			}
+
+			if !read(source, r) {
+				return
+			}
+		}
+
+		for i, body := range data {
+			if !read(fmt.Sprintf("-d value %d", i+1), strings.NewReader(body)) {
+				return
+			}
+		}
+	}
+}
+
+func cli_kitchensink_v1_names_proto_applyJSON(msg proto.Message, body []byte) error {
+	// protojson clears the message it fills, so the body decodes into a fresh
+	// partial.
+	partial := msg.ProtoReflect().New().Interface()
+	if err := (protojson.UnmarshalOptions{AllowPartial: true}).Unmarshal(body, partial); err != nil {
+		return err
+	}
+	proto.Merge(msg, partial)
+	return nil
+}
+
+// A flag overrides a body.
+func cli_kitchensink_v1_names_proto_buildRequest(req proto.Message, bodies iter.Seq2[[]byte, error], flagsJSON []byte) error {
+	n := 0
+	for body, err := range bodies {
+		if err != nil {
+			return err
+		}
+		n++
+		if err := cli_kitchensink_v1_names_proto_applyJSON(req, body); err != nil {
+			return fmt.Errorf("request body %d: %w", n, err)
+		}
+	}
+	if flagsJSON != nil {
+		if err := cli_kitchensink_v1_names_proto_applyJSON(req, flagsJSON); err != nil {
+			return fmt.Errorf("flags: %w", err)
+		}
 	}
 	if err := proto.CheckInitialized(req); err != nil {
 		return fmt.Errorf("request: %w", err)
@@ -465,912 +1013,357 @@ func cli_kitchensink_v1_names_proto_buildRequest(req proto.Message, frags []cli_
 	return nil
 }
 
-func cli_kitchensink_v1_names_proto_addInputFlags(fs *pflag.FlagSet, decoders []cli_kitchensink_v1_names_proto_decoder) {
-	names := make([]string, len(decoders))
-	for i, d := range decoders {
-		names[i] = d.name
-	}
-	formats := strings.Join(names, ", ")
-	fs.StringArrayP("filename", "f", nil,
-		"Request body from a file ("+formats+"), or '-' for stdin.\n"+
-			"Repeatable; -f files, -i values, and flags merge in that order.")
-	_ = cobra.MarkFlagFilename(fs, "filename", "json", "yaml", "yml")
-	fs.StringArrayP("input", "i", nil,
-		"Request body inline ("+formats+").\n"+
-			"Repeatable; merges after -f files and before flags.")
+// =============================================================================
+// Output: -o picks a printer, and a view names the fields of a response.
+// =============================================================================
+
+type Cli_kitchensink_v1_names_proto_ViewField struct {
+	Label string
+	Path  string // RFC 9535 JSONPath into the response.
 }
 
-// NamesServiceOptions configures the NamesService commands.
-type NamesServiceOptions struct {
-	// Printers adds -o formats. A print function pulls JSON records from
-	// next until io.EOF. A nil function removes the named format.
-	Printers map[string]func(w io.Writer, next func() ([]byte, error)) error
-	// DefaultOutput is the format for an empty -o.
-	DefaultOutput string
-	// Decoders adds -f and -i input formats. The content test tries them
-	// after json and yaml, in name order. A nil function removes the named
-	// format. Stdin for streaming RPCs is JSON only.
-	Decoders map[string]func([]byte) ([]byte, error)
-	// Views maps a message's full proto name to its "Label:path" fields
-	// (gjson paths). These fields replace the message's derived fields in
-	// all of its views. A malformed entry panics. A name that never displays
-	// has no effect.
-	Views map[string][]string
+type Cli_kitchensink_v1_names_proto_ViewList struct {
+	Label  string
+	Path   string
+	Fields []Cli_kitchensink_v1_names_proto_ViewField
 }
 
-// NewNamesServiceCommand returns the NamesService command with
-// one subcommand for each RPC. Later opts override earlier opts for each
-// entry.
-func NewNamesServiceCommand(conn grpc.ClientConnInterface, opts ...NamesServiceOptions) *cobra.Command {
-	client := NewNamesServiceClient(conn)
+type Cli_kitchensink_v1_names_proto_View struct {
+	Lists  []Cli_kitchensink_v1_names_proto_ViewList
+	Fields []Cli_kitchensink_v1_names_proto_ViewField
+}
 
-	printers := cli_kitchensink_v1_names_proto_printers()
-	defaultOutput := ""
-	decoderFns := cli_kitchensink_v1_names_proto_decoderFns()
-	views := map[string][]cli_kitchensink_v1_names_proto_viewField{}
-	for _, o := range opts {
-		for name, fn := range o.Printers {
-			if fn == nil {
-				delete(printers, name)
-				continue
+// A Printer renders one body. A streaming command calls it once for each
+// response. --dry-run and --example give it a request body and an empty view.
+type Cli_kitchensink_v1_names_proto_Printer func(w io.Writer, view Cli_kitchensink_v1_names_proto_View, body []byte) error
+
+// The built-in printers, keyed by the name -o takes.
+var Cli_kitchensink_v1_names_proto_Printers = map[string]Cli_kitchensink_v1_names_proto_Printer{
+	"json": func(w io.Writer, _ Cli_kitchensink_v1_names_proto_View, body []byte) error {
+		return cli_kitchensink_v1_names_proto_printJSON(w, body, true)
+	},
+	"jsonl": func(w io.Writer, _ Cli_kitchensink_v1_names_proto_View, body []byte) error {
+		return cli_kitchensink_v1_names_proto_printJSON(w, body, false)
+	},
+	"table": cli_kitchensink_v1_names_proto_printTable,
+	"yaml":  cli_kitchensink_v1_names_proto_printYAML,
+}
+
+// The view derived for each response message.
+var cli_kitchensink_v1_names_proto_messageViews = map[string]Cli_kitchensink_v1_names_proto_View{
+	"imported.v1.ImportedRequest": {Fields: []Cli_kitchensink_v1_names_proto_ViewField{
+		{Label: "id", Path: "$[\"id\"]"},
+	}},
+	"kitchensink.v1.CasingRequest": {Fields: []Cli_kitchensink_v1_names_proto_ViewField{
+		{Label: "HTTPHeader", Path: "$[\"HTTPHeader\"]"},
+		{Label: "camelField", Path: "$[\"camelField\"]"},
+		{Label: "with_json_name", Path: "$[\"customName\"]"},
+		{Label: "dotted", Path: "$[\"weird.name\"]"},
+	}},
+	"kitchensink.v1.CollisionsRequest": {Fields: []Cli_kitchensink_v1_names_proto_ViewField{
+		{Label: "req", Path: "$[\"req\"]"},
+		{Label: "err", Path: "$[\"err\"]"},
+		{Label: "cmd", Path: "$[\"cmd\"]"},
+		{Label: "resp", Path: "$[\"resp\"]"},
+		{Label: "out", Path: "$[\"out\"]"},
+		{Label: "frags", Path: "$[\"frags\"]"},
+		{Label: "type", Path: "$[\"type\"]"},
+		{Label: "func", Path: "$[\"func\"]"},
+		{Label: "return", Path: "$[\"return\"]"},
+		{Label: "import", Path: "$[\"import\"]"},
+	}},
+	"kitchensink.v1.Envelope.Letter": {Fields: []Cli_kitchensink_v1_names_proto_ViewField{
+		{Label: "body", Path: "$[\"body\"]"},
+	}},
+	"kitchensink.v1.Outer": {Fields: []Cli_kitchensink_v1_names_proto_ViewField{
+		{Label: "string_leaf", Path: "$[\"stringLeaf\"]"},
+		{Label: "int64_leaf", Path: "$[\"int64Leaf\"]"},
+		{Label: "middle.leaf", Path: "$[\"middle\"][\"leaf\"]"},
+		{Label: "middle.inner.leaf", Path: "$[\"middle\"][\"inner\"][\"leaf\"]"},
+		{Label: "middle.inner.deep.leaf", Path: "$[\"middle\"][\"inner\"][\"deep\"][\"leaf\"]"},
+		{Label: "middle.inner.deep.deeper.leaf", Path: "$[\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"leaf\"]"},
+		{Label: "middle.inner.deep.deeper.deepest.leaf", Path: "$[\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"deepest\"][\"leaf\"]"},
+	}},
+	"kitchensink.v1.ReservedRequest": {Fields: []Cli_kitchensink_v1_names_proto_ViewField{
+		{Label: "filename", Path: "$[\"filename\"]"},
+		{Label: "data", Path: "$[\"data\"]"},
+		{Label: "help", Path: "$[\"help\"]"},
+		{Label: "output", Path: "$[\"output\"]"},
+		{Label: "timeout", Path: "$[\"timeout\"]"},
+		{Label: "example", Path: "$[\"example\"]"},
+		{Label: "dry_run", Path: "$[\"dryRun\"]"},
+		{Label: "columns", Path: "$[\"columns\"]"},
+	}},
+	"second.v1.PingRequest": {Fields: []Cli_kitchensink_v1_names_proto_ViewField{
+		{Label: "text", Path: "$[\"text\"]"},
+	}},
+}
+
+func cli_kitchensink_v1_names_proto_printMessage(
+	w io.Writer,
+	printer Cli_kitchensink_v1_names_proto_Printer,
+	view Cli_kitchensink_v1_names_proto_View,
+	msg proto.Message,
+) error {
+	body, err := protojson.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	return printer(w, view, body)
+}
+
+func cli_kitchensink_v1_names_proto_printJSON(w io.Writer, body []byte, indent bool) error {
+	// Indent and Compact both pin the spacing, which protojson varies
+	// between runs on purpose.
+	var buf bytes.Buffer
+	if indent {
+		if err := json.Indent(&buf, body, "", "  "); err != nil {
+			return err
+		}
+	} else if err := json.Compact(&buf, body); err != nil {
+		return err
+	}
+	_, err := fmt.Fprintln(w, buf.String())
+	return err
+}
+
+// cli_kitchensink_v1_names_proto_printYAML starts the document with ---, so bodies render as one
+// valid YAML stream.
+func cli_kitchensink_v1_names_proto_printYAML(w io.Writer, _ Cli_kitchensink_v1_names_proto_View, body []byte) error {
+	doc, err := yaml.JSONToYAML(body)
+	if err != nil {
+		return err
+	}
+	if _, err := io.WriteString(w, "---\n"); err != nil {
+		return err
+	}
+	_, err = w.Write(doc)
+	return err
+}
+
+func cli_kitchensink_v1_names_proto_printTable(w io.Writer, view Cli_kitchensink_v1_names_proto_View, body []byte) error {
+	// UseNumber keeps a number's own spelling. The default renders a large
+	// integer in exponent form.
+	dec := json.NewDecoder(bytes.NewReader(body))
+	dec.UseNumber()
+	var doc any
+	if err := dec.Decode(&doc); err != nil {
+		return err
+	}
+
+	var cell func(value any) string
+	cell = func(value any) string {
+		switch v := value.(type) {
+		case nil:
+			return ""
+		case string:
+			return v
+		case []any:
+			parts := make([]string, len(v))
+			for i, item := range v {
+				parts[i] = cell(item)
 			}
-			printers[name] = func(w io.Writer, _ cli_kitchensink_v1_names_proto_view, next func() ([]byte, error)) error {
-				return fn(w, next)
+			return strings.Join(parts, ",")
+		case map[string]any:
+			parts := make([]string, 0, len(v))
+			for _, k := range slices.Sorted(maps.Keys(v)) {
+				parts = append(parts, k+"="+cell(v[k]))
 			}
+			return strings.Join(parts, ",")
 		}
-		if o.DefaultOutput != "" {
-			defaultOutput = o.DefaultOutput
+		return fmt.Sprint(value)
+	}
+
+	width := 0
+	if f, ok := w.(*os.File); ok {
+		if cols, _, err := term.GetSize(int(f.Fd())); err == nil && cols > 0 {
+			width = cols
 		}
-		for name, fn := range o.Decoders {
-			if fn == nil {
-				delete(decoderFns, name)
-				continue
+	}
+	render := func(title string, fields []Cli_kitchensink_v1_names_proto_ViewField, rows []any) error {
+		if len(rows) == 0 {
+			return nil
+		}
+		columns := make([]*jsonpath.Path, len(fields))
+		for i, f := range fields {
+			path, err := jsonpath.Parse(f.Path)
+			if err != nil {
+				return fmt.Errorf("column %s: %w", f.Label, err)
 			}
-			decoderFns[name] = fn
+			columns[i] = path
 		}
-		for message, entries := range o.Views {
-			views[message] = cli_kitchensink_v1_names_proto_viewFields(message, entries)
-		}
-	}
-	cli_kitchensink_v1_names_proto_checkDefaultOutput(printers, defaultOutput)
-	decoders := cli_kitchensink_v1_names_proto_decoders(decoderFns)
 
-	// messageViews contains the derived views. Options.Views entries
-	// override them.
-	messageViews := map[string]cli_kitchensink_v1_names_proto_view{
-		"google.protobuf.Empty": {Fields: []cli_kitchensink_v1_names_proto_viewField{}},
-		"imported.v1.ImportedRequest": {Fields: []cli_kitchensink_v1_names_proto_viewField{
-			{Label: "id", Path: "id"},
-		}},
-		"kitchensink.v1.CasingRequest": {Fields: []cli_kitchensink_v1_names_proto_viewField{
-			{Label: "HTTPHeader", Path: "HTTPHeader"},
-			{Label: "camelField", Path: "camelField"},
-			{Label: "with_json_name", Path: "customName"},
-			{Label: "dotted", Path: "weird\\.name"},
-		}},
-		"kitchensink.v1.CollisionsRequest": {Fields: []cli_kitchensink_v1_names_proto_viewField{
-			{Label: "req", Path: "req"},
-			{Label: "err", Path: "err"},
-			{Label: "cmd", Path: "cmd"},
-			{Label: "resp", Path: "resp"},
-			{Label: "out", Path: "out"},
-			{Label: "frags", Path: "frags"},
-			{Label: "type", Path: "type"},
-			{Label: "func", Path: "func"},
-			{Label: "return", Path: "return"},
-			{Label: "import", Path: "import"},
-		}},
-		"kitchensink.v1.Envelope.Letter": {Fields: []cli_kitchensink_v1_names_proto_viewField{
-			{Label: "body", Path: "body"},
-		}},
-		"kitchensink.v1.Outer": {Fields: []cli_kitchensink_v1_names_proto_viewField{
-			{Label: "string_leaf", Path: "stringLeaf"},
-			{Label: "int64_leaf", Path: "int64Leaf"},
-			{Label: "middle.leaf", Path: "middle.leaf"},
-			{Label: "middle.inner.leaf", Path: "middle.inner.leaf"},
-			{Label: "middle.inner.deep.leaf", Path: "middle.inner.deep.leaf"},
-			{Label: "middle.inner.deep.deeper.leaf", Path: "middle.inner.deep.deeper.leaf"},
-			{Label: "middle.inner.deep.deeper.deepest.leaf", Path: "middle.inner.deep.deeper.deepest.leaf"},
-		}},
-		"kitchensink.v1.ReservedRequest": {Fields: []cli_kitchensink_v1_names_proto_viewField{
-			{Label: "filename", Path: "filename"},
-			{Label: "input", Path: "input"},
-			{Label: "help", Path: "help"},
-			{Label: "output", Path: "output"},
-		}},
-		"second.v1.PingRequest": {Fields: []cli_kitchensink_v1_names_proto_viewField{
-			{Label: "text", Path: "text"},
-		}},
+		t := table.NewWriter()
+		t.Style().Size.WidthMax = width
+		if title != "" {
+			t.SetTitle(title)
+		}
+		header := make(table.Row, len(fields))
+		for j, f := range fields {
+			header[j] = f.Label
+		}
+		t.AppendHeader(header)
+		for _, row := range rows {
+			line := make(table.Row, len(fields))
+			for j, path := range columns {
+				found := path.Select(row)
+				if len(found) == 1 {
+					line[j] = cell(found[0])
+					continue
+				}
+				line[j] = cell([]any(found))
+			}
+			t.AppendRow(line)
+		}
+		_, err := fmt.Fprintln(w, t.Render())
+		return err
 	}
 
-	viewFor := func(fullName string) cli_kitchensink_v1_names_proto_view {
-		return cli_kitchensink_v1_names_proto_viewFor(fullName, messageViews, views)
+	if len(view.Fields) > 0 {
+		if err := render("", view.Fields, []any{doc}); err != nil {
+			return err
+		}
 	}
-	outputPrinter := func(cmd *cobra.Command) (func(io.Writer, cli_kitchensink_v1_names_proto_view, func() ([]byte, error)) error, error) {
-		return cli_kitchensink_v1_names_proto_outputPrinter(cmd, printers, defaultOutput)
+	for _, list := range view.Lists {
+		path, err := jsonpath.Parse(list.Path)
+		if err != nil {
+			return fmt.Errorf("list %s: %w", list.Label, err)
+		}
+		if err := render(strings.ToUpper(list.Label), list.Fields, path.Select(doc)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func cli_kitchensink_v1_names_proto_resolveOutput(
+	out io.Writer,
+	response, method, format, columns string,
+	opt Cli_kitchensink_v1_names_proto_Options,
+) (Cli_kitchensink_v1_names_proto_Printer, Cli_kitchensink_v1_names_proto_View, error) {
+	if format == "" {
+		format = opt.DefaultPrinter
 	}
 
-	cmd := &cobra.Command{
-		Use:   "names",
-		Short: "NamesService's RPCs echo their requests.",
+	printer, found := opt.Printers[format]
+	if format != "" && !found {
+		return nil, Cli_kitchensink_v1_names_proto_View{}, cli_kitchensink_v1_names_proto_exitError{cli_kitchensink_v1_names_proto_exitUsage, fmt.Errorf(
+			"unknown output format %q; use one of: %s",
+			format, strings.Join(slices.Sorted(maps.Keys(opt.Printers)), ", "))}
 	}
-	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
-	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_names_proto_outputHelp(printers, defaultOutput))
-	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(slices.Sorted(maps.Keys(printers)), cobra.ShellCompDirectiveNoFileComp))
-	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
-	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
-	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_kitchensink_v1_names_proto_usage(err) })
-	cmd.AddCommand(func() *cobra.Command {
-		var flagReq string
-		var flagErr string
-		var flagCmd string
-		var flagResp string
-		var flagOut string
-		var flagFrags string
-		var flagType string
-		var flagFunc string
-		var flagReturn string
-		var flagImport string
-		sub := &cobra.Command{
-			Use:  "collisions",
-			Args: cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &CollisionsRequest{}
-					if err := protojson.Unmarshal([]byte("{\"req\":\"Mind the year, then celebrate!\",\"err\":\"Celebrate wins tied to the group.\",\"cmd\":\"Up to the company, we chase a smaller woman.\",\"resp\":\"Onto the fact, align expectations.\",\"out\":\"Few agree when the number spikes.\",\"frags\":\"The colorful hand being unexpectedly fondly.\",\"type\":\"Sample government at 9s intervals.\",\"func\":\"One wake when the day spikes.\",\"return\":\"Attribute gains to year where possible.\",\"import\":\"Surface risks around the time barely.\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CollisionsRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_kitchensink_v1_names_proto_callErr(ctx, err) }()
-				frags, err := cli_kitchensink_v1_names_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("req") {
-					doc, err := sjson.SetBytes([]byte("{}"), "req", flagReq)
-					if err != nil {
-						return fmt.Errorf("flag --req: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --req", JSON: doc})
-				}
-				if cmd.Flags().Changed("err") {
-					doc, err := sjson.SetBytes([]byte("{}"), "err", flagErr)
-					if err != nil {
-						return fmt.Errorf("flag --err: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --err", JSON: doc})
-				}
-				if cmd.Flags().Changed("cmd") {
-					doc, err := sjson.SetBytes([]byte("{}"), "cmd", flagCmd)
-					if err != nil {
-						return fmt.Errorf("flag --cmd: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --cmd", JSON: doc})
-				}
-				if cmd.Flags().Changed("resp") {
-					doc, err := sjson.SetBytes([]byte("{}"), "resp", flagResp)
-					if err != nil {
-						return fmt.Errorf("flag --resp: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --resp", JSON: doc})
-				}
-				if cmd.Flags().Changed("out") {
-					doc, err := sjson.SetBytes([]byte("{}"), "out", flagOut)
-					if err != nil {
-						return fmt.Errorf("flag --out: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --out", JSON: doc})
-				}
-				if cmd.Flags().Changed("frags") {
-					doc, err := sjson.SetBytes([]byte("{}"), "frags", flagFrags)
-					if err != nil {
-						return fmt.Errorf("flag --frags: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --frags", JSON: doc})
-				}
-				if cmd.Flags().Changed("type") {
-					doc, err := sjson.SetBytes([]byte("{}"), "type", flagType)
-					if err != nil {
-						return fmt.Errorf("flag --type: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --type", JSON: doc})
-				}
-				if cmd.Flags().Changed("func") {
-					doc, err := sjson.SetBytes([]byte("{}"), "func", flagFunc)
-					if err != nil {
-						return fmt.Errorf("flag --func: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --func", JSON: doc})
-				}
-				if cmd.Flags().Changed("return") {
-					doc, err := sjson.SetBytes([]byte("{}"), "return", flagReturn)
-					if err != nil {
-						return fmt.Errorf("flag --return: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --return", JSON: doc})
-				}
-				if cmd.Flags().Changed("import") {
-					doc, err := sjson.SetBytes([]byte("{}"), "import", flagImport)
-					if err != nil {
-						return fmt.Errorf("flag --import: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --import", JSON: doc})
-				}
-				req := &CollisionsRequest{}
-				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CollisionsRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				resp, err := client.Collisions(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CollisionsRequest"), cli_kitchensink_v1_names_proto_oneRecord(resp))
-			},
+	if format == "" {
+		// A removed printer cannot break the no-flag default.
+		tty := false
+		if f, ok := out.(*os.File); ok {
+			tty = term.IsTerminal(int(f.Fd()))
 		}
-		sub.Flags().StringVar(&flagReq, "req", flagReq, "")
-		sub.Flags().StringVar(&flagErr, "err", flagErr, "")
-		sub.Flags().StringVar(&flagCmd, "cmd", flagCmd, "")
-		sub.Flags().StringVar(&flagResp, "resp", flagResp, "")
-		sub.Flags().StringVar(&flagOut, "out", flagOut, "")
-		sub.Flags().StringVar(&flagFrags, "frags", flagFrags, "")
-		sub.Flags().StringVar(&flagType, "type", flagType, "")
-		sub.Flags().StringVar(&flagFunc, "func", flagFunc, "")
-		sub.Flags().StringVar(&flagReturn, "return", flagReturn, "")
-		sub.Flags().StringVar(&flagImport, "import", flagImport, "")
-		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagId string
-		sub := &cobra.Command{
-			Use:  "imported",
-			Args: cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &v1.ImportedRequest{}
-					if err := protojson.Unmarshal([]byte("{\"id\":\"Mind the year, then celebrate!\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("imported.v1.ImportedRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_kitchensink_v1_names_proto_callErr(ctx, err) }()
-				frags, err := cli_kitchensink_v1_names_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("id") {
-					doc, err := sjson.SetBytes([]byte("{}"), "id", flagId)
-					if err != nil {
-						return fmt.Errorf("flag --id: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --id", JSON: doc})
-				}
-				req := &v1.ImportedRequest{}
-				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("imported.v1.ImportedRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				resp, err := client.Imported(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("imported.v1.ImportedRequest"), cli_kitchensink_v1_names_proto_oneRecord(resp))
-			},
+		switch {
+		case columns != "":
+			printer = Cli_kitchensink_v1_names_proto_Printers["table"]
+		case tty:
+			printer = Cli_kitchensink_v1_names_proto_Printers["json"]
+		default:
+			printer = Cli_kitchensink_v1_names_proto_Printers["jsonl"]
 		}
-		sub.Flags().StringVar(&flagId, "id", flagId, "")
-		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagText string
-		sub := &cobra.Command{
-			Use:  "second",
-			Args: cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &v12.PingRequest{}
-					if err := protojson.Unmarshal([]byte("{\"text\":\"Mind the year, then celebrate!\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("second.v1.PingRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_kitchensink_v1_names_proto_callErr(ctx, err) }()
-				frags, err := cli_kitchensink_v1_names_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("text") {
-					doc, err := sjson.SetBytes([]byte("{}"), "text", flagText)
-					if err != nil {
-						return fmt.Errorf("flag --text: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --text", JSON: doc})
-				}
-				req := &v12.PingRequest{}
-				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("second.v1.PingRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				resp, err := client.Second(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("second.v1.PingRequest"), cli_kitchensink_v1_names_proto_oneRecord(resp))
-			},
+	}
+
+	if columns != "" {
+		parts := strings.Split(columns, ",")
+		fields := make([]Cli_kitchensink_v1_names_proto_ViewField, len(parts))
+		for i, part := range parts {
+			label, path, ok := strings.Cut(part, ":")
+			if !ok {
+				return nil, Cli_kitchensink_v1_names_proto_View{}, cli_kitchensink_v1_names_proto_exitError{cli_kitchensink_v1_names_proto_exitUsage, fmt.Errorf(
+					"--columns entry %q has no colon; write LABEL:path", part)}
+			}
+			if _, err := jsonpath.Parse(path); err != nil {
+				return nil, Cli_kitchensink_v1_names_proto_View{}, cli_kitchensink_v1_names_proto_exitError{cli_kitchensink_v1_names_proto_exitUsage, fmt.Errorf(
+					"--columns entry %q: %w", part, err)}
+			}
+			fields[i] = Cli_kitchensink_v1_names_proto_ViewField{Label: label, Path: path}
 		}
-		sub.Flags().StringVar(&flagText, "text", flagText, "")
-		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagFilename string
-		var flagInput string
-		var flagHelp string
-		var flagOutput string
-		sub := &cobra.Command{
-			Use:  "reserved",
-			Args: cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &ReservedRequest{}
-					if err := protojson.Unmarshal([]byte("{\"filename\":\"Mind the year, then celebrate!\",\"input\":\"Celebrate wins tied to the group.\",\"help\":\"Up to the company, we chase a smaller woman.\",\"output\":\"Onto the fact, align expectations.\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.ReservedRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_kitchensink_v1_names_proto_callErr(ctx, err) }()
-				frags, err := cli_kitchensink_v1_names_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("arg-filename") {
-					doc, err := sjson.SetBytes([]byte("{}"), "filename", flagFilename)
-					if err != nil {
-						return fmt.Errorf("flag --arg-filename: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --arg-filename", JSON: doc})
-				}
-				if cmd.Flags().Changed("arg-input") {
-					doc, err := sjson.SetBytes([]byte("{}"), "input", flagInput)
-					if err != nil {
-						return fmt.Errorf("flag --arg-input: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --arg-input", JSON: doc})
-				}
-				if cmd.Flags().Changed("arg-help") {
-					doc, err := sjson.SetBytes([]byte("{}"), "help", flagHelp)
-					if err != nil {
-						return fmt.Errorf("flag --arg-help: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --arg-help", JSON: doc})
-				}
-				if cmd.Flags().Changed("arg-output") {
-					doc, err := sjson.SetBytes([]byte("{}"), "output", flagOutput)
-					if err != nil {
-						return fmt.Errorf("flag --arg-output: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --arg-output", JSON: doc})
-				}
-				req := &ReservedRequest{}
-				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.ReservedRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				resp, err := client.Reserved(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.ReservedRequest"), cli_kitchensink_v1_names_proto_oneRecord(resp))
-			},
-		}
-		sub.Flags().StringVar(&flagFilename, "arg-filename", flagFilename, "")
-		sub.Flags().StringVar(&flagInput, "arg-input", flagInput, "")
-		sub.Flags().StringVar(&flagHelp, "arg-help", flagHelp, "")
-		sub.Flags().StringVar(&flagOutput, "arg-output", flagOutput, "")
-		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		sub := &cobra.Command{
-			Use:  "empty",
-			Long: "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:\n\n    service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }",
-			Args: cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &emptypb.Empty{}
-					if err := protojson.Unmarshal([]byte("{}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_kitchensink_v1_names_proto_callErr(ctx, err) }()
-				frags, err := cli_kitchensink_v1_names_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				req := &emptypb.Empty{}
-				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				resp, err := client.Empty(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("google.protobuf.Empty"), cli_kitchensink_v1_names_proto_oneRecord(resp))
-			},
-		}
-		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagHttpHeader string
-		var flagCamelField string
-		var flagWithJsonName string
-		var flagDotted string
-		sub := &cobra.Command{
-			Use:  "http-call",
-			Args: cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &CasingRequest{}
-					if err := protojson.Unmarshal([]byte("{\"HTTPHeader\":\"Mind the year, then celebrate!\",\"camelField\":\"Celebrate wins tied to the group.\",\"customName\":\"Up to the company, we chase a smaller woman.\",\"weird.name\":\"Onto the fact, align expectations.\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CasingRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_kitchensink_v1_names_proto_callErr(ctx, err) }()
-				frags, err := cli_kitchensink_v1_names_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("http-header") {
-					doc, err := sjson.SetBytes([]byte("{}"), "HTTPHeader", flagHttpHeader)
-					if err != nil {
-						return fmt.Errorf("flag --http-header: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --http-header", JSON: doc})
-				}
-				if cmd.Flags().Changed("camel-field") {
-					doc, err := sjson.SetBytes([]byte("{}"), "camelField", flagCamelField)
-					if err != nil {
-						return fmt.Errorf("flag --camel-field: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --camel-field", JSON: doc})
-				}
-				if cmd.Flags().Changed("with-json-name") {
-					doc, err := sjson.SetBytes([]byte("{}"), "with_json_name", flagWithJsonName)
-					if err != nil {
-						return fmt.Errorf("flag --with-json-name: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --with-json-name", JSON: doc})
-				}
-				if cmd.Flags().Changed("dotted") {
-					doc, err := sjson.SetBytes([]byte("{}"), "dotted", flagDotted)
-					if err != nil {
-						return fmt.Errorf("flag --dotted: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --dotted", JSON: doc})
-				}
-				req := &CasingRequest{}
-				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CasingRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				resp, err := client.HTTPCall(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CasingRequest"), cli_kitchensink_v1_names_proto_oneRecord(resp))
-			},
-		}
-		sub.Flags().StringVar(&flagHttpHeader, "http-header", flagHttpHeader, "")
-		sub.Flags().StringVar(&flagCamelField, "camel-field", flagCamelField, "")
-		sub.Flags().StringVar(&flagWithJsonName, "with-json-name", flagWithJsonName, "")
-		sub.Flags().StringVar(&flagDotted, "dotted", flagDotted, "")
-		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagHttpHeader string
-		var flagCamelField string
-		var flagWithJsonName string
-		var flagDotted string
-		sub := &cobra.Command{
-			Use:  "lower-snake",
-			Args: cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &CasingRequest{}
-					if err := protojson.Unmarshal([]byte("{\"HTTPHeader\":\"Mind the year, then celebrate!\",\"camelField\":\"Celebrate wins tied to the group.\",\"customName\":\"Up to the company, we chase a smaller woman.\",\"weird.name\":\"Onto the fact, align expectations.\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CasingRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_kitchensink_v1_names_proto_callErr(ctx, err) }()
-				frags, err := cli_kitchensink_v1_names_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("http-header") {
-					doc, err := sjson.SetBytes([]byte("{}"), "HTTPHeader", flagHttpHeader)
-					if err != nil {
-						return fmt.Errorf("flag --http-header: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --http-header", JSON: doc})
-				}
-				if cmd.Flags().Changed("camel-field") {
-					doc, err := sjson.SetBytes([]byte("{}"), "camelField", flagCamelField)
-					if err != nil {
-						return fmt.Errorf("flag --camel-field: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --camel-field", JSON: doc})
-				}
-				if cmd.Flags().Changed("with-json-name") {
-					doc, err := sjson.SetBytes([]byte("{}"), "with_json_name", flagWithJsonName)
-					if err != nil {
-						return fmt.Errorf("flag --with-json-name: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --with-json-name", JSON: doc})
-				}
-				if cmd.Flags().Changed("dotted") {
-					doc, err := sjson.SetBytes([]byte("{}"), "dotted", flagDotted)
-					if err != nil {
-						return fmt.Errorf("flag --dotted: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --dotted", JSON: doc})
-				}
-				req := &CasingRequest{}
-				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CasingRequest"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				resp, err := client.LowerSnake(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CasingRequest"), cli_kitchensink_v1_names_proto_oneRecord(resp))
-			},
-		}
-		sub.Flags().StringVar(&flagHttpHeader, "http-header", flagHttpHeader, "")
-		sub.Flags().StringVar(&flagCamelField, "camel-field", flagCamelField, "")
-		sub.Flags().StringVar(&flagWithJsonName, "with-json-name", flagWithJsonName, "")
-		sub.Flags().StringVar(&flagDotted, "dotted", flagDotted, "")
-		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagStringLeaf string
-		var flagInt64Leaf int64
-		var flagMiddle string
-		var flagMiddleLeaf string
-		var flagMiddleInner string
-		var flagMiddleInnerLeaf string
-		var flagMiddleInnerDeep string
-		var flagMiddleInnerDeepLeaf string
-		var flagMiddleInnerDeepDeeper string
-		var flagMiddleInnerDeepDeeperLeaf string
-		var flagMiddleInnerDeepDeeperDeepest string
-		var flagMiddleInnerDeepDeeperDeepestLeaf string
-		sub := &cobra.Command{
-			Use:  "borrow",
-			Args: cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &Outer{}
-					if err := protojson.Unmarshal([]byte("{\"stringLeaf\":\"Mind the year, then celebrate!\",\"int64Leaf\":\"864\",\"middle\":{\"leaf\":\"Launch the world midweek for clarity.\",\"inner\":{\"leaf\":\"Retire outdated company each quarter.\",\"deep\":{\"leaf\":\"Protect the woman under enthusiastic load.\",\"deeper\":{\"leaf\":\"Theirs life has ready for fiction.\",\"deepest\":{\"leaf\":\"Publish a changelog entry for the way.\"}}}}}}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.Outer"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_kitchensink_v1_names_proto_callErr(ctx, err) }()
-				frags, err := cli_kitchensink_v1_names_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("string-leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "string_leaf", flagStringLeaf)
-					if err != nil {
-						return fmt.Errorf("flag --string-leaf: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --string-leaf", JSON: doc})
-				}
-				if cmd.Flags().Changed("int64-leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "int64_leaf", flagInt64Leaf)
-					if err != nil {
-						return fmt.Errorf("flag --int64-leaf: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --int64-leaf", JSON: doc})
-				}
-				if cmd.Flags().Changed("middle") {
-					if !json.Valid([]byte(flagMiddle)) {
-						return fmt.Errorf("flag --middle: %q is not valid JSON", flagMiddle)
-					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "middle", []byte(flagMiddle))
-					if err != nil {
-						return fmt.Errorf("flag --middle: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --middle", JSON: doc})
-				}
-				if cmd.Flags().Changed("middle.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "middle.leaf", flagMiddleLeaf)
-					if err != nil {
-						return fmt.Errorf("flag --middle.leaf: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --middle.leaf", JSON: doc})
-				}
-				if cmd.Flags().Changed("middle.inner") {
-					if !json.Valid([]byte(flagMiddleInner)) {
-						return fmt.Errorf("flag --middle.inner: %q is not valid JSON", flagMiddleInner)
-					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "middle.inner", []byte(flagMiddleInner))
-					if err != nil {
-						return fmt.Errorf("flag --middle.inner: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --middle.inner", JSON: doc})
-				}
-				if cmd.Flags().Changed("middle.inner.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "middle.inner.leaf", flagMiddleInnerLeaf)
-					if err != nil {
-						return fmt.Errorf("flag --middle.inner.leaf: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --middle.inner.leaf", JSON: doc})
-				}
-				if cmd.Flags().Changed("middle.inner.deep") {
-					if !json.Valid([]byte(flagMiddleInnerDeep)) {
-						return fmt.Errorf("flag --middle.inner.deep: %q is not valid JSON", flagMiddleInnerDeep)
-					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "middle.inner.deep", []byte(flagMiddleInnerDeep))
-					if err != nil {
-						return fmt.Errorf("flag --middle.inner.deep: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --middle.inner.deep", JSON: doc})
-				}
-				if cmd.Flags().Changed("middle.inner.deep.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "middle.inner.deep.leaf", flagMiddleInnerDeepLeaf)
-					if err != nil {
-						return fmt.Errorf("flag --middle.inner.deep.leaf: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --middle.inner.deep.leaf", JSON: doc})
-				}
-				if cmd.Flags().Changed("middle.inner.deep.deeper") {
-					if !json.Valid([]byte(flagMiddleInnerDeepDeeper)) {
-						return fmt.Errorf("flag --middle.inner.deep.deeper: %q is not valid JSON", flagMiddleInnerDeepDeeper)
-					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "middle.inner.deep.deeper", []byte(flagMiddleInnerDeepDeeper))
-					if err != nil {
-						return fmt.Errorf("flag --middle.inner.deep.deeper: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --middle.inner.deep.deeper", JSON: doc})
-				}
-				if cmd.Flags().Changed("middle.inner.deep.deeper.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "middle.inner.deep.deeper.leaf", flagMiddleInnerDeepDeeperLeaf)
-					if err != nil {
-						return fmt.Errorf("flag --middle.inner.deep.deeper.leaf: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --middle.inner.deep.deeper.leaf", JSON: doc})
-				}
-				if cmd.Flags().Changed("middle.inner.deep.deeper.deepest") {
-					if !json.Valid([]byte(flagMiddleInnerDeepDeeperDeepest)) {
-						return fmt.Errorf("flag --middle.inner.deep.deeper.deepest: %q is not valid JSON", flagMiddleInnerDeepDeeperDeepest)
-					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "middle.inner.deep.deeper.deepest", []byte(flagMiddleInnerDeepDeeperDeepest))
-					if err != nil {
-						return fmt.Errorf("flag --middle.inner.deep.deeper.deepest: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --middle.inner.deep.deeper.deepest", JSON: doc})
-				}
-				if cmd.Flags().Changed("middle.inner.deep.deeper.deepest.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "middle.inner.deep.deeper.deepest.leaf", flagMiddleInnerDeepDeeperDeepestLeaf)
-					if err != nil {
-						return fmt.Errorf("flag --middle.inner.deep.deeper.deepest.leaf: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --middle.inner.deep.deeper.deepest.leaf", JSON: doc})
-				}
-				req := &Outer{}
-				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.Outer"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				resp, err := client.Borrow(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.Outer"), cli_kitchensink_v1_names_proto_oneRecord(resp))
-			},
-		}
-		sub.Flags().StringVar(&flagStringLeaf, "string-leaf", flagStringLeaf, "")
-		sub.Flags().Int64Var(&flagInt64Leaf, "int64-leaf", flagInt64Leaf, "")
-		sub.Flags().StringVar(&flagMiddle, "middle", flagMiddle, "")
-		sub.Flags().StringVar(&flagMiddleLeaf, "middle.leaf", flagMiddleLeaf, "")
-		sub.Flags().StringVar(&flagMiddleInner, "middle.inner", flagMiddleInner, "")
-		sub.Flags().StringVar(&flagMiddleInnerLeaf, "middle.inner.leaf", flagMiddleInnerLeaf, "")
-		sub.Flags().StringVar(&flagMiddleInnerDeep, "middle.inner.deep", flagMiddleInnerDeep, "")
-		sub.Flags().StringVar(&flagMiddleInnerDeepLeaf, "middle.inner.deep.leaf", flagMiddleInnerDeepLeaf, "")
-		sub.Flags().StringVar(&flagMiddleInnerDeepDeeper, "middle.inner.deep.deeper", flagMiddleInnerDeepDeeper, "")
-		sub.Flags().StringVar(&flagMiddleInnerDeepDeeperLeaf, "middle.inner.deep.deeper.leaf", flagMiddleInnerDeepDeeperLeaf, "")
-		sub.Flags().StringVar(&flagMiddleInnerDeepDeeperDeepest, "middle.inner.deep.deeper.deepest", flagMiddleInnerDeepDeeperDeepest, "")
-		sub.Flags().StringVar(&flagMiddleInnerDeepDeeperDeepestLeaf, "middle.inner.deep.deeper.deepest.leaf", flagMiddleInnerDeepDeeperDeepestLeaf, "")
-		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagBody string
-		sub := &cobra.Command{
-			Use:  "nested",
-			Args: cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &Envelope_Letter{}
-					if err := protojson.Unmarshal([]byte("{\"body\":\"Mind the year, then celebrate!\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.Envelope.Letter"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
-				if err != nil {
-					return err
-				}
-				// Set after the checks above. Those checks keep cobra's usage.
-				cmd.SilenceUsage = true
-				ctx, cancel := cli_kitchensink_v1_names_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_kitchensink_v1_names_proto_callErr(ctx, err) }()
-				frags, err := cli_kitchensink_v1_names_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
-				}
-				if cmd.Flags().Changed("body") {
-					doc, err := sjson.SetBytes([]byte("{}"), "body", flagBody)
-					if err != nil {
-						return fmt.Errorf("flag --body: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_names_proto_fragment{Source: "flag --body", JSON: doc})
-				}
-				req := &Envelope_Letter{}
-				if err := cli_kitchensink_v1_names_proto_buildRequest(req, frags); err != nil {
-					return err
-				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.Envelope.Letter"), cli_kitchensink_v1_names_proto_oneRecord(req))
-				}
-				resp, err := client.Nested(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.Envelope.Letter"), cli_kitchensink_v1_names_proto_oneRecord(resp))
-			},
-		}
-		sub.Flags().StringVar(&flagBody, "body", flagBody, "")
-		cli_kitchensink_v1_names_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	return cmd
+		return printer, Cli_kitchensink_v1_names_proto_View{Fields: fields}, nil
+	}
+	if override, ok := opt.Views[method]; ok {
+		return printer, override, nil
+	}
+	return printer, cli_kitchensink_v1_names_proto_messageViews[response], nil
+}
+
+// =============================================================================
+// Call: each rpc shape runs its call, or prints the requests instead.
+// =============================================================================
+
+func cli_kitchensink_v1_names_proto_callContext(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
+	if timeout > 0 {
+		return context.WithTimeout(ctx, timeout)
+	}
+	return context.WithCancel(ctx)
+}
+
+func cli_kitchensink_v1_names_proto_runUnary[Req, Res proto.Message](ctx context.Context, out io.Writer, printer Cli_kitchensink_v1_names_proto_Printer, view Cli_kitchensink_v1_names_proto_View, req Req, dryRun bool, timeout time.Duration, call func(context.Context, Req, ...grpc.CallOption) (Res, error)) (err error) {
+	if dryRun {
+		return cli_kitchensink_v1_names_proto_printMessage(out, printer, Cli_kitchensink_v1_names_proto_View{}, req)
+	}
+	ctx, cancel := cli_kitchensink_v1_names_proto_callContext(ctx, timeout)
+	defer cancel()
+	defer func() { err = cli_kitchensink_v1_names_proto_withExitCode(ctx, err) }()
+
+	resp, err := call(ctx, req)
+	if err != nil {
+		return err
+	}
+	return cli_kitchensink_v1_names_proto_printMessage(out, printer, view, resp)
+}
+
+// =============================================================================
+// Exit: every failure contains the code the shell sees.
+// =============================================================================
+
+const (
+	cli_kitchensink_v1_names_proto_exitFailure   = 1
+	cli_kitchensink_v1_names_proto_exitUsage     = 2
+	cli_kitchensink_v1_names_proto_exitTimeout   = 124
+	cli_kitchensink_v1_names_proto_exitInterrupt = 130
+)
+
+type cli_kitchensink_v1_names_proto_exitError struct {
+	code int
+	err  error
+}
+
+// Error removes the gRPC "rpc error: ..." wrapper.
+func (e cli_kitchensink_v1_names_proto_exitError) Error() string {
+	if msg := status.Convert(e.err).Message(); msg != "" {
+		return msg
+	}
+	return e.err.Error()
+}
+
+func (e cli_kitchensink_v1_names_proto_exitError) Unwrap() error { return e.err }
+func (e cli_kitchensink_v1_names_proto_exitError) ExitCode() int { return e.code }
+
+// The context, not the gRPC status, decides the exit code.
+func cli_kitchensink_v1_names_proto_withExitCode(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+	var coded cli_kitchensink_v1_names_proto_exitError
+	if errors.As(err, &coded) {
+		return err
+	}
+	switch ctx.Err() {
+	case context.DeadlineExceeded:
+		return cli_kitchensink_v1_names_proto_exitError{cli_kitchensink_v1_names_proto_exitTimeout, err}
+	case context.Canceled:
+		return cli_kitchensink_v1_names_proto_exitError{cli_kitchensink_v1_names_proto_exitInterrupt, err}
+	}
+	return cli_kitchensink_v1_names_proto_exitError{cli_kitchensink_v1_names_proto_exitFailure, err}
+}
+
+func cli_kitchensink_v1_names_proto_noArgs(cmd *cobra.Command, args []string) error {
+	if err := cobra.NoArgs(cmd, args); err != nil {
+		return cli_kitchensink_v1_names_proto_exitError{cli_kitchensink_v1_names_proto_exitUsage, err}
+	}
+	return nil
 }

@@ -1,7 +1,7 @@
 version: v2
 modules:
   - path: proto
-    name: buf.build/braveokafor/proto-to-cli-cli
+    name: buf.build/braveokafor/protoc-gen-cli
   - path: examples/bookstore/proto
   - path: examples/bookstore-annotated/proto
   - path: examples/kitchen-sink/proto

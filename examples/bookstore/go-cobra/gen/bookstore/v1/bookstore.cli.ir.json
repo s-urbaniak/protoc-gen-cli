@@ -5,47 +5,45 @@
   "proto_package": "bookstore.v1",
   "file_options": {
     "go_package_name": "bookstorev1",
-    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
-    "go_descriptor_name": "File_bookstore_v1_bookstore_proto"
+    "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1"
   },
   "services": [
     {
+      "full_name": "bookstore.v1.BookstoreService",
       "proto_name": "BookstoreService",
-      "go_name": "BookstoreService",
       "name": "bookstore",
       "short_help": "A simple Bookstore API.",
       "long_help": "A simple Bookstore API.\n\nThe API manages shelves and books resources. Shelves contain books.",
       "commands": [
         {
+          "full_name": "bookstore.v1.BookstoreService.ListShelves",
           "proto_name": "ListShelves",
-          "go_name": "ListShelves",
           "name": "list-shelves",
           "short_help": "Returns a list of all shelves in the bookstore.",
-          "long_help": "Returns a list of all shelves in the bookstore.\n\nA generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:\n\n    service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }",
-          "input": {
+          "request": {
             "full_name": "google.protobuf.Empty",
             "proto_file": "google/protobuf/empty.proto",
             "proto_package": "google.protobuf",
-            "go_name": "Empty",
             "go_import_path": "google.golang.org/protobuf/types/known/emptypb",
             "go_package_name": "emptypb"
           },
-          "output": "bookstore.v1.ListShelvesResponse",
+          "response": "bookstore.v1.ListShelvesResponse",
+          "shape": "unary",
           "view": {
             "full_name": "bookstore.v1.ListShelvesResponse",
             "lists": [
               {
                 "full_name": "bookstore.v1.Shelf",
                 "label": "shelves",
-                "path": "shelves",
+                "path": "$[\"shelves\"][*]",
                 "fields": [
                   {
                     "label": "id",
-                    "path": "id"
+                    "path": "$[\"id\"]"
                   },
                   {
                     "label": "theme",
-                    "path": "theme"
+                    "path": "$[\"theme\"]"
                   }
                 ]
               }
@@ -54,20 +52,20 @@
           "example_json": "{}"
         },
         {
+          "full_name": "bookstore.v1.BookstoreService.CreateShelf",
           "proto_name": "CreateShelf",
-          "go_name": "CreateShelf",
           "name": "create-shelf",
           "short_help": "Creates a new shelf in the bookstore.",
           "long_help": "Creates a new shelf in the bookstore.\n\nRequest message for CreateShelf method.",
-          "input": {
+          "request": {
             "full_name": "bookstore.v1.CreateShelfRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
             "proto_package": "bookstore.v1",
-            "go_name": "CreateShelfRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.Shelf",
+          "response": "bookstore.v1.Shelf",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "shelf",
@@ -93,31 +91,31 @@
             "fields": [
               {
                 "label": "id",
-                "path": "id"
+                "path": "$[\"id\"]"
               },
               {
                 "label": "theme",
-                "path": "theme"
+                "path": "$[\"theme\"]"
               }
             ]
           },
-          "example_json": "{\"shelf\":{\"id\":\"998\",\"theme\":\"Protect the number under uninterested load.\"}}"
+          "example_json": "{\"shelf\":{\"id\":\"998\",\"theme\":\"Aut et repudiandae.\"}}"
         },
         {
+          "full_name": "bookstore.v1.BookstoreService.GetShelf",
           "proto_name": "GetShelf",
-          "go_name": "GetShelf",
           "name": "get-shelf",
           "short_help": "Returns a specific bookstore shelf.",
           "long_help": "Returns a specific bookstore shelf.\n\nRequest message for GetShelf method.",
-          "input": {
+          "request": {
             "full_name": "bookstore.v1.GetShelfRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
             "proto_package": "bookstore.v1",
-            "go_name": "GetShelfRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.Shelf",
+          "response": "bookstore.v1.Shelf",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "shelf",
@@ -131,31 +129,31 @@
             "fields": [
               {
                 "label": "id",
-                "path": "id"
+                "path": "$[\"id\"]"
               },
               {
                 "label": "theme",
-                "path": "theme"
+                "path": "$[\"theme\"]"
               }
             ]
           },
           "example_json": "{\"shelf\":\"998\"}"
         },
         {
+          "full_name": "bookstore.v1.BookstoreService.DeleteShelf",
           "proto_name": "DeleteShelf",
-          "go_name": "DeleteShelf",
           "name": "delete-shelf",
           "short_help": "Deletes a shelf, including all books that are stored on the shelf.",
           "long_help": "Deletes a shelf, including all books that are stored on the shelf.\n\nRequest message for DeleteShelf method.",
-          "input": {
+          "request": {
             "full_name": "bookstore.v1.DeleteShelfRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
             "proto_package": "bookstore.v1",
-            "go_name": "DeleteShelfRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "google.protobuf.Empty",
+          "response": "google.protobuf.Empty",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "shelf",
@@ -170,20 +168,20 @@
           "example_json": "{\"shelf\":\"998\"}"
         },
         {
+          "full_name": "bookstore.v1.BookstoreService.ListBooks",
           "proto_name": "ListBooks",
-          "go_name": "ListBooks",
           "name": "list-books",
           "short_help": "Returns a list of books on a shelf.",
           "long_help": "Returns a list of books on a shelf.\n\nRequest message for ListBooks method.",
-          "input": {
+          "request": {
             "full_name": "bookstore.v1.ListBooksRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
             "proto_package": "bookstore.v1",
-            "go_name": "ListBooksRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.ListBooksResponse",
+          "response": "bookstore.v1.ListBooksResponse",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "shelf",
@@ -198,19 +196,19 @@
               {
                 "full_name": "bookstore.v1.Book",
                 "label": "books",
-                "path": "books",
+                "path": "$[\"books\"][*]",
                 "fields": [
                   {
                     "label": "id",
-                    "path": "id"
+                    "path": "$[\"id\"]"
                   },
                   {
                     "label": "author",
-                    "path": "author"
+                    "path": "$[\"author\"]"
                   },
                   {
                     "label": "title",
-                    "path": "title"
+                    "path": "$[\"title\"]"
                   }
                 ]
               }
@@ -219,20 +217,20 @@
           "example_json": "{\"shelf\":\"998\"}"
         },
         {
+          "full_name": "bookstore.v1.BookstoreService.CreateBook",
           "proto_name": "CreateBook",
-          "go_name": "CreateBook",
           "name": "create-book",
           "short_help": "Creates a new book.",
           "long_help": "Creates a new book.\n\nRequest message for CreateBook method.",
-          "input": {
+          "request": {
             "full_name": "bookstore.v1.CreateBookRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
             "proto_package": "bookstore.v1",
-            "go_name": "CreateBookRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.Book",
+          "response": "bookstore.v1.Book",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "shelf",
@@ -270,35 +268,35 @@
             "fields": [
               {
                 "label": "id",
-                "path": "id"
+                "path": "$[\"id\"]"
               },
               {
                 "label": "author",
-                "path": "author"
+                "path": "$[\"author\"]"
               },
               {
                 "label": "title",
-                "path": "title"
+                "path": "$[\"title\"]"
               }
             ]
           },
-          "example_json": "{\"shelf\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Celebrate wins tied to the group.\",\"title\":\"Up to the company, we chase a smaller woman.\"}}"
+          "example_json": "{\"shelf\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Et repudiandae quis.\",\"title\":\"Recusandae vel odit.\"}}"
         },
         {
+          "full_name": "bookstore.v1.BookstoreService.GetBook",
           "proto_name": "GetBook",
-          "go_name": "GetBook",
           "name": "get-book",
           "short_help": "Returns a specific book.",
           "long_help": "Returns a specific book.\n\nRequest message for GetBook method.",
-          "input": {
+          "request": {
             "full_name": "bookstore.v1.GetBookRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
             "proto_package": "bookstore.v1",
-            "go_name": "GetBookRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.Book",
+          "response": "bookstore.v1.Book",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "shelf",
@@ -318,35 +316,35 @@
             "fields": [
               {
                 "label": "id",
-                "path": "id"
+                "path": "$[\"id\"]"
               },
               {
                 "label": "author",
-                "path": "author"
+                "path": "$[\"author\"]"
               },
               {
                 "label": "title",
-                "path": "title"
+                "path": "$[\"title\"]"
               }
             ]
           },
           "example_json": "{\"shelf\":\"998\",\"book\":\"103\"}"
         },
         {
+          "full_name": "bookstore.v1.BookstoreService.DeleteBook",
           "proto_name": "DeleteBook",
-          "go_name": "DeleteBook",
           "name": "delete-book",
           "short_help": "Deletes a book from a shelf.",
           "long_help": "Deletes a book from a shelf.\n\nRequest message for DeleteBook method.",
-          "input": {
+          "request": {
             "full_name": "bookstore.v1.DeleteBookRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
             "proto_package": "bookstore.v1",
-            "go_name": "DeleteBookRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "google.protobuf.Empty",
+          "response": "google.protobuf.Empty",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "shelf",
@@ -369,25 +367,25 @@
       ]
     },
     {
+      "full_name": "bookstore.v1.AuctionsService",
       "proto_name": "AuctionsService",
-      "go_name": "AuctionsService",
       "name": "auctions",
       "short_help": "AuctionsService sells the store's rare books under the hammer.",
       "commands": [
         {
+          "full_name": "bookstore.v1.AuctionsService.CreateAuction",
           "proto_name": "CreateAuction",
-          "go_name": "CreateAuction",
           "name": "create-auction",
           "short_help": "CreateAuction consigns a lot and schedules its auction.",
-          "input": {
+          "request": {
             "full_name": "bookstore.v1.CreateAuctionRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
             "proto_package": "bookstore.v1",
-            "go_name": "CreateAuctionRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.Auction",
+          "response": "bookstore.v1.Auction",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "lot",
@@ -486,94 +484,94 @@
             "fields": [
               {
                 "label": "id",
-                "path": "id"
+                "path": "$[\"id\"]"
               },
               {
                 "label": "lot.id",
-                "path": "lot.id"
+                "path": "$[\"lot\"][\"id\"]"
               },
               {
                 "label": "lot.book.id",
-                "path": "lot.book.id"
+                "path": "$[\"lot\"][\"book\"][\"id\"]"
               },
               {
                 "label": "lot.book.author",
-                "path": "lot.book.author"
+                "path": "$[\"lot\"][\"book\"][\"author\"]"
               },
               {
                 "label": "lot.book.title",
-                "path": "lot.book.title"
+                "path": "$[\"lot\"][\"book\"][\"title\"]"
               },
               {
                 "label": "lot.condition",
-                "path": "lot.condition"
+                "path": "$[\"lot\"][\"condition\"]"
               },
               {
                 "label": "lot.reserve_price",
-                "path": "lot.reservePrice"
+                "path": "$[\"lot\"][\"reservePrice\"]"
               },
               {
                 "label": "lot.provenance",
-                "path": "lot.provenance"
+                "path": "$[\"lot\"][\"provenance\"]"
               },
               {
                 "label": "lot.flaws",
-                "path": "lot.flaws"
+                "path": "$[\"lot\"][\"flaws\"]"
               },
               {
                 "label": "lot.attributes",
-                "path": "lot.attributes"
+                "path": "$[\"lot\"][\"attributes\"]"
               },
               {
                 "label": "lot.consignor.name",
-                "path": "lot.consignor.name"
+                "path": "$[\"lot\"][\"consignor\"][\"name\"]"
               },
               {
                 "label": "lot.consignor.address.street",
-                "path": "lot.consignor.address.street"
+                "path": "$[\"lot\"][\"consignor\"][\"address\"][\"street\"]"
               },
               {
                 "label": "lot.consignor.address.city",
-                "path": "lot.consignor.address.city"
+                "path": "$[\"lot\"][\"consignor\"][\"address\"][\"city\"]"
               },
               {
                 "label": "lot.consignor.address.country",
-                "path": "lot.consignor.address.country"
+                "path": "$[\"lot\"][\"consignor\"][\"address\"][\"country\"]"
               },
               {
                 "label": "state",
-                "path": "state"
+                "path": "$[\"state\"]"
               },
               {
                 "label": "high_bid",
-                "path": "highBid"
+                "path": "$[\"highBid\"]"
               },
               {
                 "label": "high_bidder",
-                "path": "highBidder"
+                "path": "$[\"highBidder\"]"
               },
               {
                 "label": "ends_at",
-                "path": "endsAt"
+                "path": "$[\"endsAt\"]"
               }
             ]
           },
-          "example_json": "{\"lot\":{\"id\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Celebrate wins tied to the group.\",\"title\":\"Up to the company, we chase a smaller woman.\"},\"condition\":\"CONDITION_FINE\",\"reservePrice\":297,\"provenance\":[\"Theirs life has ready for fiction.\"],\"flaws\":[{\"kind\":\"Publish a changelog entry for the way.\",\"detail\":\"Consistent hand being the foundation of thrill.\"}],\"attributes\":{\"in\":\"Sample government at 9s intervals.\"},\"consignor\":{\"name\":\"Subtle MediumAquaMarine accents is effective somewhat.\",\"address\":{\"street\":\"Carefully carry the bakery painfully.\",\"city\":\"Share the decision record for the life.\",\"country\":{\"code\":\"Nevertheless, keep the thing simple.\",\"name\":\"Nobody float when the thing spikes.\"}}}},\"startsAt\":\"2029-03-15T22:28:26Z\"}"
+          "example_json": "{\"lot\":{\"id\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Et repudiandae quis.\",\"title\":\"Recusandae vel odit.\"},\"condition\":\"CONDITION_FINE\",\"reservePrice\":553,\"provenance\":[\"Exercitationem vel maiores.\"],\"flaws\":[{\"kind\":\"Aliquid iusto consequatur.\",\"detail\":\"Vero consequuntur sequi.\"}],\"attributes\":{\"product\":\"Ea magnam minima.\"},\"consignor\":{\"name\":\"Qui aliquid cumque.\",\"address\":{\"street\":\"Non quia officia.\",\"city\":\"Dicta vel voluptatem.\",\"country\":{\"code\":\"Dicta eos iste.\",\"name\":\"Est suscipit quaerat.\"}}}},\"startsAt\":\"2026-02-21T12:14:50Z\"}"
         },
         {
+          "full_name": "bookstore.v1.AuctionsService.ListAuctions",
           "proto_name": "ListAuctions",
-          "go_name": "ListAuctions",
           "name": "list-auctions",
           "short_help": "ListAuctions lists auctions, optionally filtered by state.",
-          "input": {
+          "request": {
             "full_name": "bookstore.v1.ListAuctionsRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
             "proto_package": "bookstore.v1",
-            "go_name": "ListAuctionsRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.ListAuctionsResponse",
+          "response": "bookstore.v1.ListAuctionsResponse",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "state",
@@ -593,90 +591,90 @@
             "fields": [
               {
                 "label": "next_page_token",
-                "path": "nextPageToken"
+                "path": "$[\"nextPageToken\"]"
               },
               {
                 "label": "total_size",
-                "path": "totalSize"
+                "path": "$[\"totalSize\"]"
               }
             ],
             "lists": [
               {
                 "full_name": "bookstore.v1.Auction",
                 "label": "auctions",
-                "path": "auctions",
+                "path": "$[\"auctions\"][*]",
                 "fields": [
                   {
                     "label": "id",
-                    "path": "id"
+                    "path": "$[\"id\"]"
                   },
                   {
                     "label": "lot.id",
-                    "path": "lot.id"
+                    "path": "$[\"lot\"][\"id\"]"
                   },
                   {
                     "label": "lot.book.id",
-                    "path": "lot.book.id"
+                    "path": "$[\"lot\"][\"book\"][\"id\"]"
                   },
                   {
                     "label": "lot.book.author",
-                    "path": "lot.book.author"
+                    "path": "$[\"lot\"][\"book\"][\"author\"]"
                   },
                   {
                     "label": "lot.book.title",
-                    "path": "lot.book.title"
+                    "path": "$[\"lot\"][\"book\"][\"title\"]"
                   },
                   {
                     "label": "lot.condition",
-                    "path": "lot.condition"
+                    "path": "$[\"lot\"][\"condition\"]"
                   },
                   {
                     "label": "lot.reserve_price",
-                    "path": "lot.reservePrice"
+                    "path": "$[\"lot\"][\"reservePrice\"]"
                   },
                   {
                     "label": "lot.provenance",
-                    "path": "lot.provenance"
+                    "path": "$[\"lot\"][\"provenance\"]"
                   },
                   {
                     "label": "lot.flaws",
-                    "path": "lot.flaws"
+                    "path": "$[\"lot\"][\"flaws\"]"
                   },
                   {
                     "label": "lot.attributes",
-                    "path": "lot.attributes"
+                    "path": "$[\"lot\"][\"attributes\"]"
                   },
                   {
                     "label": "lot.consignor.name",
-                    "path": "lot.consignor.name"
+                    "path": "$[\"lot\"][\"consignor\"][\"name\"]"
                   },
                   {
                     "label": "lot.consignor.address.street",
-                    "path": "lot.consignor.address.street"
+                    "path": "$[\"lot\"][\"consignor\"][\"address\"][\"street\"]"
                   },
                   {
                     "label": "lot.consignor.address.city",
-                    "path": "lot.consignor.address.city"
+                    "path": "$[\"lot\"][\"consignor\"][\"address\"][\"city\"]"
                   },
                   {
                     "label": "lot.consignor.address.country",
-                    "path": "lot.consignor.address.country"
+                    "path": "$[\"lot\"][\"consignor\"][\"address\"][\"country\"]"
                   },
                   {
                     "label": "state",
-                    "path": "state"
+                    "path": "$[\"state\"]"
                   },
                   {
                     "label": "high_bid",
-                    "path": "highBid"
+                    "path": "$[\"highBid\"]"
                   },
                   {
                     "label": "high_bidder",
-                    "path": "highBidder"
+                    "path": "$[\"highBidder\"]"
                   },
                   {
                     "label": "ends_at",
-                    "path": "endsAt"
+                    "path": "$[\"endsAt\"]"
                   }
                 ]
               }
@@ -685,21 +683,20 @@
           "example_json": "{\"state\":\"AUCTION_STATE_SCHEDULED\"}"
         },
         {
+          "full_name": "bookstore.v1.AuctionsService.WatchAuction",
           "proto_name": "WatchAuction",
-          "go_name": "WatchAuction",
           "name": "watch-auction",
           "short_help": "WatchAuction streams bidding updates for the selected auctions as a live feed until the client cancels.",
-          "long_help": "WatchAuction streams bidding updates for the selected auctions as a live\nfeed until the client cancels.\n\nWatchAuctionRequest selects auctions by exactly one of auction or author.\n\nThe server may send multiple responses; each prints as it arrives.",
-          "input": {
+          "long_help": "WatchAuction streams bidding updates for the selected auctions as a live\nfeed until the client cancels.\n\nWatchAuctionRequest selects auctions by exactly one of auction or author.\n\nThe server can send multiple responses. Each prints as it arrives.",
+          "request": {
             "full_name": "bookstore.v1.WatchAuctionRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
             "proto_package": "bookstore.v1",
-            "go_name": "WatchAuctionRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.AuctionUpdate",
-          "server_streaming": true,
+          "response": "bookstore.v1.AuctionUpdate",
+          "shape": "server_stream",
           "params": [
             {
               "proto_path": "auction",
@@ -725,67 +722,77 @@
             "fields": [
               {
                 "label": "auction",
-                "path": "auction"
+                "path": "$[\"auction\"]"
               },
               {
                 "label": "high_bid",
-                "path": "highBid"
+                "path": "$[\"highBid\"]"
               },
               {
                 "label": "bidder",
-                "path": "bidder"
+                "path": "$[\"bidder\"]"
               },
               {
                 "label": "state",
-                "path": "state"
+                "path": "$[\"state\"]"
               },
               {
                 "label": "at",
-                "path": "at"
+                "path": "$[\"at\"]"
               }
             ]
           },
           "example_json": "{\"auction\":\"103\",\"limit\":864}"
         },
         {
+          "full_name": "bookstore.v1.AuctionsService.Bid",
           "proto_name": "Bid",
-          "go_name": "Bid",
           "name": "bid",
           "short_help": "Bid places bids and streams back every update on the bid's auction.",
-          "long_help": "Bid places bids and streams back every update on the bid's auction.\n\nReads JSON requests from stdin, one after another.\n\nThe server may send multiple responses; each prints as it arrives.",
-          "input": {
+          "long_help": "Bid places bids and streams back every update on the bid's auction.\n\nEach request body becomes one request.\n\nThe server can send multiple responses. Each prints as it arrives.",
+          "request": {
             "full_name": "bookstore.v1.PlaceBidRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
             "proto_package": "bookstore.v1",
-            "go_name": "PlaceBidRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.AuctionUpdate",
-          "client_streaming": true,
-          "server_streaming": true,
+          "response": "bookstore.v1.AuctionUpdate",
+          "shape": "bidi",
+          "params": [
+            {
+              "proto_path": "auction",
+              "name": "auction",
+              "bind": "int"
+            },
+            {
+              "proto_path": "amount",
+              "name": "amount",
+              "bind": "float"
+            }
+          ],
           "view": {
             "full_name": "bookstore.v1.AuctionUpdate",
             "fields": [
               {
                 "label": "auction",
-                "path": "auction"
+                "path": "$[\"auction\"]"
               },
               {
                 "label": "high_bid",
-                "path": "highBid"
+                "path": "$[\"highBid\"]"
               },
               {
                 "label": "bidder",
-                "path": "bidder"
+                "path": "$[\"bidder\"]"
               },
               {
                 "label": "state",
-                "path": "state"
+                "path": "$[\"state\"]"
               },
               {
                 "label": "at",
-                "path": "at"
+                "path": "$[\"at\"]"
               }
             ]
           },
@@ -794,53 +801,82 @@
       ]
     },
     {
+      "full_name": "bookstore.v1.InventoryService",
       "proto_name": "InventoryService",
-      "go_name": "InventoryService",
       "name": "inventory",
       "short_help": "InventoryService is the back office's stock system.",
       "commands": [
         {
+          "full_name": "bookstore.v1.InventoryService.ImportBooks",
           "proto_name": "ImportBooks",
-          "go_name": "ImportBooks",
           "name": "import-books",
-          "short_help": "ImportBooks ingests a book catalogue as a stream of records.",
-          "long_help": "ImportBooks ingests a book catalogue as a stream of records.\n\nImportBooksRequest is one record of a catalogue import.\n\nReads JSON requests from stdin, one after another.",
-          "input": {
+          "short_help": "ImportBooks ingests a book catalogue as a stream of books.",
+          "long_help": "ImportBooks ingests a book catalogue as a stream of books.\n\nImportBooksRequest is one book in a catalogue import.\n\nEach request body becomes one request.",
+          "request": {
             "full_name": "bookstore.v1.ImportBooksRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
             "proto_package": "bookstore.v1",
-            "go_name": "ImportBooksRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.ImportSummary",
-          "client_streaming": true,
+          "response": "bookstore.v1.ImportSummary",
+          "shape": "client_stream",
+          "params": [
+            {
+              "proto_path": "shelf",
+              "name": "shelf",
+              "bind": "int"
+            },
+            {
+              "proto_path": "book",
+              "name": "book",
+              "bind": "json"
+            },
+            {
+              "proto_path": "book.id",
+              "name": "book.id",
+              "short_help": "A unique book id.",
+              "bind": "int"
+            },
+            {
+              "proto_path": "book.author",
+              "name": "book.author",
+              "short_help": "An author of the book.",
+              "bind": "string"
+            },
+            {
+              "proto_path": "book.title",
+              "name": "book.title",
+              "short_help": "A book title.",
+              "bind": "string"
+            }
+          ],
           "view": {
             "full_name": "bookstore.v1.ImportSummary",
             "fields": [
               {
                 "label": "created",
-                "path": "created"
+                "path": "$[\"created\"]"
               }
             ]
           },
-          "example_json": "{\"shelf\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Celebrate wins tied to the group.\",\"title\":\"Up to the company, we chase a smaller woman.\"}}"
+          "example_json": "{\"shelf\":\"998\",\"book\":{\"id\":\"103\",\"author\":\"Et repudiandae quis.\",\"title\":\"Recusandae vel odit.\"}}"
         },
         {
+          "full_name": "bookstore.v1.InventoryService.ExportReport",
           "proto_name": "ExportReport",
-          "go_name": "ExportReport",
           "name": "export-report",
           "short_help": "ExportReport renders a shelf's stock report and writes it to a file on the server.",
           "long_help": "ExportReport renders a shelf's stock report and writes it to a file on\nthe server.\n\nRequest message for ExportReport method.",
-          "input": {
+          "request": {
             "full_name": "bookstore.v1.ExportReportRequest",
             "proto_file": "bookstore/v1/bookstore.proto",
             "proto_package": "bookstore.v1",
-            "go_name": "ExportReportRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/bookstore/go-cobra/gen/bookstore/v1",
             "go_package_name": "bookstorev1"
           },
-          "output": "bookstore.v1.Report",
+          "response": "bookstore.v1.Report",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "shelf",
@@ -860,15 +896,15 @@
             "fields": [
               {
                 "label": "filename",
-                "path": "filename"
+                "path": "$[\"filename\"]"
               },
               {
                 "label": "books",
-                "path": "books"
+                "path": "$[\"books\"]"
               }
             ]
           },
-          "example_json": "{\"shelf\":\"998\",\"filename\":\"Protect the number under uninterested load.\"}"
+          "example_json": "{\"shelf\":\"998\",\"filename\":\"Aut et repudiandae.\"}"
         }
       ]
     }

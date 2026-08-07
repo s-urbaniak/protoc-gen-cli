@@ -666,7 +666,7 @@ const (
 //
 // InventoryService is the back office's stock system.
 type InventoryServiceClient interface {
-	// ImportBooks ingests a book catalogue as a stream of records.
+	// ImportBooks ingests a book catalogue as a stream of books.
 	ImportBooks(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[ImportBooksRequest, ImportSummary], error)
 	// ExportReport renders a shelf's stock report and writes it to a file on
 	// the server.
@@ -710,7 +710,7 @@ func (c *inventoryServiceClient) ExportReport(ctx context.Context, in *ExportRep
 //
 // InventoryService is the back office's stock system.
 type InventoryServiceServer interface {
-	// ImportBooks ingests a book catalogue as a stream of records.
+	// ImportBooks ingests a book catalogue as a stream of books.
 	ImportBooks(grpc.ClientStreamingServer[ImportBooksRequest, ImportSummary]) error
 	// ExportReport renders a shelf's stock report and writes it to a file on
 	// the server.

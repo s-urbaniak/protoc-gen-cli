@@ -11,15 +11,15 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/braveokafor/proto-to-cli/internal/irbuild"
-	"github.com/braveokafor/proto-to-cli/internal/target"
-	"github.com/braveokafor/proto-to-cli/internal/target/gocobra"
+	"github.com/braveokafor/protoc-gen-cli/internal/irbuild"
+	"github.com/braveokafor/protoc-gen-cli/internal/target"
+	"github.com/braveokafor/protoc-gen-cli/internal/target/gocobra"
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/types/descriptorpb"
 	"google.golang.org/protobuf/types/pluginpb"
 )
 
-// The -ldflags option sets version at build time. The default is "dev".
+// -ldflags sets this at build time.
 var version = "dev"
 
 func resolveVersion() string {
@@ -34,18 +34,20 @@ func resolveVersion() string {
 	return version
 }
 
-// Config contains the inputs of one invocation.
+var targets = map[string]target.Target{
+	"gocobra": gocobra.Generate,
+}
+
 type Config struct {
 	// These come from opt=.
-	Target              string // Target selects from Targets.
-	DumpIR              bool   // DumpIR also emits each file's IR beside it as <file>.cli.ir.json.
+	Target              string
+	DumpIR              bool
 	RequestExpandDepth  int    // At zero, only the request's own fields get params.
 	ResponseExpandDepth int    // At zero, only the response's own fields become view fields.
-	TemplatePath        string // Empty uses the built-in template.
+	TemplatesDir        string // Empty uses the built-in templates.
 
-	// main sets these.
-	Version string                   // Version goes into the generated-file headers.
-	Targets map[string]target.Target // Targets contains the selectable back-ends, for example "gocobra".
+	// main sets this.
+	Version string
 }
 
 func main() {
@@ -57,9 +59,6 @@ func main() {
 
 	var cfg Config
 	cfg.Version = ver
-	cfg.Targets = map[string]target.Target{
-		"gocobra": gocobra.Generate,
-	}
 
 	var flags flag.FlagSet
 	flags.BoolVar(&cfg.DumpIR, "dump-ir", false, "dump each file's IR as JSON")
@@ -68,8 +67,8 @@ func main() {
 		"how many message levels down fields still get dotted flags")
 	flags.IntVar(&cfg.ResponseExpandDepth, "response-expand-depth", 1,
 		"how many message levels down response fields still become view fields")
-	flags.StringVar(&cfg.TemplatePath, "template", "",
-		"render with this template file instead of the built-in one")
+	flags.StringVar(&cfg.TemplatesDir, "templates", "",
+		"replace built-in template with the *.tmpl files in this directory")
 
 	opts := &protogen.Options{
 		ParamFunc: flags.Set,
@@ -80,14 +79,13 @@ func main() {
 	})
 }
 
-// run builds the IR of each file with Generate set and gives it to the
-// selected target.
+// run builds the IR of each file and gives it to the selected target.
 func run(plug *protogen.Plugin, cfg *Config) error {
-	targetNames := slices.Sorted(maps.Keys(cfg.Targets))
+	targetNames := slices.Sorted(maps.Keys(targets))
 	if cfg.Target == "" {
 		return fmt.Errorf("opt=target=<name> is required (available: %v)", targetNames)
 	}
-	tgt, ok := cfg.Targets[cfg.Target]
+	tgt, ok := targets[cfg.Target]
 	if !ok {
 		return fmt.Errorf("unknown target %q (available: %v)", cfg.Target, targetNames)
 	}
@@ -146,7 +144,7 @@ func run(plug *protogen.Plugin, cfg *Config) error {
 			}
 		}
 
-		files, err := tgt(m, target.Options{TemplateOverride: cfg.TemplatePath})
+		files, err := tgt(file, m, target.Options{TemplatesDir: cfg.TemplatesDir})
 		if err != nil {
 			return fmt.Errorf("%s: %w", protoPath, err)
 		}

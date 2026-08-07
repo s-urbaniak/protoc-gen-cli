@@ -1,5 +1,3 @@
-// This file shows the (cli.v1.*) options that bookstore-annotated does not use.
-
 syntax = "proto3";
 
 package kitchensink.v1;
@@ -7,7 +5,7 @@ package kitchensink.v1;
 import "cli/v1/cli.proto";
 import "google/protobuf/struct.proto";
 
-option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
+option go_package = "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
 
 // AnnotationsService's RPCs echo their requests.
 service AnnotationsService {
@@ -44,16 +42,16 @@ message KnobsRequest {
   string capital = 1 [(cli.v1.param).shorthand = "S"];
   Widget shallow = 2 [(cli.v1.param).expand_depth = 2];
   Widget whole = 3 [(cli.v1.param).expand_depth = 0];
-  // The next three options cannot apply. Generation drops each one. It prints
-  // a warning.
+  // A line of text.
   string lifted = 4 [(cli.v1.param).hoist = true];
+  // Another line of text.
   string deepened = 5 [(cli.v1.param).expand_depth = 3];
-  Widget insisted = 6 [(cli.v1.param).required = true];
+  // A third line of text.
+  string worded = 6 [(cli.v1.param).help = "Set by the annotation, not the comment."];
   google.protobuf.Struct blob = 7 [(cli.v1.param).shorthand = "j"];
 }
 
 message CuratedRequest {
-  // The last path does not resolve. Generation drops it. It prints a warning.
   option (cli.v1.view) = {
     fields: [
       {

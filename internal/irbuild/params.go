@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/braveokafor/proto-to-cli/internal/ir"
+	"github.com/braveokafor/protoc-gen-cli/internal/ir"
 	"github.com/stoewer/go-strcase"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/descriptorpb"
 )
 
-// messageBinds contains the message types that protojson shows as one JSON
-// value.
+// protojson shows these message types as one JSON value.
 var messageBinds = map[protoreflect.FullName]ir.Bind{
 	"google.protobuf.Timestamp": ir.BindTimestamp,
 	"google.protobuf.Duration":  ir.BindDuration,
@@ -55,8 +55,8 @@ var scalarBinds = map[protoreflect.Kind]ir.Bind{
 // buildParams derives a command's params from its request message's fields.
 func buildParams(md protoreflect.MessageDescriptor, opts Options) []*ir.Param {
 	var params []*ir.Param
-	var walk func(md protoreflect.MessageDescriptor, protoPrefix, cliPrefix string, budget int, ancestors []protoreflect.FullName)
-	walk = func(md protoreflect.MessageDescriptor, protoPrefix, cliPrefix string, budget int, ancestors []protoreflect.FullName) {
+	var walk func(md protoreflect.MessageDescriptor, protoPrefix, cliPrefix string, depth int, ancestors []protoreflect.FullName)
+	walk = func(md protoreflect.MessageDescriptor, protoPrefix, cliPrefix string, depth int, ancestors []protoreflect.FullName) {
 		fields := md.Fields()
 		for i := range fields.Len() {
 			fd := fields.Get(i)
@@ -77,7 +77,7 @@ func buildParams(md protoreflect.MessageDescriptor, opts Options) []*ir.Param {
 
 			if !ok {
 				opts.Warn(fmt.Sprintf(
-					"field %s.%s: group-encoded fields get no flag; set it with -f or -i, or make the field a message",
+					"field %s.%s: group-encoded fields get no flag; set it with -f or -d, or make the field a message",
 					md.FullName(),
 					fd.Name(),
 				))
@@ -103,11 +103,11 @@ func buildParams(md protoreflect.MessageDescriptor, opts Options) []*ir.Param {
 				))
 			}
 
-			descend := budget
+			fieldDepth := depth
 			if po.HasExpandDepth() {
-				descend = int(po.GetExpandDepth())
+				fieldDepth = int(po.GetExpandDepth())
 			}
-			expands := isExpandable(fd) && descend > 0 &&
+			expands := isExpandable(fd) && fieldDepth > 0 &&
 				!slices.Contains(ancestors, fd.Message().FullName())
 
 			if po.GetHoist() && !expands {
@@ -118,26 +118,14 @@ func buildParams(md protoreflect.MessageDescriptor, opts Options) []*ir.Param {
 				))
 			}
 
-			required := po.GetRequired()
-			if required && expands {
-				opts.Warn(fmt.Sprintf(
-					"field %s.%s: required is dropped; sub-flags set the field without typing --%s",
-					md.FullName(),
-					fd.Name(),
-					name,
-				))
-				required = false
-			}
-
 			comment := fd.ParentFile().SourceLocations().ByDescriptor(fd).LeadingComments
-			short, _ := helpFrom(cleanComment(comment))
+			short, _ := helpFrom(cmp.Or(po.GetHelp(), cleanComment(comment)))
 			params = append(params,
 				&ir.Param{
 					ProtoPath:  path,
 					Name:       name,
 					Shorthand:  po.GetShorthand(),
-					Hidden:     po.GetHidden(),
-					Required:   required,
+					Deprecated: fd.Options().(*descriptorpb.FieldOptions).GetDeprecated(),
 					ShortHelp:  short,
 					Bind:       bind,
 					Repeated:   fd.IsList(),
@@ -151,7 +139,7 @@ func buildParams(md protoreflect.MessageDescriptor, opts Options) []*ir.Param {
 				if po.GetHoist() {
 					childPrefix = cliPrefix
 				}
-				walk(fd.Message(), path+".", childPrefix, descend-1,
+				walk(fd.Message(), path+".", childPrefix, fieldDepth-1,
 					append(ancestors, fd.Message().FullName()))
 			}
 		}
@@ -162,7 +150,7 @@ func buildParams(md protoreflect.MessageDescriptor, opts Options) []*ir.Param {
 	return params
 }
 
-// ok is false for fields with no param.
+// fieldBind returns ok false for a field with no param.
 func fieldBind(fd protoreflect.FieldDescriptor) (bind ir.Bind, ok bool, enum []string) {
 	// A map field's own kind is its synthetic entry message.
 	elem := fd

@@ -1,7 +1,6 @@
 version: "2"
 
 run:
-  concurrency: 1
   go: "1.26"
   relative-path-mode: cfg
 

@@ -1,0 +1,88 @@
+{{- define "service" -}}
+{{- $svc := . }}
+{{- $go := goName $svc.FullName }}
+// =============================================================================
+// {{ $svc.FullName }}{{ if $svc.ShortHelp }} — {{ $svc.ShortHelp }}{{ end }}
+// =============================================================================
+
+// {{ $go }}Options configures New{{ $go }}Command.
+// The zero value keeps every built-in default.
+type {{ $go }}Options = {{ export }}Options
+
+// {{ $go }}Printer renders one body.
+type {{ $go }}Printer = {{ export }}Printer
+
+// {{ $go }}Decoder decodes one source into request bodies.
+type {{ $go }}Decoder = {{ export }}Decoder
+
+// {{ $go }}View names the fields a printer shows.
+type {{ $go }}View = {{ export }}View
+
+type {{ $go }}ViewList = {{ export }}ViewList
+
+type {{ $go }}ViewField = {{ export }}ViewField
+
+// The built-in decoders, in the order the CLI tries them.
+var (
+	{{ $go }}DecoderJSON = {{ export }}DecoderJSON
+	{{ $go }}DecoderYAML = {{ export }}DecoderYAML
+	{{ $go }}Decoders    = {{ export }}Decoders
+)
+
+// New{{ $go }}Command returns the {{ printf "%q" $svc.Name }} command tree.
+{{- if or $svc.LongHelp $svc.ShortHelp }}
+//
+{{ goDoc (or $svc.LongHelp $svc.ShortHelp) }}
+{{- end }}
+//
+// Later opts override earlier opts for each entry.
+func New{{ $go }}Command(conn grpc.ClientConnInterface, opts ...{{ $go }}Options) *cobra.Command {
+	client := New{{ $go }}Client(conn)
+	opt := {{ prefix }}resolveOptions(opts)
+
+	cmd := &cobra.Command{
+		Use: {{ printf "%q" $svc.Name }},
+{{- if $svc.ShortHelp }}
+		Short: {{ printf "%q" $svc.ShortHelp }},
+{{- end }}
+{{- if $svc.LongHelp }}
+		Long: {{ printf "%q" $svc.LongHelp }},
+{{- end }}
+{{- if $svc.Aliases }}
+		Aliases: []string{ {{ quoteJoin $svc.Aliases }} },
+{{- end }}
+{{- if $svc.Deprecated }}
+		Deprecated: "the API can remove it at any time.",
+{{- end }}
+	}
+	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {
+		return {{ prefix }}exitError{ {{ prefix }}exitUsage, err}
+	})
+
+	// ----- persistent flags -----
+	printers := slices.Sorted(maps.Keys(opt.Printers))
+	if _, ok := opt.Printers[opt.DefaultPrinter]; opt.DefaultPrinter != "" && !ok {
+		panic(fmt.Sprintf("Options.DefaultPrinter: unknown printer %q; use one of: %s", opt.DefaultPrinter, strings.Join(printers, ", ")))
+	}
+	defaultFormat := "json on a terminal, jsonl when piped"
+	if opt.DefaultPrinter != "" {
+		defaultFormat = opt.DefaultPrinter
+	}
+
+	fs := cmd.PersistentFlags()
+	fs.StringArrayP("filename", "f", nil, "Request bodies from a file, or '-' for stdin.")
+	_ = cobra.MarkFlagFilename(fs, "filename")
+	fs.StringArrayP("data", "d", nil, "A request body, inline.")
+	fs.Bool("dry-run", false, "Print the assembled requests without sending them.")
+	fs.StringP("output", "o", "", "Output format: "+strings.Join(printers, ", ")+".\nDefault: "+defaultFormat+".")
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(printers, cobra.ShellCompDirectiveNoFileComp))
+	fs.String("columns", "", "Table columns, as LABEL:path pairs into the JSON response.\nExample: --columns 'ID:$.id,NAME:$.name'.")
+	fs.Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
+	fs.Bool("example", false, "Print an example request body without sending it.")
+{{ range $svc.Commands }}
+{{ template "command" . }}
+{{ end }}
+	return cmd
+}
+{{ end -}}

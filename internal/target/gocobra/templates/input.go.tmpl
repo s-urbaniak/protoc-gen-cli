@@ -1,0 +1,279 @@
+{{- define "input" -}}
+// =============================================================================
+// Input: -f files, then -d values, then flags, in that order.
+// =============================================================================
+
+// A Decoder decodes one source into request bodies.
+type {{ export }}Decoder struct {
+	// Name identifies the decoder in an error.
+	Name string
+	// Decode yields one JSON body for each document in the source, in order.
+	// It yields an error, and nothing more, for a source it cannot read.
+	Decode func(r io.Reader) iter.Seq2[[]byte, error]
+}
+
+var (
+	{{ export }}DecoderJSON = {{ export }}Decoder{
+		Name: "json",
+		Decode: func(r io.Reader) iter.Seq2[[]byte, error] {
+			return func(yield func([]byte, error) bool) {
+				dec := json.NewDecoder(r)
+				for {
+					var raw json.RawMessage
+					if err := dec.Decode(&raw); err != nil {
+						if !errors.Is(err, io.EOF) {
+							yield(nil, err)
+						}
+						return
+					}
+					var items []json.RawMessage
+					if err := json.Unmarshal(raw, &items); err != nil {
+						if !yield(raw, nil) {
+							return
+						}
+						continue
+					}
+					for _, item := range items {
+						if !yield(item, nil) {
+							return
+						}
+					}
+				}
+			}
+		},
+	}
+
+	{{ export }}DecoderYAML = {{ export }}Decoder{
+		Name: "yaml",
+		Decode: func(r io.Reader) iter.Seq2[[]byte, error] {
+			return func(yield func([]byte, error) bool) {
+				// yaml3 finds the document boundaries. yaml converts a
+				// document, including a map key that YAML allows and JSON
+				// does not.
+				dec := yaml3.NewDecoder(r)
+				for {
+					var node yaml3.Node
+					if err := dec.Decode(&node); err != nil {
+						if !errors.Is(err, io.EOF) {
+							yield(nil, err)
+						}
+						return
+					}
+					doc, err := yaml3.Marshal(&node)
+					if err != nil {
+						yield(nil, err)
+						return
+					}
+					body, err := yaml.YAMLToJSON(doc)
+					if err != nil {
+						yield(nil, err)
+						return
+					}
+					// An empty document converts to null, which is no body.
+					if bytes.Equal(bytes.TrimSpace(body), []byte("null")) {
+						continue
+					}
+					if !yield(body, nil) {
+						return
+					}
+				}
+			}
+		},
+	}
+
+	// The built-in decoders, in the order the CLI tries them.
+	{{ export }}Decoders = []{{ export }}Decoder{ {{ export }}DecoderJSON, {{ export }}DecoderYAML}
+)
+
+// The first decoder to read a body takes the source.
+func {{ prefix }}decodeSource(decoders []{{ export }}Decoder, source string, r io.Reader) iter.Seq2[[]byte, error] {
+	for _, dec := range decoders {
+		// A decoder reads as far as it needs to. The bytes a failed decoder
+		// read go to the next one, because stdin cannot replay them.
+		var seen bytes.Buffer
+		next, stop := iter.Pull2(dec.Decode(io.TeeReader(r, &seen)))
+		body, err, read := next()
+		stop()
+		r = io.MultiReader(bytes.NewReader(seen.Bytes()), r)
+		if err != nil {
+			continue
+		}
+		if read {
+			// A body fills a request message, so it is a JSON object. A
+			// source that reads as anything else belongs to another decoder.
+			opening, err := json.NewDecoder(bytes.NewReader(body)).Token()
+			if err != nil || opening != json.Delim('{') {
+				continue
+			}
+		}
+
+		return func(yield func([]byte, error) bool) {
+			for body, err := range dec.Decode(r) {
+				if err != nil {
+					yield(nil, fmt.Errorf("read %s as %s: %w", source, dec.Name, err))
+					return
+				}
+				if !yield(body, nil) {
+					return
+				}
+			}
+		}
+	}
+
+	names := make([]string, len(decoders))
+	for i, dec := range decoders {
+		names[i] = dec.Name
+	}
+	return func(yield func([]byte, error) bool) {
+		yield(nil, fmt.Errorf("cannot read %s as any of: %s", source, strings.Join(names, ", ")))
+	}
+}
+
+// {{ prefix }}readBodies opens nothing until a caller ranges the sequence.
+func {{ prefix }}readBodies(
+	decoders []{{ export }}Decoder,
+	filenames, data []string,
+	stdin io.Reader,
+	stderr io.Writer,
+) iter.Seq2[[]byte, error] {
+	if f, ok := stdin.(*os.File); ok && term.IsTerminal(int(f.Fd())) &&
+		slices.ContainsFunc(filenames, func(name string) bool {
+			return strings.TrimSpace(name) == "-"
+		}) {
+		fmt.Fprintln(stderr, "reading request bodies from the terminal; Ctrl-D to finish")
+	}
+
+	return func(yield func([]byte, error) bool) {
+		// read reports whether the caller wants more bodies.
+		read := func(source string, r io.Reader) bool {
+			for body, err := range {{ prefix }}decodeSource(decoders, source, r) {
+				if !yield(body, err) || err != nil {
+					return false
+				}
+			}
+			return true
+		}
+
+		for _, filename := range filenames {
+			filename = strings.TrimSpace(filename)
+
+			var r io.Reader
+			source := filename
+			switch {
+			case filename == "":
+				continue
+			case filename == "-":
+				source, r = "stdin", stdin
+			default:
+				f, err := os.Open(filename)
+				if err != nil {
+					yield(nil, err)
+					return
+				}
+				defer f.Close()
+				r = f
+			}
+
+			if !read(source, r) {
+				return
+			}
+		}
+
+		for i, body := range data {
+			if !read(fmt.Sprintf("-d value %d", i+1), strings.NewReader(body)) {
+				return
+			}
+		}
+	}
+}
+
+func {{ prefix }}applyJSON(msg proto.Message, body []byte) error {
+	// protojson clears the message it fills, so the body decodes into a fresh
+	// partial.
+	partial := msg.ProtoReflect().New().Interface()
+	if err := (protojson.UnmarshalOptions{AllowPartial: true}).Unmarshal(body, partial); err != nil {
+		return err
+	}
+	proto.Merge(msg, partial)
+	return nil
+}
+{{ if fileHasShape "unary" "server_stream" }}
+// A flag overrides a body.
+func {{ prefix }}buildRequest(req proto.Message, bodies iter.Seq2[[]byte, error], flagsJSON []byte) error {
+	n := 0
+	for body, err := range bodies {
+		if err != nil {
+			return err
+		}
+		n++
+		if err := {{ prefix }}applyJSON(req, body); err != nil {
+			return fmt.Errorf("request body %d: %w", n, err)
+		}
+	}
+	if flagsJSON != nil {
+		if err := {{ prefix }}applyJSON(req, flagsJSON); err != nil {
+			return fmt.Errorf("flags: %w", err)
+		}
+	}
+	if err := proto.CheckInitialized(req); err != nil {
+		return fmt.Errorf("request: %w", err)
+	}
+	return nil
+}
+{{ end }}
+{{- if fileHasShape "client_stream" "bidi" }}
+// With no body, the flags alone are one request. With neither, the sequence
+// is empty.
+func {{ prefix }}buildRequests[Req any, PReq interface{ proto.Message; *Req }](
+	bodies iter.Seq2[[]byte, error],
+	flagsJSON []byte,
+) iter.Seq2[PReq, error] {
+	return func(yield func(PReq, error) bool) {
+		build := func(body []byte) (PReq, error) {
+			req := PReq(new(Req))
+			if body != nil {
+				if err := {{ prefix }}applyJSON(req, body); err != nil {
+					return nil, err
+				}
+			}
+			if flagsJSON != nil {
+				if err := {{ prefix }}applyJSON(req, flagsJSON); err != nil {
+					return nil, fmt.Errorf("flags: %w", err)
+				}
+			}
+			if err := proto.CheckInitialized(req); err != nil {
+				return nil, fmt.Errorf("request: %w", err)
+			}
+			return req, nil
+		}
+
+		n := 0
+		for body, err := range bodies {
+			if err != nil {
+				yield(nil, err)
+				return
+			}
+			n++
+			req, err := build(body)
+			if err != nil {
+				yield(nil, fmt.Errorf("request body %d: %w", n, err))
+				return
+			}
+			if !yield(req, nil) {
+				return
+			}
+		}
+		if n > 0 || flagsJSON == nil {
+			return
+		}
+
+		req, err := build(nil)
+		if err != nil {
+			yield(nil, err)
+			return
+		}
+		yield(req, nil)
+	}
+}
+{{ end }}
+{{- end -}}

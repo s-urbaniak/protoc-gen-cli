@@ -5,32 +5,30 @@
   "proto_package": "kitchensink.v1",
   "file_options": {
     "go_package_name": "kitchensinkv1",
-    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
-    "go_descriptor_name": "File_kitchensink_v1_feed_proto"
+    "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1"
   },
   "services": [
     {
+      "full_name": "kitchensink.v1.FeedService",
       "proto_name": "FeedService",
-      "go_name": "FeedService",
       "name": "feed",
       "short_help": "FeedService streams fake events.",
       "commands": [
         {
+          "full_name": "kitchensink.v1.FeedService.Tail",
           "proto_name": "Tail",
-          "go_name": "Tail",
           "name": "tail",
           "short_help": "Tail streams the requested number of events and then ends the feed.",
-          "long_help": "Tail streams the requested number of events and then ends the feed.\n\nThe server may send multiple responses; each prints as it arrives.",
-          "input": {
+          "long_help": "Tail streams the requested number of events and then ends the feed.\n\nThe server can send multiple responses. Each prints as it arrives.",
+          "request": {
             "full_name": "kitchensink.v1.TailRequest",
             "proto_file": "kitchensink/v1/feed.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "TailRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.FeedEvent",
-          "server_streaming": true,
+          "response": "kitchensink.v1.FeedEvent",
+          "shape": "server_stream",
           "params": [
             {
               "proto_path": "count",
@@ -43,11 +41,11 @@
             "fields": [
               {
                 "label": "index",
-                "path": "index"
+                "path": "$[\"index\"]"
               },
               {
                 "label": "note",
-                "path": "note"
+                "path": "$[\"note\"]"
               }
             ]
           },

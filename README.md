@@ -1,1 +1,1 @@
-# proto-to-cli
+# protoc-gen-cli

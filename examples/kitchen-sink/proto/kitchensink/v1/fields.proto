@@ -1,4 +1,4 @@
-// The flag surface has one RPC for each field-shape family.
+// This service has one RPC for each field-shape family.
 
 syntax = "proto3";
 
@@ -12,10 +12,9 @@ import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 
-option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
+option go_package = "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
 
-// FieldsService echoes each request. Thus the response shows exactly what
-// arrived.
+// FieldsService echoes each request.
 service FieldsService {
   // Scalars contains every proto scalar type.
   rpc Scalars(ScalarsRequest) returns (ScalarsRequest) {}
@@ -66,7 +65,6 @@ message ScalarsRequest {
 }
 
 message MessagesRequest {
-  // The outer message.
   Outer outer = 1;
   Outer kebab_outer = 2;
   // When the row was created.
@@ -83,7 +81,7 @@ message MessagesRequest {
 }
 
 message RepeatedRequest {
-  // A tag to attach. Repeat the flag for more.
+  // A tag to attach. Repeat to add more.
   repeated string strings = 1;
   repeated bool bools = 2;
   // An id to include.

@@ -8,20 +8,27 @@ import (
 	"unicode"
 )
 
-// The built-in params of each generated command use these names and
-// one-letter shorthands.
+// The built-in params of every generated command claim these.
 var (
-	ReservedParamNames = []string{"filename", "input", "help", "output"}
-	ReservedShorthands = []string{"f", "i", "h", "o"}
+	ReservedParamNames = []string{
+		"filename",
+		"data",
+		"help",
+		"output",
+		"columns",
+		"example",
+		"timeout",
+		"dry-run",
+	}
+	ReservedShorthands = []string{"f", "d", "h", "o"}
 )
 
-// A claim is the holder of one name in a namespace.
 type claim struct {
 	party string
 	alias bool
 }
 
-// Validate returns every violation in the model as one error.
+// Validate returns every violation in the model.
 func (m *Model) Validate() error {
 	var errs []error
 
@@ -44,14 +51,12 @@ func (m *Model) Validate() error {
 			errs = append(errs, validateViews(checkedViews, cmd)...)
 		}
 
-		errs = append(errs, validateServiceAliases(svc, commands)...)
+		errs = append(errs, validateServiceAliases(commands, svc)...)
 	}
 
 	return errors.Join(errs...)
 }
 
-// claimService checks svc against the command namespace that its name and
-// aliases share.
 func claimService(claims map[string]claim, svc *Service) []error {
 	var errs []error
 	for i, n := range append([]string{svc.Name}, svc.Aliases...) {
@@ -103,8 +108,6 @@ func claimService(claims map[string]claim, svc *Service) []error {
 	return errs
 }
 
-// claimCommand checks cmd against the subcommand namespace that its name
-// and aliases share.
 func claimCommand(claims map[string]claim, svc *Service, cmd *Command) []error {
 	var errs []error
 	for i, n := range append([]string{cmd.Name}, cmd.Aliases...) {
@@ -153,10 +156,7 @@ func claimCommand(claims map[string]claim, svc *Service, cmd *Command) []error {
 	return errs
 }
 
-// validateServiceAliases rejects a service alias that reuses one of its own
-// subcommands' tokens. The same word has two different meanings at the two
-// levels.
-func validateServiceAliases(svc *Service, commands map[string]claim) []error {
+func validateServiceAliases(commands map[string]claim, svc *Service) []error {
 	var errs []error
 	seen := map[string]bool{}
 	for _, a := range svc.Aliases {
@@ -264,8 +264,6 @@ func validateCommand(svc *Service, cmd *Command) []error {
 	return errs
 }
 
-// validateViews rejects a view that declares one label twice. Only a
-// declared view can produce a duplicate.
 func validateViews(checked map[string]bool, cmd *Command) []error {
 	var errs []error
 	check := func(fullName string, fields []*ViewField) {

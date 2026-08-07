@@ -1,0 +1,163 @@
+{{- define "command" -}}
+	// ----- {{ .Name }} — rpc {{ .ProtoName }} -----
+{{- if or .LongHelp .ShortHelp }}
+{{ goDoc (or .LongHelp .ShortHelp) }}
+{{- end }}
+	{
+		sub := &cobra.Command{
+			Use:  {{ printf "%q" .Name }},
+{{- if .ShortHelp }}
+			Short: {{ printf "%q" .ShortHelp }},
+{{- end }}
+{{- if .LongHelp }}
+			Long: {{ printf "%q" .LongHelp }},
+{{- end }}
+{{- if .Aliases }}
+			Aliases: []string{ {{ quoteJoin .Aliases }} },
+{{- end }}
+{{- if .Deprecated }}
+			Deprecated: "the API can remove it at any time.",
+{{- end }}
+			Args: {{ prefix }}noArgs,
+{{- if oneofGroups . }}
+			PreRunE: func(cmd *cobra.Command, _ []string) error {
+				// cobra validates the groups after this hook, as a plain error.
+				// This call runs first, to add the usage exit code.
+				if err := cmd.ValidateFlagGroups(); err != nil {
+					return {{ prefix }}exitError{ {{ prefix }}exitUsage, err}
+				}
+				return nil
+			},
+{{- end }}
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := {{ prefix }}resolveOutput(cmd.OutOrStdout(), {{ printf "%q" .Response }}, {{ printf "%q" .FullName }}, format, columns, opt)
+				if err != nil {
+					return err
+				}
+{{- /* SilenceUsage sits past the checks above so that they keep cobra's usage. */}}
+				cmd.SilenceUsage = true
+				if example {
+					return printer(cmd.OutOrStdout(), {{ export }}View{}, []byte({{ printf "%q" .ExampleJSON }}))
+				}
+{{- template "command.input" . }}
+{{- if eq .Shape "bidi" }}
+				return {{ prefix }}runBidi(cmd.Context(), cmd.OutOrStdout(), printer, view, reqs, dryRun, timeout, client.{{ goName .FullName }})
+{{- else if eq .Shape "client_stream" }}
+				return {{ prefix }}runClientStream(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), printer, view, reqs, dryRun, timeout, client.{{ goName .FullName }})
+{{- else if eq .Shape "server_stream" }}
+				return {{ prefix }}runServerStream(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.{{ goName .FullName }})
+{{- else }}
+				return {{ prefix }}runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.{{ goName .FullName }})
+{{- end }}
+			},
+		}
+{{- range .Params }}
+		sub.Flags().{{ (goBinding .).Method }}{{ if .Shorthand }}P{{ end }}({{ printf "%q" .Name }}, {{ if .Shorthand }}{{ printf "%q" .Shorthand }}, {{ end }}{{ (goBinding .).Zero }}, {{ printf "%q" (flagUsage .) }})
+{{- if .Deprecated }}
+		_ = sub.Flags().MarkDeprecated({{ printf "%q" .Name }}, "the API can remove it at any time.")
+{{- end }}
+{{- if .EnumValues }}
+		_ = sub.RegisterFlagCompletionFunc({{ printf "%q" .Name }}, cobra.FixedCompletions([]string{ {{ quoteJoin .EnumValues }} }, cobra.ShellCompDirectiveNoFileComp))
+{{- end }}
+{{- end }}
+{{- range oneofGroups . }}
+		sub.MarkFlagsMutuallyExclusive({{ quoteJoin . }})
+{{- end }}
+		cmd.AddCommand(sub)
+	}
+{{- end }}
+
+{{- define "command.input" }}
+				var flagsJSON []byte
+{{- range .Params }}
+{{- template "command.flag" . }}
+{{- end }}
+				bodies := {{ prefix }}readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
+{{- if or (eq .Shape "client_stream") (eq .Shape "bidi") }}
+				reqs := {{ prefix }}buildRequests[{{ goRequestType . }}](bodies, flagsJSON)
+{{- else }}
+				req := &{{ goRequestType . }}{}
+				if err := {{ prefix }}buildRequest(req, bodies, flagsJSON); err != nil {
+					return err
+				}
+{{- end }}
+{{- end }}
+
+{{- define "command.flag" }}
+{{- $b := goBinding . }}
+				if cmd.Flags().Changed({{ printf "%q" .Name }}) {
+{{- if eq $b.Overlay "mapString" }}
+{{- template "command.flag.mapString" . }}
+{{- else if eq $b.Overlay "mapJSON" }}
+{{- template "command.flag.mapJSON" . }}
+{{- else if eq $b.Overlay "jsonArray" }}
+{{- template "command.flag.jsonArray" . }}
+{{- else if eq $b.Overlay "json" }}
+{{- template "command.flag.json" . }}
+{{- else }}
+{{- template "command.flag.value" . }}
+{{- end }}
+					if err != nil {
+						return fmt.Errorf("flag --{{ .Name }}: %w", err)
+					}
+				}
+{{- end }}
+
+{{- define "command.flag.mapString" }}
+					values, _ := cmd.Flags().Get{{ (goBinding .).Method }}({{ printf "%q" .Name }})
+					entries := map[string]string{}
+					for _, kv := range values {
+						k, v, ok := strings.Cut(kv, "=")
+						if !ok {
+							return fmt.Errorf("flag --{{ .Name }}: %q is not key=value", kv)
+						}
+						entries[k] = v
+					}
+					flagsJSON, err = sjson.SetBytes(flagsJSON, {{ printf "%q" .ProtoPath }}, entries)
+{{- end }}
+
+{{- define "command.flag.mapJSON" }}
+					values, _ := cmd.Flags().Get{{ (goBinding .).Method }}({{ printf "%q" .Name }})
+					entries := map[string]json.RawMessage{}
+					for _, kv := range values {
+						k, v, ok := strings.Cut(kv, "=")
+						if !ok {
+							return fmt.Errorf("flag --{{ .Name }}: %q is not key=value", kv)
+						}
+						if !json.Valid([]byte(v)) {
+							return fmt.Errorf("flag --{{ .Name }}: %q is not valid JSON", v)
+						}
+						entries[k] = json.RawMessage(v)
+					}
+					flagsJSON, err = sjson.SetBytes(flagsJSON, {{ printf "%q" .ProtoPath }}, entries)
+{{- end }}
+
+{{- define "command.flag.jsonArray" }}
+					values, _ := cmd.Flags().Get{{ (goBinding .).Method }}({{ printf "%q" .Name }})
+					for _, value := range values {
+						if !json.Valid([]byte(value)) {
+							return fmt.Errorf("flag --{{ .Name }}: %q is not valid JSON", value)
+						}
+					}
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, {{ printf "%q" .ProtoPath }}, []byte("["+strings.Join(values, ",")+"]"))
+{{- end }}
+
+{{- define "command.flag.json" }}
+					value, _ := cmd.Flags().Get{{ (goBinding .).Method }}({{ printf "%q" .Name }})
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --{{ .Name }}: %q is not valid JSON", value)
+					}
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, {{ printf "%q" .ProtoPath }}, []byte(value))
+{{- end }}
+
+{{- define "command.flag.value" }}
+					value, _ := cmd.Flags().Get{{ (goBinding .).Method }}({{ printf "%q" .Name }})
+					flagsJSON, err = sjson.SetBytes(flagsJSON, {{ printf "%q" .ProtoPath }}, value)
+{{- end }}

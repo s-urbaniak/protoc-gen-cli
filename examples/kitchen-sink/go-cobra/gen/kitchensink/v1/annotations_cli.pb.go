@@ -10,16 +10,18 @@ import (
 	errors "errors"
 	fmt "fmt"
 	io "io"
+	iter "iter"
 	maps "maps"
 	os "os"
 	slices "slices"
 	strings "strings"
+	time "time"
 
 	table "github.com/jedib0t/go-pretty/v6/table"
 	cobra "github.com/spf13/cobra"
-	pflag "github.com/spf13/pflag"
-	gjson "github.com/tidwall/gjson"
+	jsonpath "github.com/theory/jsonpath"
 	sjson "github.com/tidwall/sjson"
+	yaml3 "go.yaml.in/yaml/v3"
 	term "golang.org/x/term"
 	grpc "google.golang.org/grpc"
 	status "google.golang.org/grpc/status"
@@ -28,547 +30,42 @@ import (
 	yaml "sigs.k8s.io/yaml"
 )
 
-type cli_kitchensink_v1_annotations_proto_viewField struct {
-	Label string
-	Path  string
-}
+// =============================================================================
+// kitchensink.v1.AnnotationsService — AnnotationsService's RPCs echo their requests.
+// =============================================================================
 
-type cli_kitchensink_v1_annotations_proto_viewList struct {
-	FullName string
-	Label    string
-	Path     string
-	Fields   []cli_kitchensink_v1_annotations_proto_viewField
-}
+// AnnotationsServiceOptions configures NewAnnotationsServiceCommand.
+// The zero value keeps every built-in default.
+type AnnotationsServiceOptions = Cli_kitchensink_v1_annotations_proto_Options
 
-// A view is the display projection of a message.
-type cli_kitchensink_v1_annotations_proto_view struct {
-	Lists  []cli_kitchensink_v1_annotations_proto_viewList
-	Fields []cli_kitchensink_v1_annotations_proto_viewField
-}
+// AnnotationsServicePrinter renders one body.
+type AnnotationsServicePrinter = Cli_kitchensink_v1_annotations_proto_Printer
 
-// viewFor returns the view of fullName. Configured fields replace the
-// derived fields.
-func cli_kitchensink_v1_annotations_proto_viewFor(fullName string, messageViews map[string]cli_kitchensink_v1_annotations_proto_view, views map[string][]cli_kitchensink_v1_annotations_proto_viewField) cli_kitchensink_v1_annotations_proto_view {
-	v := messageViews[fullName]
-	if fields, ok := views[fullName]; ok {
-		v.Fields = fields
-	}
-	if len(views) > 0 && len(v.Lists) > 0 {
-		lists := slices.Clone(v.Lists)
-		for i, l := range lists {
-			if fields, ok := views[l.FullName]; ok {
-				lists[i].Fields = fields
-			}
-		}
-		v.Lists = lists
-	}
-	return v
-}
+// AnnotationsServiceDecoder decodes one source into request bodies.
+type AnnotationsServiceDecoder = Cli_kitchensink_v1_annotations_proto_Decoder
 
-func cli_kitchensink_v1_annotations_proto_viewFields(message string, entries []string) []cli_kitchensink_v1_annotations_proto_viewField {
-	fields := make([]cli_kitchensink_v1_annotations_proto_viewField, 0, len(entries))
-	for _, entry := range entries {
-		label, path, ok := strings.Cut(entry, ":")
-		if !ok || label == "" || path == "" {
-			panic(fmt.Sprintf("Options.Views[%q]: %q is not \"Label:path\"", message, entry))
-		}
-		fields = append(fields, cli_kitchensink_v1_annotations_proto_viewField{Label: label, Path: path})
-	}
-	return fields
-}
+// AnnotationsServiceView names the fields a printer shows.
+type AnnotationsServiceView = Cli_kitchensink_v1_annotations_proto_View
 
-// A fragment is one request document.
-type cli_kitchensink_v1_annotations_proto_fragment struct {
-	Source string
-	JSON   []byte
-}
+type AnnotationsServiceViewList = Cli_kitchensink_v1_annotations_proto_ViewList
 
-// A decoder is one input format. decode changes its document encoding into
-// JSON.
-type cli_kitchensink_v1_annotations_proto_decoder struct {
-	name   string
-	decode func([]byte) ([]byte, error)
-}
+type AnnotationsServiceViewField = Cli_kitchensink_v1_annotations_proto_ViewField
 
-// decoderFns returns the built-in -f and -i formats.
-func cli_kitchensink_v1_annotations_proto_decoderFns() map[string]func([]byte) ([]byte, error) {
-	return map[string]func([]byte) ([]byte, error){
-		"json": func(body []byte) ([]byte, error) {
-			if !json.Valid(body) {
-				return nil, errors.New("not JSON")
-			}
-			return body, nil
-		},
-		"yaml": yaml.YAMLToJSON,
-	}
-}
+// The built-in decoders, in the order the CLI tries them.
+var (
+	AnnotationsServiceDecoderJSON = Cli_kitchensink_v1_annotations_proto_DecoderJSON
+	AnnotationsServiceDecoderYAML = Cli_kitchensink_v1_annotations_proto_DecoderYAML
+	AnnotationsServiceDecoders    = Cli_kitchensink_v1_annotations_proto_Decoders
+)
 
-// json comes before yaml because every JSON document is valid YAML.
-func cli_kitchensink_v1_annotations_proto_decoders(fns map[string]func([]byte) ([]byte, error)) []cli_kitchensink_v1_annotations_proto_decoder {
-	decoders := make([]cli_kitchensink_v1_annotations_proto_decoder, 0, len(fns))
-	for _, name := range []string{"json", "yaml"} {
-		if fn := fns[name]; fn != nil {
-			decoders = append(decoders, cli_kitchensink_v1_annotations_proto_decoder{name: name, decode: fn})
-			delete(fns, name)
-		}
-	}
-	for _, name := range slices.Sorted(maps.Keys(fns)) {
-		decoders = append(decoders, cli_kitchensink_v1_annotations_proto_decoder{name: name, decode: fns[name]})
-	}
-	return decoders
-}
-
-// marshalJSON returns m as compact JSON. The spacing of protojson is
-// unstable by design. json.Compact makes it stable.
-func cli_kitchensink_v1_annotations_proto_marshalJSON(m proto.Message) ([]byte, error) {
-	raw, err := protojson.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
-	var buf bytes.Buffer
-	if err := json.Compact(&buf, raw); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-// printJSON writes each record as one line of JSON.
-func cli_kitchensink_v1_annotations_proto_printJSON(indent bool) func(io.Writer, cli_kitchensink_v1_annotations_proto_view, func() ([]byte, error)) error {
-	return func(w io.Writer, _ cli_kitchensink_v1_annotations_proto_view, next func() ([]byte, error)) error {
-		for {
-			rec, err := next()
-			if errors.Is(err, io.EOF) {
-				return nil
-			}
-			if err != nil {
-				return err
-			}
-			if indent {
-				var buf bytes.Buffer
-				if err := json.Indent(&buf, rec, "", "  "); err != nil {
-					return err
-				}
-				rec = buf.Bytes()
-			}
-			if _, err := fmt.Fprintln(w, string(rec)); err != nil {
-				return err
-			}
-		}
-	}
-}
-
-// printYAML writes each record as one YAML document. "---" separates the
-// documents.
-func cli_kitchensink_v1_annotations_proto_printYAML(w io.Writer, _ cli_kitchensink_v1_annotations_proto_view, next func() ([]byte, error)) error {
-	first := true
-	for {
-		rec, err := next()
-		if errors.Is(err, io.EOF) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		if !first {
-			if _, err := io.WriteString(w, "---\n"); err != nil {
-				return err
-			}
-		}
-		first = false
-		doc, err := yaml.JSONToYAML(rec)
-		if err != nil {
-			return err
-		}
-		if _, err := w.Write(doc); err != nil {
-			return err
-		}
-	}
-}
-
-// cell renders a JSON value as one table cell. Top-level entries stack.
-// Deeper levels go inline.
-func cli_kitchensink_v1_annotations_proto_cell(v gjson.Result, sep string) string {
-	switch {
-	case v.IsArray():
-		items := v.Array()
-		parts := make([]string, len(items))
-		for i, item := range items {
-			parts[i] = cli_kitchensink_v1_annotations_proto_cell(item, ",")
-		}
-		return strings.Join(parts, sep)
-	case v.IsObject():
-		var parts []string
-		v.ForEach(func(k, val gjson.Result) bool {
-			parts = append(parts, k.String()+"="+cli_kitchensink_v1_annotations_proto_cell(val, ","))
-			return true
-		})
-		return strings.Join(parts, sep)
-	default:
-		return v.String()
-	}
-}
-
-// printTable renders each record as a table under its view.
-func cli_kitchensink_v1_annotations_proto_printTable(w io.Writer, v cli_kitchensink_v1_annotations_proto_view, next func() ([]byte, error)) error {
-	width := 0
-	if f, ok := w.(*os.File); ok {
-		if cols, _, err := term.GetSize(int(f.Fd())); err == nil {
-			width = cols
-		}
-	}
-	for i := 0; ; i++ {
-		rec, err := next()
-		if errors.Is(err, io.EOF) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-
-		titled := len(v.Fields) > 0 || len(v.Lists) > 1
-		first := i == 0
-		section := func(title string, fields []cli_kitchensink_v1_annotations_proto_viewField, rows []gjson.Result) error {
-			t := table.NewWriter()
-			if width > 0 {
-				t.Style().Size.WidthMax = width
-			}
-			header := make(table.Row, len(fields))
-			for j, f := range fields {
-				header[j] = f.Label
-			}
-			t.AppendHeader(header)
-			for _, src := range rows {
-				row := make(table.Row, len(fields))
-				for j, f := range fields {
-					c := cli_kitchensink_v1_annotations_proto_cell(src.Get(f.Path), "\n")
-					if strings.Contains(c, "\n") {
-						t.Style().Options.SeparateRows = true
-					}
-					row[j] = c
-				}
-				t.AppendRow(row)
-			}
-			out := ""
-			if !first {
-				out += "\n"
-			}
-			first = false
-			if title != "" {
-				out += title + "\n"
-			}
-			out += strings.TrimRight(t.Render(), "\n") + "\n"
-			_, err := io.WriteString(w, out)
-			return err
-		}
-
-		if len(v.Fields) > 0 {
-			if err := section("", v.Fields, []gjson.Result{gjson.ParseBytes(rec)}); err != nil {
-				return err
-			}
-		}
-		for _, list := range v.Lists {
-			rows := gjson.GetBytes(rec, list.Path).Array()
-			if len(rows) == 0 {
-				continue
-			}
-			title := ""
-			if titled {
-				title = strings.ToUpper(list.Label)
-			}
-			if err := section(title, list.Fields, rows); err != nil {
-				return err
-			}
-		}
-	}
-}
-
-// printers returns the built-in -o formats.
-func cli_kitchensink_v1_annotations_proto_printers() map[string]func(io.Writer, cli_kitchensink_v1_annotations_proto_view, func() ([]byte, error)) error {
-	return map[string]func(io.Writer, cli_kitchensink_v1_annotations_proto_view, func() ([]byte, error)) error{
-		"json":        cli_kitchensink_v1_annotations_proto_printJSON(false),
-		"json-pretty": cli_kitchensink_v1_annotations_proto_printJSON(true),
-		"table":       cli_kitchensink_v1_annotations_proto_printTable,
-		"yaml":        cli_kitchensink_v1_annotations_proto_printYAML,
-	}
-}
-
-func cli_kitchensink_v1_annotations_proto_checkDefaultOutput(printers map[string]func(io.Writer, cli_kitchensink_v1_annotations_proto_view, func() ([]byte, error)) error, defaultOutput string) {
-	if defaultOutput == "" {
-		return
-	}
-	if _, ok := printers[defaultOutput]; !ok {
-		panic(fmt.Sprintf("Options.DefaultOutput: unknown format %q; use one of: %s",
-			defaultOutput, strings.Join(slices.Sorted(maps.Keys(printers)), ", ")))
-	}
-}
-
-// outputPrinter resolves -o to its print function. An empty -o means the
-// configured default, or JSON. JSON is pretty on a terminal and compact in
-// a pipe.
-func cli_kitchensink_v1_annotations_proto_outputPrinter(cmd *cobra.Command, printers map[string]func(io.Writer, cli_kitchensink_v1_annotations_proto_view, func() ([]byte, error)) error, defaultOutput string) (func(io.Writer, cli_kitchensink_v1_annotations_proto_view, func() ([]byte, error)) error, error) {
-	format, _ := cmd.Flags().GetString("output")
-	if format == "" {
-		format = defaultOutput
-	}
-	if format == "" {
-		pretty := false
-		if f, ok := cmd.OutOrStdout().(*os.File); ok {
-			pretty = term.IsTerminal(int(f.Fd()))
-		}
-		return cli_kitchensink_v1_annotations_proto_printJSON(pretty), nil
-	}
-	p, ok := printers[format]
-	if !ok {
-		return nil, fmt.Errorf("unknown output format %q; use one of: %s",
-			format, strings.Join(slices.Sorted(maps.Keys(printers)), ", "))
-	}
-	return p, nil
-}
-
-// outputHelp returns the -o usage text.
-func cli_kitchensink_v1_annotations_proto_outputHelp(printers map[string]func(io.Writer, cli_kitchensink_v1_annotations_proto_view, func() ([]byte, error)) error, defaultOutput string) string {
-	help := "Output format: " + strings.Join(slices.Sorted(maps.Keys(printers)), ", ") + ".\n"
-	if defaultOutput != "" {
-		return help + "Default: " + defaultOutput + "."
-	}
-	return help + "Default: pretty JSON on a terminal, compact when piped."
-}
-
-// oneRecord yields m once and then io.EOF.
-func cli_kitchensink_v1_annotations_proto_oneRecord(m proto.Message) func() ([]byte, error) {
-	done := false
-	return func() ([]byte, error) {
-		if done {
-			return nil, io.EOF
-		}
-		done = true
-		return cli_kitchensink_v1_annotations_proto_marshalJSON(m)
-	}
-}
-
-// callContext returns the call context, with a --timeout deadline when set.
-func cli_kitchensink_v1_annotations_proto_callContext(cmd *cobra.Command) (context.Context, context.CancelFunc) {
-	if d, _ := cmd.Flags().GetDuration("timeout"); d > 0 {
-		return context.WithTimeout(cmd.Context(), d)
-	}
-	return context.WithCancel(cmd.Context())
-}
-
-// An exitError is an error with a process exit code. Error removes the gRPC
-// "rpc error: ..." wrapper.
-type cli_kitchensink_v1_annotations_proto_exitError struct {
-	code int
-	err  error
-}
-
-func (e cli_kitchensink_v1_annotations_proto_exitError) Error() string {
-	if msg := status.Convert(e.err).Message(); msg != "" {
-		return msg
-	}
-	return e.err.Error()
-}
-func (e cli_kitchensink_v1_annotations_proto_exitError) Unwrap() error { return e.err }
-func (e cli_kitchensink_v1_annotations_proto_exitError) ExitCode() int { return e.code }
-
-func cli_kitchensink_v1_annotations_proto_usage(err error) error {
-	return cli_kitchensink_v1_annotations_proto_exitError{2, err}
-}
-
-// callErr maps a failed call to an exit code from its context.
-func cli_kitchensink_v1_annotations_proto_callErr(ctx context.Context, err error) error {
-	if err == nil {
-		return nil
-	}
-	switch ctx.Err() {
-	case context.DeadlineExceeded:
-		return cli_kitchensink_v1_annotations_proto_exitError{124, err}
-	case context.Canceled:
-		return cli_kitchensink_v1_annotations_proto_exitError{130, err}
-	}
-	return cli_kitchensink_v1_annotations_proto_exitError{1, err}
-}
-
-// loadInputs returns the request fragments for the -f and -i values.
-// The fragments come in merge order. The -f documents come first, in
-// argument order. The -i values follow. A "-" filename reads stdin.
-// Content selects the format of each input. loadInputs skips empty inputs.
-func cli_kitchensink_v1_annotations_proto_loadInputs(decoders []cli_kitchensink_v1_annotations_proto_decoder, cmd *cobra.Command) ([]cli_kitchensink_v1_annotations_proto_fragment, error) {
-	files, _ := cmd.Flags().GetStringArray("filename")
-	inline, _ := cmd.Flags().GetStringArray("input")
-	var out []cli_kitchensink_v1_annotations_proto_fragment
-	add := func(source string, raw []byte) error {
-		if len(bytes.TrimSpace(raw)) == 0 {
-			return nil
-		}
-		for _, d := range decoders {
-			body, err := d.decode(raw)
-			if err == nil && bytes.HasPrefix(bytes.TrimSpace(body), []byte("{")) {
-				out = append(out, cli_kitchensink_v1_annotations_proto_fragment{Source: source, JSON: body})
-				return nil
-			}
-		}
-		names := make([]string, len(decoders))
-		for i, d := range decoders {
-			names[i] = d.name
-		}
-		return fmt.Errorf("parse %s: not an object in any input format (%s)",
-			source, strings.Join(names, ", "))
-	}
-	for _, name := range files {
-		name = strings.TrimSpace(name)
-		switch {
-		case name == "":
-		case name == "-":
-			body, err := io.ReadAll(cmd.InOrStdin())
-			if err != nil {
-				return nil, fmt.Errorf("read stdin: %w", err)
-			}
-			if err := add("stdin", body); err != nil {
-				return nil, err
-			}
-		default:
-			body, err := os.ReadFile(name)
-			if err != nil {
-				return nil, err
-			}
-			if err := add(name, body); err != nil {
-				return nil, err
-			}
-		}
-	}
-	for i, s := range inline {
-		if err := add(fmt.Sprintf("-i value %d", i+1), []byte(s)); err != nil {
-			return nil, err
-		}
-	}
-	return out, nil
-}
-
-// buildRequest merges the fragments into req in order, with proto.Merge
-// semantics.
-func cli_kitchensink_v1_annotations_proto_buildRequest(req proto.Message, frags []cli_kitchensink_v1_annotations_proto_fragment) error {
-	// Required fields are a property of the assembled request. The check
-	// comes after the merge.
-	for _, frag := range frags {
-		next := req.ProtoReflect().New().Interface()
-		if err := (protojson.UnmarshalOptions{AllowPartial: true}).Unmarshal(frag.JSON, next); err != nil {
-			return fmt.Errorf("decode %s: %w", frag.Source, err)
-		}
-		proto.Merge(req, next)
-	}
-	if err := proto.CheckInitialized(req); err != nil {
-		return fmt.Errorf("request: %w", err)
-	}
-	return nil
-}
-
-func cli_kitchensink_v1_annotations_proto_addInputFlags(fs *pflag.FlagSet, decoders []cli_kitchensink_v1_annotations_proto_decoder) {
-	names := make([]string, len(decoders))
-	for i, d := range decoders {
-		names[i] = d.name
-	}
-	formats := strings.Join(names, ", ")
-	fs.StringArrayP("filename", "f", nil,
-		"Request body from a file ("+formats+"), or '-' for stdin.\n"+
-			"Repeatable; -f files, -i values, and flags merge in that order.")
-	_ = cobra.MarkFlagFilename(fs, "filename", "json", "yaml", "yml")
-	fs.StringArrayP("input", "i", nil,
-		"Request body inline ("+formats+").\n"+
-			"Repeatable; merges after -f files and before flags.")
-}
-
-// AnnotationsServiceOptions configures the AnnotationsService commands.
-type AnnotationsServiceOptions struct {
-	// Printers adds -o formats. A print function pulls JSON records from
-	// next until io.EOF. A nil function removes the named format.
-	Printers map[string]func(w io.Writer, next func() ([]byte, error)) error
-	// DefaultOutput is the format for an empty -o.
-	DefaultOutput string
-	// Decoders adds -f and -i input formats. The content test tries them
-	// after json and yaml, in name order. A nil function removes the named
-	// format. Stdin for streaming RPCs is JSON only.
-	Decoders map[string]func([]byte) ([]byte, error)
-	// Views maps a message's full proto name to its "Label:path" fields
-	// (gjson paths). These fields replace the message's derived fields in
-	// all of its views. A malformed entry panics. A name that never displays
-	// has no effect.
-	Views map[string][]string
-}
-
-// NewAnnotationsServiceCommand returns the AnnotationsService command with
-// one subcommand for each RPC. Later opts override earlier opts for each
-// entry.
+// NewAnnotationsServiceCommand returns the "annotations" command tree.
+//
+// AnnotationsService's RPCs echo their requests.
+//
+// Later opts override earlier opts for each entry.
 func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...AnnotationsServiceOptions) *cobra.Command {
 	client := NewAnnotationsServiceClient(conn)
-
-	printers := cli_kitchensink_v1_annotations_proto_printers()
-	defaultOutput := ""
-	decoderFns := cli_kitchensink_v1_annotations_proto_decoderFns()
-	views := map[string][]cli_kitchensink_v1_annotations_proto_viewField{}
-	for _, o := range opts {
-		for name, fn := range o.Printers {
-			if fn == nil {
-				delete(printers, name)
-				continue
-			}
-			printers[name] = func(w io.Writer, _ cli_kitchensink_v1_annotations_proto_view, next func() ([]byte, error)) error {
-				return fn(w, next)
-			}
-		}
-		if o.DefaultOutput != "" {
-			defaultOutput = o.DefaultOutput
-		}
-		for name, fn := range o.Decoders {
-			if fn == nil {
-				delete(decoderFns, name)
-				continue
-			}
-			decoderFns[name] = fn
-		}
-		for message, entries := range o.Views {
-			views[message] = cli_kitchensink_v1_annotations_proto_viewFields(message, entries)
-		}
-	}
-	cli_kitchensink_v1_annotations_proto_checkDefaultOutput(printers, defaultOutput)
-	decoders := cli_kitchensink_v1_annotations_proto_decoders(decoderFns)
-
-	// messageViews contains the derived views. Options.Views entries
-	// override them.
-	messageViews := map[string]cli_kitchensink_v1_annotations_proto_view{
-		"kitchensink.v1.CuratedRequest": {Fields: []cli_kitchensink_v1_annotations_proto_viewField{
-			{Label: "KEY", Path: "key"},
-			{Label: "widget.gadget.leaf", Path: "widget.gadget.leaf"},
-		}},
-		"kitchensink.v1.EchoRequest": {Fields: []cli_kitchensink_v1_annotations_proto_viewField{
-			{Label: "text", Path: "text"},
-		}},
-		"kitchensink.v1.FlatRequest": {Fields: []cli_kitchensink_v1_annotations_proto_viewField{
-			{Label: "widget", Path: "widget"},
-			{Label: "note", Path: "note"},
-		}},
-		"kitchensink.v1.KnobsRequest": {Fields: []cli_kitchensink_v1_annotations_proto_viewField{
-			{Label: "capital", Path: "capital"},
-			{Label: "shallow.gadget.gizmo.leaf", Path: "shallow.gadget.gizmo.leaf"},
-			{Label: "shallow.gadget.leaf", Path: "shallow.gadget.leaf"},
-			{Label: "shallow.leaf", Path: "shallow.leaf"},
-			{Label: "whole.gadget.gizmo.leaf", Path: "whole.gadget.gizmo.leaf"},
-			{Label: "whole.gadget.leaf", Path: "whole.gadget.leaf"},
-			{Label: "whole.leaf", Path: "whole.leaf"},
-			{Label: "lifted", Path: "lifted"},
-			{Label: "deepened", Path: "deepened"},
-			{Label: "insisted.gadget.gizmo.leaf", Path: "insisted.gadget.gizmo.leaf"},
-			{Label: "insisted.gadget.leaf", Path: "insisted.gadget.leaf"},
-			{Label: "insisted.leaf", Path: "insisted.leaf"},
-			{Label: "blob", Path: "blob"},
-		}},
-	}
-
-	viewFor := func(fullName string) cli_kitchensink_v1_annotations_proto_view {
-		return cli_kitchensink_v1_annotations_proto_viewFor(fullName, messageViews, views)
-	}
-	outputPrinter := func(cmd *cobra.Command) (func(io.Writer, cli_kitchensink_v1_annotations_proto_view, func() ([]byte, error)) error, error) {
-		return cli_kitchensink_v1_annotations_proto_outputPrinter(cmd, printers, defaultOutput)
-	}
+	opt := cli_kitchensink_v1_annotations_proto_resolveOptions(opts)
 
 	cmd := &cobra.Command{
 		Use:     "annotations",
@@ -576,520 +73,1007 @@ func NewAnnotationsServiceCommand(conn grpc.ClientConnInterface, opts ...Annotat
 		Aliases: []string{"ann"},
 	}
 	cmd.CompletionOptions.SetDefaultShellCompDirective(cobra.ShellCompDirectiveNoFileComp)
-	cmd.PersistentFlags().StringP("output", "o", "", cli_kitchensink_v1_annotations_proto_outputHelp(printers, defaultOutput))
-	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(slices.Sorted(maps.Keys(printers)), cobra.ShellCompDirectiveNoFileComp))
-	cmd.PersistentFlags().Bool("example", false, "Print an example request body without sending it.")
-	cmd.PersistentFlags().Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
-	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error { return cli_kitchensink_v1_annotations_proto_usage(err) })
-	cmd.AddCommand(func() *cobra.Command {
-		var flagText string
+	cmd.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {
+		return cli_kitchensink_v1_annotations_proto_exitError{cli_kitchensink_v1_annotations_proto_exitUsage, err}
+	})
+
+	// ----- persistent flags -----
+	printers := slices.Sorted(maps.Keys(opt.Printers))
+	if _, ok := opt.Printers[opt.DefaultPrinter]; opt.DefaultPrinter != "" && !ok {
+		panic(fmt.Sprintf("Options.DefaultPrinter: unknown printer %q; use one of: %s", opt.DefaultPrinter, strings.Join(printers, ", ")))
+	}
+	defaultFormat := "json on a terminal, jsonl when piped"
+	if opt.DefaultPrinter != "" {
+		defaultFormat = opt.DefaultPrinter
+	}
+
+	fs := cmd.PersistentFlags()
+	fs.StringArrayP("filename", "f", nil, "Request bodies from a file, or '-' for stdin.")
+	_ = cobra.MarkFlagFilename(fs, "filename")
+	fs.StringArrayP("data", "d", nil, "A request body, inline.")
+	fs.Bool("dry-run", false, "Print the assembled requests without sending them.")
+	fs.StringP("output", "o", "", "Output format: "+strings.Join(printers, ", ")+".\nDefault: "+defaultFormat+".")
+	_ = cmd.RegisterFlagCompletionFunc("output", cobra.FixedCompletions(printers, cobra.ShellCompDirectiveNoFileComp))
+	fs.String("columns", "", "Table columns, as LABEL:path pairs into the JSON response.\nExample: --columns 'ID:$.id,NAME:$.name'.")
+	fs.Duration("timeout", 0, "Per-call deadline (e.g. 30s, 2m); 0 means no deadline.")
+	fs.Bool("example", false, "Print an example request body without sending it.")
+
+	// ----- echo — rpc Echo -----
+	{
 		sub := &cobra.Command{
 			Use:     "echo",
 			Aliases: []string{"e", "say"},
-			Args:    cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &EchoRequest{}
-					if err := protojson.Unmarshal([]byte("{\"text\":\"Mind the year, then celebrate!\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.EchoRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
+			Args:    cli_kitchensink_v1_annotations_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_kitchensink_v1_annotations_proto_resolveOutput(cmd.OutOrStdout(), "kitchensink.v1.EchoRequest", "kitchensink.v1.AnnotationsService.Echo", format, columns, opt)
 				if err != nil {
 					return err
 				}
-				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
-				ctx, cancel := cli_kitchensink_v1_annotations_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_kitchensink_v1_annotations_proto_callErr(ctx, err) }()
-				frags, err := cli_kitchensink_v1_annotations_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_kitchensink_v1_annotations_proto_View{}, []byte("{\"text\":\"Repellat aut et.\"}"))
 				}
+				var flagsJSON []byte
 				if cmd.Flags().Changed("text") {
-					doc, err := sjson.SetBytes([]byte("{}"), "text", flagText)
+					value, _ := cmd.Flags().GetString("text")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "text", value)
 					if err != nil {
 						return fmt.Errorf("flag --text: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --text", JSON: doc})
 				}
+				bodies := cli_kitchensink_v1_annotations_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
 				req := &EchoRequest{}
-				if err := cli_kitchensink_v1_annotations_proto_buildRequest(req, frags); err != nil {
+				if err := cli_kitchensink_v1_annotations_proto_buildRequest(req, bodies, flagsJSON); err != nil {
 					return err
 				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.EchoRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
-				}
-				resp, err := client.Echo(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.EchoRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(resp))
+				return cli_kitchensink_v1_annotations_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.Echo)
 			},
 		}
-		sub.Flags().StringVar(&flagText, "text", flagText, "")
-		cli_kitchensink_v1_annotations_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagCapital string
-		var flagShallow string
-		var flagShallowGadget string
-		var flagShallowGadgetGizmo string
-		var flagShallowGadgetLeaf string
-		var flagShallowLeaf string
-		var flagWhole string
-		var flagLifted string
-		var flagDeepened string
-		var flagInsisted string
-		var flagInsistedGadget string
-		var flagInsistedGadgetGizmo string
-		var flagInsistedGadgetGizmoLeaf string
-		var flagInsistedGadgetLeaf string
-		var flagInsistedLeaf string
-		var flagBlob string
+		sub.Flags().String("text", "", "")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- knobs — rpc Knobs -----
+	{
 		sub := &cobra.Command{
 			Use:  "knobs",
-			Args: cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &KnobsRequest{}
-					if err := protojson.Unmarshal([]byte("{\"capital\":\"Mind the year, then celebrate!\",\"shallow\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Celebrate wins tied to the group.\"},\"leaf\":\"Up to the company, we chase a smaller woman.\"},\"leaf\":\"Onto the fact, align expectations.\"},\"whole\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Few agree when the number spikes.\"},\"leaf\":\"The colorful hand being unexpectedly fondly.\"},\"leaf\":\"Sample government at 9s intervals.\"},\"lifted\":\"One wake when the day spikes.\",\"deepened\":\"Attribute gains to year where possible.\",\"insisted\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Surface risks around the time barely.\"},\"leaf\":\"The solitude must be fancy far.\"},\"leaf\":\"Compare thing before and after you honour.\"},\"blob\":{}}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.KnobsRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
+			Args: cli_kitchensink_v1_annotations_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_kitchensink_v1_annotations_proto_resolveOutput(cmd.OutOrStdout(), "kitchensink.v1.KnobsRequest", "kitchensink.v1.AnnotationsService.Knobs", format, columns, opt)
 				if err != nil {
 					return err
 				}
-				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
-				ctx, cancel := cli_kitchensink_v1_annotations_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_kitchensink_v1_annotations_proto_callErr(ctx, err) }()
-				frags, err := cli_kitchensink_v1_annotations_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_kitchensink_v1_annotations_proto_View{}, []byte("{\"capital\":\"Repellat aut et.\",\"shallow\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Repudiandae quis recusandae.\"},\"leaf\":\"Vel odit omnis.\"},\"leaf\":\"Exercitationem vel maiores.\"},\"whole\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Aliquid iusto consequatur.\"},\"leaf\":\"Vero consequuntur sequi.\"},\"leaf\":\"Ea magnam minima.\"},\"lifted\":\"Animi omnis qui.\",\"deepened\":\"Aliquid cumque non.\",\"worded\":\"Quia officia dicta.\",\"blob\":{}}"))
 				}
+				var flagsJSON []byte
 				if cmd.Flags().Changed("capital") {
-					doc, err := sjson.SetBytes([]byte("{}"), "capital", flagCapital)
+					value, _ := cmd.Flags().GetString("capital")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "capital", value)
 					if err != nil {
 						return fmt.Errorf("flag --capital: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --capital", JSON: doc})
 				}
 				if cmd.Flags().Changed("shallow") {
-					if !json.Valid([]byte(flagShallow)) {
-						return fmt.Errorf("flag --shallow: %q is not valid JSON", flagShallow)
+					value, _ := cmd.Flags().GetString("shallow")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --shallow: %q is not valid JSON", value)
 					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "shallow", []byte(flagShallow))
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "shallow", []byte(value))
 					if err != nil {
 						return fmt.Errorf("flag --shallow: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --shallow", JSON: doc})
 				}
 				if cmd.Flags().Changed("shallow.gadget") {
-					if !json.Valid([]byte(flagShallowGadget)) {
-						return fmt.Errorf("flag --shallow.gadget: %q is not valid JSON", flagShallowGadget)
+					value, _ := cmd.Flags().GetString("shallow.gadget")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --shallow.gadget: %q is not valid JSON", value)
 					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "shallow.gadget", []byte(flagShallowGadget))
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "shallow.gadget", []byte(value))
 					if err != nil {
 						return fmt.Errorf("flag --shallow.gadget: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --shallow.gadget", JSON: doc})
 				}
 				if cmd.Flags().Changed("shallow.gadget.gizmo") {
-					if !json.Valid([]byte(flagShallowGadgetGizmo)) {
-						return fmt.Errorf("flag --shallow.gadget.gizmo: %q is not valid JSON", flagShallowGadgetGizmo)
+					value, _ := cmd.Flags().GetString("shallow.gadget.gizmo")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --shallow.gadget.gizmo: %q is not valid JSON", value)
 					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "shallow.gadget.gizmo", []byte(flagShallowGadgetGizmo))
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "shallow.gadget.gizmo", []byte(value))
 					if err != nil {
 						return fmt.Errorf("flag --shallow.gadget.gizmo: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --shallow.gadget.gizmo", JSON: doc})
 				}
 				if cmd.Flags().Changed("shallow.gadget.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "shallow.gadget.leaf", flagShallowGadgetLeaf)
+					value, _ := cmd.Flags().GetString("shallow.gadget.leaf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "shallow.gadget.leaf", value)
 					if err != nil {
 						return fmt.Errorf("flag --shallow.gadget.leaf: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --shallow.gadget.leaf", JSON: doc})
 				}
 				if cmd.Flags().Changed("shallow.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "shallow.leaf", flagShallowLeaf)
+					value, _ := cmd.Flags().GetString("shallow.leaf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "shallow.leaf", value)
 					if err != nil {
 						return fmt.Errorf("flag --shallow.leaf: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --shallow.leaf", JSON: doc})
 				}
 				if cmd.Flags().Changed("whole") {
-					if !json.Valid([]byte(flagWhole)) {
-						return fmt.Errorf("flag --whole: %q is not valid JSON", flagWhole)
+					value, _ := cmd.Flags().GetString("whole")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --whole: %q is not valid JSON", value)
 					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "whole", []byte(flagWhole))
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "whole", []byte(value))
 					if err != nil {
 						return fmt.Errorf("flag --whole: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --whole", JSON: doc})
 				}
 				if cmd.Flags().Changed("lifted") {
-					doc, err := sjson.SetBytes([]byte("{}"), "lifted", flagLifted)
+					value, _ := cmd.Flags().GetString("lifted")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "lifted", value)
 					if err != nil {
 						return fmt.Errorf("flag --lifted: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --lifted", JSON: doc})
 				}
 				if cmd.Flags().Changed("deepened") {
-					doc, err := sjson.SetBytes([]byte("{}"), "deepened", flagDeepened)
+					value, _ := cmd.Flags().GetString("deepened")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "deepened", value)
 					if err != nil {
 						return fmt.Errorf("flag --deepened: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --deepened", JSON: doc})
 				}
-				if cmd.Flags().Changed("insisted") {
-					if !json.Valid([]byte(flagInsisted)) {
-						return fmt.Errorf("flag --insisted: %q is not valid JSON", flagInsisted)
-					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "insisted", []byte(flagInsisted))
+				if cmd.Flags().Changed("worded") {
+					value, _ := cmd.Flags().GetString("worded")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "worded", value)
 					if err != nil {
-						return fmt.Errorf("flag --insisted: %w", err)
+						return fmt.Errorf("flag --worded: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --insisted", JSON: doc})
-				}
-				if cmd.Flags().Changed("insisted.gadget") {
-					if !json.Valid([]byte(flagInsistedGadget)) {
-						return fmt.Errorf("flag --insisted.gadget: %q is not valid JSON", flagInsistedGadget)
-					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "insisted.gadget", []byte(flagInsistedGadget))
-					if err != nil {
-						return fmt.Errorf("flag --insisted.gadget: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --insisted.gadget", JSON: doc})
-				}
-				if cmd.Flags().Changed("insisted.gadget.gizmo") {
-					if !json.Valid([]byte(flagInsistedGadgetGizmo)) {
-						return fmt.Errorf("flag --insisted.gadget.gizmo: %q is not valid JSON", flagInsistedGadgetGizmo)
-					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "insisted.gadget.gizmo", []byte(flagInsistedGadgetGizmo))
-					if err != nil {
-						return fmt.Errorf("flag --insisted.gadget.gizmo: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --insisted.gadget.gizmo", JSON: doc})
-				}
-				if cmd.Flags().Changed("insisted.gadget.gizmo.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "insisted.gadget.gizmo.leaf", flagInsistedGadgetGizmoLeaf)
-					if err != nil {
-						return fmt.Errorf("flag --insisted.gadget.gizmo.leaf: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --insisted.gadget.gizmo.leaf", JSON: doc})
-				}
-				if cmd.Flags().Changed("insisted.gadget.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "insisted.gadget.leaf", flagInsistedGadgetLeaf)
-					if err != nil {
-						return fmt.Errorf("flag --insisted.gadget.leaf: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --insisted.gadget.leaf", JSON: doc})
-				}
-				if cmd.Flags().Changed("insisted.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "insisted.leaf", flagInsistedLeaf)
-					if err != nil {
-						return fmt.Errorf("flag --insisted.leaf: %w", err)
-					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --insisted.leaf", JSON: doc})
 				}
 				if cmd.Flags().Changed("blob") {
-					if !json.Valid([]byte(flagBlob)) {
-						return fmt.Errorf("flag --blob: %q is not valid JSON", flagBlob)
+					value, _ := cmd.Flags().GetString("blob")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --blob: %q is not valid JSON", value)
 					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "blob", []byte(flagBlob))
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "blob", []byte(value))
 					if err != nil {
 						return fmt.Errorf("flag --blob: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --blob", JSON: doc})
 				}
+				bodies := cli_kitchensink_v1_annotations_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
 				req := &KnobsRequest{}
-				if err := cli_kitchensink_v1_annotations_proto_buildRequest(req, frags); err != nil {
+				if err := cli_kitchensink_v1_annotations_proto_buildRequest(req, bodies, flagsJSON); err != nil {
 					return err
 				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.KnobsRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
-				}
-				resp, err := client.Knobs(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.KnobsRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(resp))
+				return cli_kitchensink_v1_annotations_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.Knobs)
 			},
 		}
-		sub.Flags().StringVarP(&flagCapital, "capital", "S", flagCapital, "")
-		sub.Flags().StringVar(&flagShallow, "shallow", flagShallow, "")
-		sub.Flags().StringVar(&flagShallowGadget, "shallow.gadget", flagShallowGadget, "")
-		sub.Flags().StringVar(&flagShallowGadgetGizmo, "shallow.gadget.gizmo", flagShallowGadgetGizmo, "")
-		sub.Flags().StringVar(&flagShallowGadgetLeaf, "shallow.gadget.leaf", flagShallowGadgetLeaf, "")
-		sub.Flags().StringVar(&flagShallowLeaf, "shallow.leaf", flagShallowLeaf, "")
-		sub.Flags().StringVar(&flagWhole, "whole", flagWhole, "")
-		sub.Flags().StringVar(&flagLifted, "lifted", flagLifted, "The next three options cannot apply.")
-		sub.Flags().StringVar(&flagDeepened, "deepened", flagDeepened, "")
-		sub.Flags().StringVar(&flagInsisted, "insisted", flagInsisted, "")
-		sub.Flags().StringVar(&flagInsistedGadget, "insisted.gadget", flagInsistedGadget, "")
-		sub.Flags().StringVar(&flagInsistedGadgetGizmo, "insisted.gadget.gizmo", flagInsistedGadgetGizmo, "")
-		sub.Flags().StringVar(&flagInsistedGadgetGizmoLeaf, "insisted.gadget.gizmo.leaf", flagInsistedGadgetGizmoLeaf, "")
-		sub.Flags().StringVar(&flagInsistedGadgetLeaf, "insisted.gadget.leaf", flagInsistedGadgetLeaf, "")
-		sub.Flags().StringVar(&flagInsistedLeaf, "insisted.leaf", flagInsistedLeaf, "")
-		sub.Flags().StringVarP(&flagBlob, "blob", "j", flagBlob, "")
-		cli_kitchensink_v1_annotations_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagKey string
-		var flagWidget string
-		var flagWidgetGadget string
-		var flagWidgetGadgetGizmo string
-		var flagWidgetGadgetGizmoLeaf string
-		var flagWidgetGadgetLeaf string
-		var flagWidgetLeaf string
+		sub.Flags().StringP("capital", "S", "", "")
+		sub.Flags().String("shallow", "", "")
+		sub.Flags().String("shallow.gadget", "", "")
+		sub.Flags().String("shallow.gadget.gizmo", "", "")
+		sub.Flags().String("shallow.gadget.leaf", "", "")
+		sub.Flags().String("shallow.leaf", "", "")
+		sub.Flags().String("whole", "", "")
+		sub.Flags().String("lifted", "", "A line of text.")
+		sub.Flags().String("deepened", "", "Another line of text.")
+		sub.Flags().String("worded", "", "Set by the annotation, not the comment.")
+		sub.Flags().StringP("blob", "j", "", "")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- curated — rpc Curated -----
+	{
 		sub := &cobra.Command{
 			Use:  "curated",
-			Args: cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &CuratedRequest{}
-					if err := protojson.Unmarshal([]byte("{\"key\":\"Mind the year, then celebrate!\",\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Celebrate wins tied to the group.\"},\"leaf\":\"Up to the company, we chase a smaller woman.\"},\"leaf\":\"Onto the fact, align expectations.\"}}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CuratedRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
+			Args: cli_kitchensink_v1_annotations_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_kitchensink_v1_annotations_proto_resolveOutput(cmd.OutOrStdout(), "kitchensink.v1.CuratedRequest", "kitchensink.v1.AnnotationsService.Curated", format, columns, opt)
 				if err != nil {
 					return err
 				}
-				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
-				ctx, cancel := cli_kitchensink_v1_annotations_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_kitchensink_v1_annotations_proto_callErr(ctx, err) }()
-				frags, err := cli_kitchensink_v1_annotations_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_kitchensink_v1_annotations_proto_View{}, []byte("{\"key\":\"Repellat aut et.\",\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Repudiandae quis recusandae.\"},\"leaf\":\"Vel odit omnis.\"},\"leaf\":\"Exercitationem vel maiores.\"}}"))
 				}
+				var flagsJSON []byte
 				if cmd.Flags().Changed("key") {
-					doc, err := sjson.SetBytes([]byte("{}"), "key", flagKey)
+					value, _ := cmd.Flags().GetString("key")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "key", value)
 					if err != nil {
 						return fmt.Errorf("flag --key: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --key", JSON: doc})
 				}
 				if cmd.Flags().Changed("widget") {
-					if !json.Valid([]byte(flagWidget)) {
-						return fmt.Errorf("flag --widget: %q is not valid JSON", flagWidget)
+					value, _ := cmd.Flags().GetString("widget")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --widget: %q is not valid JSON", value)
 					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "widget", []byte(flagWidget))
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "widget", []byte(value))
 					if err != nil {
 						return fmt.Errorf("flag --widget: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --widget", JSON: doc})
 				}
 				if cmd.Flags().Changed("widget.gadget") {
-					if !json.Valid([]byte(flagWidgetGadget)) {
-						return fmt.Errorf("flag --widget.gadget: %q is not valid JSON", flagWidgetGadget)
+					value, _ := cmd.Flags().GetString("widget.gadget")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --widget.gadget: %q is not valid JSON", value)
 					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "widget.gadget", []byte(flagWidgetGadget))
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "widget.gadget", []byte(value))
 					if err != nil {
 						return fmt.Errorf("flag --widget.gadget: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --widget.gadget", JSON: doc})
 				}
 				if cmd.Flags().Changed("widget.gadget.gizmo") {
-					if !json.Valid([]byte(flagWidgetGadgetGizmo)) {
-						return fmt.Errorf("flag --widget.gadget.gizmo: %q is not valid JSON", flagWidgetGadgetGizmo)
+					value, _ := cmd.Flags().GetString("widget.gadget.gizmo")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --widget.gadget.gizmo: %q is not valid JSON", value)
 					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "widget.gadget.gizmo", []byte(flagWidgetGadgetGizmo))
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "widget.gadget.gizmo", []byte(value))
 					if err != nil {
 						return fmt.Errorf("flag --widget.gadget.gizmo: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --widget.gadget.gizmo", JSON: doc})
 				}
 				if cmd.Flags().Changed("widget.gadget.gizmo.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "widget.gadget.gizmo.leaf", flagWidgetGadgetGizmoLeaf)
+					value, _ := cmd.Flags().GetString("widget.gadget.gizmo.leaf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "widget.gadget.gizmo.leaf", value)
 					if err != nil {
 						return fmt.Errorf("flag --widget.gadget.gizmo.leaf: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --widget.gadget.gizmo.leaf", JSON: doc})
 				}
 				if cmd.Flags().Changed("widget.gadget.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "widget.gadget.leaf", flagWidgetGadgetLeaf)
+					value, _ := cmd.Flags().GetString("widget.gadget.leaf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "widget.gadget.leaf", value)
 					if err != nil {
 						return fmt.Errorf("flag --widget.gadget.leaf: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --widget.gadget.leaf", JSON: doc})
 				}
 				if cmd.Flags().Changed("widget.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "widget.leaf", flagWidgetLeaf)
+					value, _ := cmd.Flags().GetString("widget.leaf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "widget.leaf", value)
 					if err != nil {
 						return fmt.Errorf("flag --widget.leaf: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --widget.leaf", JSON: doc})
 				}
+				bodies := cli_kitchensink_v1_annotations_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
 				req := &CuratedRequest{}
-				if err := cli_kitchensink_v1_annotations_proto_buildRequest(req, frags); err != nil {
+				if err := cli_kitchensink_v1_annotations_proto_buildRequest(req, bodies, flagsJSON); err != nil {
 					return err
 				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CuratedRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
-				}
-				resp, err := client.Curated(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.CuratedRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(resp))
+				return cli_kitchensink_v1_annotations_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.Curated)
 			},
 		}
-		sub.Flags().StringVar(&flagKey, "key", flagKey, "")
-		sub.Flags().StringVar(&flagWidget, "widget", flagWidget, "")
-		sub.Flags().StringVar(&flagWidgetGadget, "widget.gadget", flagWidgetGadget, "")
-		sub.Flags().StringVar(&flagWidgetGadgetGizmo, "widget.gadget.gizmo", flagWidgetGadgetGizmo, "")
-		sub.Flags().StringVar(&flagWidgetGadgetGizmoLeaf, "widget.gadget.gizmo.leaf", flagWidgetGadgetGizmoLeaf, "")
-		sub.Flags().StringVar(&flagWidgetGadgetLeaf, "widget.gadget.leaf", flagWidgetGadgetLeaf, "")
-		sub.Flags().StringVar(&flagWidgetLeaf, "widget.leaf", flagWidgetLeaf, "")
-		cli_kitchensink_v1_annotations_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
-	cmd.AddCommand(func() *cobra.Command {
-		var flagWidget string
-		var flagWidgetGadget string
-		var flagWidgetGadgetGizmo string
-		var flagWidgetGadgetGizmoLeaf string
-		var flagWidgetGadgetLeaf string
-		var flagWidgetLeaf string
-		var flagNote string
+		sub.Flags().String("key", "", "")
+		sub.Flags().String("widget", "", "")
+		sub.Flags().String("widget.gadget", "", "")
+		sub.Flags().String("widget.gadget.gizmo", "", "")
+		sub.Flags().String("widget.gadget.gizmo.leaf", "", "")
+		sub.Flags().String("widget.gadget.leaf", "", "")
+		sub.Flags().String("widget.leaf", "", "")
+		cmd.AddCommand(sub)
+	}
+
+	// ----- flat — rpc Flat -----
+	{
 		sub := &cobra.Command{
 			Use:  "flat",
-			Args: cobra.NoArgs,
-			RunE: func(cmd *cobra.Command, _ []string) (err error) {
-				if example, _ := cmd.Flags().GetBool("example"); example {
-					print, err := outputPrinter(cmd)
-					if err != nil {
-						return err
-					}
-					req := &FlatRequest{}
-					if err := protojson.Unmarshal([]byte("{\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Mind the year, then celebrate!\"},\"leaf\":\"Celebrate wins tied to the group.\"},\"leaf\":\"Up to the company, we chase a smaller woman.\"},\"note\":\"Onto the fact, align expectations.\"}"), req); err != nil {
-						return err
-					}
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.FlatRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
-				}
-				print, err := outputPrinter(cmd)
+			Args: cli_kitchensink_v1_annotations_proto_noArgs,
+			RunE: func(cmd *cobra.Command, _ []string) error {
+				format, _ := cmd.Flags().GetString("output")
+				columns, _ := cmd.Flags().GetString("columns")
+				example, _ := cmd.Flags().GetBool("example")
+				dryRun, _ := cmd.Flags().GetBool("dry-run")
+				timeout, _ := cmd.Flags().GetDuration("timeout")
+				filenames, _ := cmd.Flags().GetStringArray("filename")
+				data, _ := cmd.Flags().GetStringArray("data")
+				printer, view, err := cli_kitchensink_v1_annotations_proto_resolveOutput(cmd.OutOrStdout(), "kitchensink.v1.FlatRequest", "kitchensink.v1.AnnotationsService.Flat", format, columns, opt)
 				if err != nil {
 					return err
 				}
-				// Set after the checks above. Those checks keep cobra's usage.
 				cmd.SilenceUsage = true
-				ctx, cancel := cli_kitchensink_v1_annotations_proto_callContext(cmd)
-				defer cancel()
-				defer func() { err = cli_kitchensink_v1_annotations_proto_callErr(ctx, err) }()
-				frags, err := cli_kitchensink_v1_annotations_proto_loadInputs(decoders, cmd)
-				if err != nil {
-					return err
+				if example {
+					return printer(cmd.OutOrStdout(), Cli_kitchensink_v1_annotations_proto_View{}, []byte("{\"widget\":{\"gadget\":{\"gizmo\":{\"leaf\":\"Repellat aut et.\"},\"leaf\":\"Repudiandae quis recusandae.\"},\"leaf\":\"Vel odit omnis.\"},\"note\":\"Exercitationem vel maiores.\"}"))
 				}
+				var flagsJSON []byte
 				if cmd.Flags().Changed("widget") {
-					if !json.Valid([]byte(flagWidget)) {
-						return fmt.Errorf("flag --widget: %q is not valid JSON", flagWidget)
+					value, _ := cmd.Flags().GetString("widget")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --widget: %q is not valid JSON", value)
 					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "widget", []byte(flagWidget))
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "widget", []byte(value))
 					if err != nil {
 						return fmt.Errorf("flag --widget: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --widget", JSON: doc})
 				}
 				if cmd.Flags().Changed("widget.gadget") {
-					if !json.Valid([]byte(flagWidgetGadget)) {
-						return fmt.Errorf("flag --widget.gadget: %q is not valid JSON", flagWidgetGadget)
+					value, _ := cmd.Flags().GetString("widget.gadget")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --widget.gadget: %q is not valid JSON", value)
 					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "widget.gadget", []byte(flagWidgetGadget))
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "widget.gadget", []byte(value))
 					if err != nil {
 						return fmt.Errorf("flag --widget.gadget: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --widget.gadget", JSON: doc})
 				}
 				if cmd.Flags().Changed("widget.gadget.gizmo") {
-					if !json.Valid([]byte(flagWidgetGadgetGizmo)) {
-						return fmt.Errorf("flag --widget.gadget.gizmo: %q is not valid JSON", flagWidgetGadgetGizmo)
+					value, _ := cmd.Flags().GetString("widget.gadget.gizmo")
+					if !json.Valid([]byte(value)) {
+						return fmt.Errorf("flag --widget.gadget.gizmo: %q is not valid JSON", value)
 					}
-					doc, err := sjson.SetRawBytes([]byte("{}"), "widget.gadget.gizmo", []byte(flagWidgetGadgetGizmo))
+					flagsJSON, err = sjson.SetRawBytes(flagsJSON, "widget.gadget.gizmo", []byte(value))
 					if err != nil {
 						return fmt.Errorf("flag --widget.gadget.gizmo: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --widget.gadget.gizmo", JSON: doc})
 				}
 				if cmd.Flags().Changed("widget.gadget.gizmo.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "widget.gadget.gizmo.leaf", flagWidgetGadgetGizmoLeaf)
+					value, _ := cmd.Flags().GetString("widget.gadget.gizmo.leaf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "widget.gadget.gizmo.leaf", value)
 					if err != nil {
 						return fmt.Errorf("flag --widget.gadget.gizmo.leaf: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --widget.gadget.gizmo.leaf", JSON: doc})
 				}
 				if cmd.Flags().Changed("widget.gadget.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "widget.gadget.leaf", flagWidgetGadgetLeaf)
+					value, _ := cmd.Flags().GetString("widget.gadget.leaf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "widget.gadget.leaf", value)
 					if err != nil {
 						return fmt.Errorf("flag --widget.gadget.leaf: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --widget.gadget.leaf", JSON: doc})
 				}
 				if cmd.Flags().Changed("widget.leaf") {
-					doc, err := sjson.SetBytes([]byte("{}"), "widget.leaf", flagWidgetLeaf)
+					value, _ := cmd.Flags().GetString("widget.leaf")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "widget.leaf", value)
 					if err != nil {
 						return fmt.Errorf("flag --widget.leaf: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --widget.leaf", JSON: doc})
 				}
 				if cmd.Flags().Changed("note") {
-					doc, err := sjson.SetBytes([]byte("{}"), "note", flagNote)
+					value, _ := cmd.Flags().GetString("note")
+					flagsJSON, err = sjson.SetBytes(flagsJSON, "note", value)
 					if err != nil {
 						return fmt.Errorf("flag --note: %w", err)
 					}
-					frags = append(frags, cli_kitchensink_v1_annotations_proto_fragment{Source: "flag --note", JSON: doc})
 				}
+				bodies := cli_kitchensink_v1_annotations_proto_readBodies(opt.Decoders, filenames, data, cmd.InOrStdin(), cmd.ErrOrStderr())
 				req := &FlatRequest{}
-				if err := cli_kitchensink_v1_annotations_proto_buildRequest(req, frags); err != nil {
+				if err := cli_kitchensink_v1_annotations_proto_buildRequest(req, bodies, flagsJSON); err != nil {
 					return err
 				}
-				if dryRun, _ := cmd.Flags().GetBool("dry-run"); dryRun {
-					return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.FlatRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(req))
-				}
-				resp, err := client.Flat(ctx, req)
-				if err != nil {
-					return err
-				}
-				return print(cmd.OutOrStdout(), viewFor("kitchensink.v1.FlatRequest"), cli_kitchensink_v1_annotations_proto_oneRecord(resp))
+				return cli_kitchensink_v1_annotations_proto_runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.Flat)
 			},
 		}
-		sub.Flags().StringVar(&flagWidget, "widget", flagWidget, "")
-		sub.Flags().StringVar(&flagWidgetGadget, "widget.gadget", flagWidgetGadget, "")
-		sub.Flags().StringVar(&flagWidgetGadgetGizmo, "widget.gadget.gizmo", flagWidgetGadgetGizmo, "")
-		sub.Flags().StringVar(&flagWidgetGadgetGizmoLeaf, "widget.gadget.gizmo.leaf", flagWidgetGadgetGizmoLeaf, "")
-		sub.Flags().StringVar(&flagWidgetGadgetLeaf, "widget.gadget.leaf", flagWidgetGadgetLeaf, "")
-		sub.Flags().StringVar(&flagWidgetLeaf, "widget.leaf", flagWidgetLeaf, "")
-		sub.Flags().StringVar(&flagNote, "note", flagNote, "")
-		cli_kitchensink_v1_annotations_proto_addInputFlags(sub.Flags(), decoders)
-		sub.Flags().Bool("dry-run", false, "Print the assembled request body without sending it.")
-		return sub
-	}())
+		sub.Flags().String("widget", "", "")
+		sub.Flags().String("widget.gadget", "", "")
+		sub.Flags().String("widget.gadget.gizmo", "", "")
+		sub.Flags().String("widget.gadget.gizmo.leaf", "", "")
+		sub.Flags().String("widget.gadget.leaf", "", "")
+		sub.Flags().String("widget.leaf", "", "")
+		sub.Flags().String("note", "", "")
+		cmd.AddCommand(sub)
+	}
+
 	return cmd
+}
+
+// =============================================================================
+// Options: what the caller configures.
+// =============================================================================
+
+// Cli_kitchensink_v1_annotations_proto_Options configures a service command. The zero value keeps every
+// built-in default.
+type Cli_kitchensink_v1_annotations_proto_Options struct {
+	// Printers adds a printer under the name -o takes. A nil printer removes
+	// the built-in of that name.
+	Printers map[string]Cli_kitchensink_v1_annotations_proto_Printer
+	// DefaultPrinter names the printer when -o is absent. An unknown one panics
+	// when the caller builds the command.
+	DefaultPrinter string
+	// Decoders replaces the built-in -f and -d decoders, in the order the CLI
+	// tries them.
+	Decoders []Cli_kitchensink_v1_annotations_proto_Decoder
+	// A Views entry replaces the derived view of a method, keyed by the
+	// method's full proto name.
+	Views map[string]Cli_kitchensink_v1_annotations_proto_View
+}
+
+func cli_kitchensink_v1_annotations_proto_resolveOptions(opts []Cli_kitchensink_v1_annotations_proto_Options) Cli_kitchensink_v1_annotations_proto_Options {
+	resolved := Cli_kitchensink_v1_annotations_proto_Options{
+		Printers: maps.Clone(Cli_kitchensink_v1_annotations_proto_Printers),
+		Decoders: Cli_kitchensink_v1_annotations_proto_Decoders,
+		Views:    map[string]Cli_kitchensink_v1_annotations_proto_View{},
+	}
+	for _, opt := range opts {
+		for name, printer := range opt.Printers {
+			if printer == nil {
+				delete(resolved.Printers, name)
+				continue
+			}
+			resolved.Printers[name] = printer
+		}
+		if opt.DefaultPrinter != "" {
+			resolved.DefaultPrinter = opt.DefaultPrinter
+		}
+		if len(opt.Decoders) > 0 {
+			resolved.Decoders = opt.Decoders
+		}
+		for method, view := range opt.Views {
+			resolved.Views[method] = view
+		}
+	}
+	return resolved
+}
+
+// =============================================================================
+// Input: -f files, then -d values, then flags, in that order.
+// =============================================================================
+
+// A Decoder decodes one source into request bodies.
+type Cli_kitchensink_v1_annotations_proto_Decoder struct {
+	// Name identifies the decoder in an error.
+	Name string
+	// Decode yields one JSON body for each document in the source, in order.
+	// It yields an error, and nothing more, for a source it cannot read.
+	Decode func(r io.Reader) iter.Seq2[[]byte, error]
+}
+
+var (
+	Cli_kitchensink_v1_annotations_proto_DecoderJSON = Cli_kitchensink_v1_annotations_proto_Decoder{
+		Name: "json",
+		Decode: func(r io.Reader) iter.Seq2[[]byte, error] {
+			return func(yield func([]byte, error) bool) {
+				dec := json.NewDecoder(r)
+				for {
+					var raw json.RawMessage
+					if err := dec.Decode(&raw); err != nil {
+						if !errors.Is(err, io.EOF) {
+							yield(nil, err)
+						}
+						return
+					}
+					var items []json.RawMessage
+					if err := json.Unmarshal(raw, &items); err != nil {
+						if !yield(raw, nil) {
+							return
+						}
+						continue
+					}
+					for _, item := range items {
+						if !yield(item, nil) {
+							return
+						}
+					}
+				}
+			}
+		},
+	}
+
+	Cli_kitchensink_v1_annotations_proto_DecoderYAML = Cli_kitchensink_v1_annotations_proto_Decoder{
+		Name: "yaml",
+		Decode: func(r io.Reader) iter.Seq2[[]byte, error] {
+			return func(yield func([]byte, error) bool) {
+				// yaml3 finds the document boundaries. yaml converts a
+				// document, including a map key that YAML allows and JSON
+				// does not.
+				dec := yaml3.NewDecoder(r)
+				for {
+					var node yaml3.Node
+					if err := dec.Decode(&node); err != nil {
+						if !errors.Is(err, io.EOF) {
+							yield(nil, err)
+						}
+						return
+					}
+					doc, err := yaml3.Marshal(&node)
+					if err != nil {
+						yield(nil, err)
+						return
+					}
+					body, err := yaml.YAMLToJSON(doc)
+					if err != nil {
+						yield(nil, err)
+						return
+					}
+					// An empty document converts to null, which is no body.
+					if bytes.Equal(bytes.TrimSpace(body), []byte("null")) {
+						continue
+					}
+					if !yield(body, nil) {
+						return
+					}
+				}
+			}
+		},
+	}
+
+	// The built-in decoders, in the order the CLI tries them.
+	Cli_kitchensink_v1_annotations_proto_Decoders = []Cli_kitchensink_v1_annotations_proto_Decoder{Cli_kitchensink_v1_annotations_proto_DecoderJSON, Cli_kitchensink_v1_annotations_proto_DecoderYAML}
+)
+
+// The first decoder to read a body takes the source.
+func cli_kitchensink_v1_annotations_proto_decodeSource(decoders []Cli_kitchensink_v1_annotations_proto_Decoder, source string, r io.Reader) iter.Seq2[[]byte, error] {
+	for _, dec := range decoders {
+		// A decoder reads as far as it needs to. The bytes a failed decoder
+		// read go to the next one, because stdin cannot replay them.
+		var seen bytes.Buffer
+		next, stop := iter.Pull2(dec.Decode(io.TeeReader(r, &seen)))
+		body, err, read := next()
+		stop()
+		r = io.MultiReader(bytes.NewReader(seen.Bytes()), r)
+		if err != nil {
+			continue
+		}
+		if read {
+			// A body fills a request message, so it is a JSON object. A
+			// source that reads as anything else belongs to another decoder.
+			opening, err := json.NewDecoder(bytes.NewReader(body)).Token()
+			if err != nil || opening != json.Delim('{') {
+				continue
+			}
+		}
+
+		return func(yield func([]byte, error) bool) {
+			for body, err := range dec.Decode(r) {
+				if err != nil {
+					yield(nil, fmt.Errorf("read %s as %s: %w", source, dec.Name, err))
+					return
+				}
+				if !yield(body, nil) {
+					return
+				}
+			}
+		}
+	}
+
+	names := make([]string, len(decoders))
+	for i, dec := range decoders {
+		names[i] = dec.Name
+	}
+	return func(yield func([]byte, error) bool) {
+		yield(nil, fmt.Errorf("cannot read %s as any of: %s", source, strings.Join(names, ", ")))
+	}
+}
+
+// cli_kitchensink_v1_annotations_proto_readBodies opens nothing until a caller ranges the sequence.
+func cli_kitchensink_v1_annotations_proto_readBodies(
+	decoders []Cli_kitchensink_v1_annotations_proto_Decoder,
+	filenames, data []string,
+	stdin io.Reader,
+	stderr io.Writer,
+) iter.Seq2[[]byte, error] {
+	if f, ok := stdin.(*os.File); ok && term.IsTerminal(int(f.Fd())) &&
+		slices.ContainsFunc(filenames, func(name string) bool {
+			return strings.TrimSpace(name) == "-"
+		}) {
+		fmt.Fprintln(stderr, "reading request bodies from the terminal; Ctrl-D to finish")
+	}
+
+	return func(yield func([]byte, error) bool) {
+		// read reports whether the caller wants more bodies.
+		read := func(source string, r io.Reader) bool {
+			for body, err := range cli_kitchensink_v1_annotations_proto_decodeSource(decoders, source, r) {
+				if !yield(body, err) || err != nil {
+					return false
+				}
+			}
+			return true
+		}
+
+		for _, filename := range filenames {
+			filename = strings.TrimSpace(filename)
+
+			var r io.Reader
+			source := filename
+			switch {
+			case filename == "":
+				continue
+			case filename == "-":
+				source, r = "stdin", stdin
+			default:
+				f, err := os.Open(filename)
+				if err != nil {
+					yield(nil, err)
+					return
+				}
+				defer f.Close()
+				r = f
+			}
+
+			if !read(source, r) {
+				return
+			}
+		}
+
+		for i, body := range data {
+			if !read(fmt.Sprintf("-d value %d", i+1), strings.NewReader(body)) {
+				return
+			}
+		}
+	}
+}
+
+func cli_kitchensink_v1_annotations_proto_applyJSON(msg proto.Message, body []byte) error {
+	// protojson clears the message it fills, so the body decodes into a fresh
+	// partial.
+	partial := msg.ProtoReflect().New().Interface()
+	if err := (protojson.UnmarshalOptions{AllowPartial: true}).Unmarshal(body, partial); err != nil {
+		return err
+	}
+	proto.Merge(msg, partial)
+	return nil
+}
+
+// A flag overrides a body.
+func cli_kitchensink_v1_annotations_proto_buildRequest(req proto.Message, bodies iter.Seq2[[]byte, error], flagsJSON []byte) error {
+	n := 0
+	for body, err := range bodies {
+		if err != nil {
+			return err
+		}
+		n++
+		if err := cli_kitchensink_v1_annotations_proto_applyJSON(req, body); err != nil {
+			return fmt.Errorf("request body %d: %w", n, err)
+		}
+	}
+	if flagsJSON != nil {
+		if err := cli_kitchensink_v1_annotations_proto_applyJSON(req, flagsJSON); err != nil {
+			return fmt.Errorf("flags: %w", err)
+		}
+	}
+	if err := proto.CheckInitialized(req); err != nil {
+		return fmt.Errorf("request: %w", err)
+	}
+	return nil
+}
+
+// =============================================================================
+// Output: -o picks a printer, and a view names the fields of a response.
+// =============================================================================
+
+type Cli_kitchensink_v1_annotations_proto_ViewField struct {
+	Label string
+	Path  string // RFC 9535 JSONPath into the response.
+}
+
+type Cli_kitchensink_v1_annotations_proto_ViewList struct {
+	Label  string
+	Path   string
+	Fields []Cli_kitchensink_v1_annotations_proto_ViewField
+}
+
+type Cli_kitchensink_v1_annotations_proto_View struct {
+	Lists  []Cli_kitchensink_v1_annotations_proto_ViewList
+	Fields []Cli_kitchensink_v1_annotations_proto_ViewField
+}
+
+// A Printer renders one body. A streaming command calls it once for each
+// response. --dry-run and --example give it a request body and an empty view.
+type Cli_kitchensink_v1_annotations_proto_Printer func(w io.Writer, view Cli_kitchensink_v1_annotations_proto_View, body []byte) error
+
+// The built-in printers, keyed by the name -o takes.
+var Cli_kitchensink_v1_annotations_proto_Printers = map[string]Cli_kitchensink_v1_annotations_proto_Printer{
+	"json": func(w io.Writer, _ Cli_kitchensink_v1_annotations_proto_View, body []byte) error {
+		return cli_kitchensink_v1_annotations_proto_printJSON(w, body, true)
+	},
+	"jsonl": func(w io.Writer, _ Cli_kitchensink_v1_annotations_proto_View, body []byte) error {
+		return cli_kitchensink_v1_annotations_proto_printJSON(w, body, false)
+	},
+	"table": cli_kitchensink_v1_annotations_proto_printTable,
+	"yaml":  cli_kitchensink_v1_annotations_proto_printYAML,
+}
+
+// The view derived for each response message.
+var cli_kitchensink_v1_annotations_proto_messageViews = map[string]Cli_kitchensink_v1_annotations_proto_View{
+	"kitchensink.v1.CuratedRequest": {Fields: []Cli_kitchensink_v1_annotations_proto_ViewField{
+		{Label: "KEY", Path: "$[\"key\"]"},
+		{Label: "widget.gadget.leaf", Path: "$[\"widget\"][\"gadget\"][\"leaf\"]"},
+	}},
+	"kitchensink.v1.EchoRequest": {Fields: []Cli_kitchensink_v1_annotations_proto_ViewField{
+		{Label: "text", Path: "$[\"text\"]"},
+	}},
+	"kitchensink.v1.FlatRequest": {Fields: []Cli_kitchensink_v1_annotations_proto_ViewField{
+		{Label: "widget", Path: "$[\"widget\"]"},
+		{Label: "note", Path: "$[\"note\"]"},
+	}},
+	"kitchensink.v1.KnobsRequest": {Fields: []Cli_kitchensink_v1_annotations_proto_ViewField{
+		{Label: "capital", Path: "$[\"capital\"]"},
+		{Label: "shallow.gadget.gizmo.leaf", Path: "$[\"shallow\"][\"gadget\"][\"gizmo\"][\"leaf\"]"},
+		{Label: "shallow.gadget.leaf", Path: "$[\"shallow\"][\"gadget\"][\"leaf\"]"},
+		{Label: "shallow.leaf", Path: "$[\"shallow\"][\"leaf\"]"},
+		{Label: "whole.gadget.gizmo.leaf", Path: "$[\"whole\"][\"gadget\"][\"gizmo\"][\"leaf\"]"},
+		{Label: "whole.gadget.leaf", Path: "$[\"whole\"][\"gadget\"][\"leaf\"]"},
+		{Label: "whole.leaf", Path: "$[\"whole\"][\"leaf\"]"},
+		{Label: "lifted", Path: "$[\"lifted\"]"},
+		{Label: "deepened", Path: "$[\"deepened\"]"},
+		{Label: "worded", Path: "$[\"worded\"]"},
+		{Label: "blob", Path: "$[\"blob\"]"},
+	}},
+}
+
+func cli_kitchensink_v1_annotations_proto_printMessage(
+	w io.Writer,
+	printer Cli_kitchensink_v1_annotations_proto_Printer,
+	view Cli_kitchensink_v1_annotations_proto_View,
+	msg proto.Message,
+) error {
+	body, err := protojson.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	return printer(w, view, body)
+}
+
+func cli_kitchensink_v1_annotations_proto_printJSON(w io.Writer, body []byte, indent bool) error {
+	// Indent and Compact both pin the spacing, which protojson varies
+	// between runs on purpose.
+	var buf bytes.Buffer
+	if indent {
+		if err := json.Indent(&buf, body, "", "  "); err != nil {
+			return err
+		}
+	} else if err := json.Compact(&buf, body); err != nil {
+		return err
+	}
+	_, err := fmt.Fprintln(w, buf.String())
+	return err
+}
+
+// cli_kitchensink_v1_annotations_proto_printYAML starts the document with ---, so bodies render as one
+// valid YAML stream.
+func cli_kitchensink_v1_annotations_proto_printYAML(w io.Writer, _ Cli_kitchensink_v1_annotations_proto_View, body []byte) error {
+	doc, err := yaml.JSONToYAML(body)
+	if err != nil {
+		return err
+	}
+	if _, err := io.WriteString(w, "---\n"); err != nil {
+		return err
+	}
+	_, err = w.Write(doc)
+	return err
+}
+
+func cli_kitchensink_v1_annotations_proto_printTable(w io.Writer, view Cli_kitchensink_v1_annotations_proto_View, body []byte) error {
+	// UseNumber keeps a number's own spelling. The default renders a large
+	// integer in exponent form.
+	dec := json.NewDecoder(bytes.NewReader(body))
+	dec.UseNumber()
+	var doc any
+	if err := dec.Decode(&doc); err != nil {
+		return err
+	}
+
+	var cell func(value any) string
+	cell = func(value any) string {
+		switch v := value.(type) {
+		case nil:
+			return ""
+		case string:
+			return v
+		case []any:
+			parts := make([]string, len(v))
+			for i, item := range v {
+				parts[i] = cell(item)
+			}
+			return strings.Join(parts, ",")
+		case map[string]any:
+			parts := make([]string, 0, len(v))
+			for _, k := range slices.Sorted(maps.Keys(v)) {
+				parts = append(parts, k+"="+cell(v[k]))
+			}
+			return strings.Join(parts, ",")
+		}
+		return fmt.Sprint(value)
+	}
+
+	width := 0
+	if f, ok := w.(*os.File); ok {
+		if cols, _, err := term.GetSize(int(f.Fd())); err == nil && cols > 0 {
+			width = cols
+		}
+	}
+	render := func(title string, fields []Cli_kitchensink_v1_annotations_proto_ViewField, rows []any) error {
+		if len(rows) == 0 {
+			return nil
+		}
+		columns := make([]*jsonpath.Path, len(fields))
+		for i, f := range fields {
+			path, err := jsonpath.Parse(f.Path)
+			if err != nil {
+				return fmt.Errorf("column %s: %w", f.Label, err)
+			}
+			columns[i] = path
+		}
+
+		t := table.NewWriter()
+		t.Style().Size.WidthMax = width
+		if title != "" {
+			t.SetTitle(title)
+		}
+		header := make(table.Row, len(fields))
+		for j, f := range fields {
+			header[j] = f.Label
+		}
+		t.AppendHeader(header)
+		for _, row := range rows {
+			line := make(table.Row, len(fields))
+			for j, path := range columns {
+				found := path.Select(row)
+				if len(found) == 1 {
+					line[j] = cell(found[0])
+					continue
+				}
+				line[j] = cell([]any(found))
+			}
+			t.AppendRow(line)
+		}
+		_, err := fmt.Fprintln(w, t.Render())
+		return err
+	}
+
+	if len(view.Fields) > 0 {
+		if err := render("", view.Fields, []any{doc}); err != nil {
+			return err
+		}
+	}
+	for _, list := range view.Lists {
+		path, err := jsonpath.Parse(list.Path)
+		if err != nil {
+			return fmt.Errorf("list %s: %w", list.Label, err)
+		}
+		if err := render(strings.ToUpper(list.Label), list.Fields, path.Select(doc)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func cli_kitchensink_v1_annotations_proto_resolveOutput(
+	out io.Writer,
+	response, method, format, columns string,
+	opt Cli_kitchensink_v1_annotations_proto_Options,
+) (Cli_kitchensink_v1_annotations_proto_Printer, Cli_kitchensink_v1_annotations_proto_View, error) {
+	if format == "" {
+		format = opt.DefaultPrinter
+	}
+
+	printer, found := opt.Printers[format]
+	if format != "" && !found {
+		return nil, Cli_kitchensink_v1_annotations_proto_View{}, cli_kitchensink_v1_annotations_proto_exitError{cli_kitchensink_v1_annotations_proto_exitUsage, fmt.Errorf(
+			"unknown output format %q; use one of: %s",
+			format, strings.Join(slices.Sorted(maps.Keys(opt.Printers)), ", "))}
+	}
+	if format == "" {
+		// A removed printer cannot break the no-flag default.
+		tty := false
+		if f, ok := out.(*os.File); ok {
+			tty = term.IsTerminal(int(f.Fd()))
+		}
+		switch {
+		case columns != "":
+			printer = Cli_kitchensink_v1_annotations_proto_Printers["table"]
+		case tty:
+			printer = Cli_kitchensink_v1_annotations_proto_Printers["json"]
+		default:
+			printer = Cli_kitchensink_v1_annotations_proto_Printers["jsonl"]
+		}
+	}
+
+	if columns != "" {
+		parts := strings.Split(columns, ",")
+		fields := make([]Cli_kitchensink_v1_annotations_proto_ViewField, len(parts))
+		for i, part := range parts {
+			label, path, ok := strings.Cut(part, ":")
+			if !ok {
+				return nil, Cli_kitchensink_v1_annotations_proto_View{}, cli_kitchensink_v1_annotations_proto_exitError{cli_kitchensink_v1_annotations_proto_exitUsage, fmt.Errorf(
+					"--columns entry %q has no colon; write LABEL:path", part)}
+			}
+			if _, err := jsonpath.Parse(path); err != nil {
+				return nil, Cli_kitchensink_v1_annotations_proto_View{}, cli_kitchensink_v1_annotations_proto_exitError{cli_kitchensink_v1_annotations_proto_exitUsage, fmt.Errorf(
+					"--columns entry %q: %w", part, err)}
+			}
+			fields[i] = Cli_kitchensink_v1_annotations_proto_ViewField{Label: label, Path: path}
+		}
+		return printer, Cli_kitchensink_v1_annotations_proto_View{Fields: fields}, nil
+	}
+	if override, ok := opt.Views[method]; ok {
+		return printer, override, nil
+	}
+	return printer, cli_kitchensink_v1_annotations_proto_messageViews[response], nil
+}
+
+// =============================================================================
+// Call: each rpc shape runs its call, or prints the requests instead.
+// =============================================================================
+
+func cli_kitchensink_v1_annotations_proto_callContext(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
+	if timeout > 0 {
+		return context.WithTimeout(ctx, timeout)
+	}
+	return context.WithCancel(ctx)
+}
+
+func cli_kitchensink_v1_annotations_proto_runUnary[Req, Res proto.Message](ctx context.Context, out io.Writer, printer Cli_kitchensink_v1_annotations_proto_Printer, view Cli_kitchensink_v1_annotations_proto_View, req Req, dryRun bool, timeout time.Duration, call func(context.Context, Req, ...grpc.CallOption) (Res, error)) (err error) {
+	if dryRun {
+		return cli_kitchensink_v1_annotations_proto_printMessage(out, printer, Cli_kitchensink_v1_annotations_proto_View{}, req)
+	}
+	ctx, cancel := cli_kitchensink_v1_annotations_proto_callContext(ctx, timeout)
+	defer cancel()
+	defer func() { err = cli_kitchensink_v1_annotations_proto_withExitCode(ctx, err) }()
+
+	resp, err := call(ctx, req)
+	if err != nil {
+		return err
+	}
+	return cli_kitchensink_v1_annotations_proto_printMessage(out, printer, view, resp)
+}
+
+// =============================================================================
+// Exit: every failure contains the code the shell sees.
+// =============================================================================
+
+const (
+	cli_kitchensink_v1_annotations_proto_exitFailure   = 1
+	cli_kitchensink_v1_annotations_proto_exitUsage     = 2
+	cli_kitchensink_v1_annotations_proto_exitTimeout   = 124
+	cli_kitchensink_v1_annotations_proto_exitInterrupt = 130
+)
+
+type cli_kitchensink_v1_annotations_proto_exitError struct {
+	code int
+	err  error
+}
+
+// Error removes the gRPC "rpc error: ..." wrapper.
+func (e cli_kitchensink_v1_annotations_proto_exitError) Error() string {
+	if msg := status.Convert(e.err).Message(); msg != "" {
+		return msg
+	}
+	return e.err.Error()
+}
+
+func (e cli_kitchensink_v1_annotations_proto_exitError) Unwrap() error { return e.err }
+func (e cli_kitchensink_v1_annotations_proto_exitError) ExitCode() int { return e.code }
+
+// The context, not the gRPC status, decides the exit code.
+func cli_kitchensink_v1_annotations_proto_withExitCode(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
+	}
+	var coded cli_kitchensink_v1_annotations_proto_exitError
+	if errors.As(err, &coded) {
+		return err
+	}
+	switch ctx.Err() {
+	case context.DeadlineExceeded:
+		return cli_kitchensink_v1_annotations_proto_exitError{cli_kitchensink_v1_annotations_proto_exitTimeout, err}
+	case context.Canceled:
+		return cli_kitchensink_v1_annotations_proto_exitError{cli_kitchensink_v1_annotations_proto_exitInterrupt, err}
+	}
+	return cli_kitchensink_v1_annotations_proto_exitError{cli_kitchensink_v1_annotations_proto_exitFailure, err}
+}
+
+func cli_kitchensink_v1_annotations_proto_noArgs(cmd *cobra.Command, args []string) error {
+	if err := cobra.NoArgs(cmd, args); err != nil {
+		return cli_kitchensink_v1_annotations_proto_exitError{cli_kitchensink_v1_annotations_proto_exitUsage, err}
+	}
+	return nil
 }

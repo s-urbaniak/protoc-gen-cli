@@ -5,30 +5,29 @@
   "proto_package": "second.v1",
   "file_options": {
     "go_package_name": "v1",
-    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/second/v1",
-    "go_descriptor_name": "File_second_v1_second_proto"
+    "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/second/v1"
   },
   "services": [
     {
+      "full_name": "second.v1.SecondService",
       "proto_name": "SecondService",
-      "go_name": "SecondService",
       "name": "second",
       "short_help": "SecondService echoes text back.",
       "commands": [
         {
+          "full_name": "second.v1.SecondService.Ping",
           "proto_name": "Ping",
-          "go_name": "Ping",
           "name": "ping",
           "short_help": "Ping echoes its text.",
-          "input": {
+          "request": {
             "full_name": "second.v1.PingRequest",
             "proto_file": "second/v1/second.proto",
             "proto_package": "second.v1",
-            "go_name": "PingRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/second/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/second/v1",
             "go_package_name": "v1"
           },
-          "output": "second.v1.PingRequest",
+          "response": "second.v1.PingRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "text",
@@ -41,11 +40,11 @@
             "fields": [
               {
                 "label": "text",
-                "path": "text"
+                "path": "$[\"text\"]"
               }
             ]
           },
-          "example_json": "{\"text\":\"Mind the year, then celebrate!\"}"
+          "example_json": "{\"text\":\"Repellat aut et.\"}"
         }
       ]
     }

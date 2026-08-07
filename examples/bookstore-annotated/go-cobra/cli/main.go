@@ -1,5 +1,5 @@
 // Command bookstore-annotated is the example CLI for the bookstore-annotated
-// fixture. The (cli.v1.*) options in the proto control it, not code.
+// fixture.
 package main
 
 import (
@@ -9,7 +9,7 @@ import (
 	"os"
 	"os/signal"
 
-	bookstoreannotatedv1 "github.com/braveokafor/proto-to-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1"
+	bookstoreannotatedv1 "github.com/braveokafor/protoc-gen-cli/examples/bookstore-annotated/go-cobra/gen/bookstore/annotated/v1"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

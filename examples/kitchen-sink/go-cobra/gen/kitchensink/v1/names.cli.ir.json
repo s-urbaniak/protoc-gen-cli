@@ -5,29 +5,28 @@
   "proto_package": "kitchensink.v1",
   "file_options": {
     "go_package_name": "kitchensinkv1",
-    "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
-    "go_descriptor_name": "File_kitchensink_v1_names_proto"
+    "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1"
   },
   "services": [
     {
+      "full_name": "kitchensink.v1.NamesService",
       "proto_name": "NamesService",
-      "go_name": "NamesService",
       "name": "names",
       "short_help": "NamesService's RPCs echo their requests.",
       "commands": [
         {
+          "full_name": "kitchensink.v1.NamesService.Collisions",
           "proto_name": "Collisions",
-          "go_name": "Collisions",
           "name": "collisions",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.CollisionsRequest",
             "proto_file": "kitchensink/v1/names.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "CollisionsRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.CollisionsRequest",
+          "response": "kitchensink.v1.CollisionsRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "req",
@@ -85,61 +84,61 @@
             "fields": [
               {
                 "label": "req",
-                "path": "req"
+                "path": "$[\"req\"]"
               },
               {
                 "label": "err",
-                "path": "err"
+                "path": "$[\"err\"]"
               },
               {
                 "label": "cmd",
-                "path": "cmd"
+                "path": "$[\"cmd\"]"
               },
               {
                 "label": "resp",
-                "path": "resp"
+                "path": "$[\"resp\"]"
               },
               {
                 "label": "out",
-                "path": "out"
+                "path": "$[\"out\"]"
               },
               {
                 "label": "frags",
-                "path": "frags"
+                "path": "$[\"frags\"]"
               },
               {
                 "label": "type",
-                "path": "type"
+                "path": "$[\"type\"]"
               },
               {
                 "label": "func",
-                "path": "func"
+                "path": "$[\"func\"]"
               },
               {
                 "label": "return",
-                "path": "return"
+                "path": "$[\"return\"]"
               },
               {
                 "label": "import",
-                "path": "import"
+                "path": "$[\"import\"]"
               }
             ]
           },
-          "example_json": "{\"req\":\"Mind the year, then celebrate!\",\"err\":\"Celebrate wins tied to the group.\",\"cmd\":\"Up to the company, we chase a smaller woman.\",\"resp\":\"Onto the fact, align expectations.\",\"out\":\"Few agree when the number spikes.\",\"frags\":\"The colorful hand being unexpectedly fondly.\",\"type\":\"Sample government at 9s intervals.\",\"func\":\"One wake when the day spikes.\",\"return\":\"Attribute gains to year where possible.\",\"import\":\"Surface risks around the time barely.\"}"
+          "example_json": "{\"req\":\"Repellat aut et.\",\"err\":\"Repudiandae quis recusandae.\",\"cmd\":\"Vel odit omnis.\",\"resp\":\"Exercitationem vel maiores.\",\"out\":\"Aliquid iusto consequatur.\",\"frags\":\"Vero consequuntur sequi.\",\"type\":\"Ea magnam minima.\",\"func\":\"Animi omnis qui.\",\"return\":\"Aliquid cumque non.\",\"import\":\"Quia officia dicta.\"}"
         },
         {
+          "full_name": "kitchensink.v1.NamesService.Imported",
           "proto_name": "Imported",
-          "go_name": "Imported",
           "name": "imported",
-          "input": {
+          "request": {
             "full_name": "imported.v1.ImportedRequest",
             "proto_file": "imported/v1/imported.proto",
             "proto_package": "imported.v1",
-            "go_name": "ImportedRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/imported/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/imported/v1",
             "go_package_name": "v1"
           },
-          "output": "imported.v1.ImportedRequest",
+          "response": "imported.v1.ImportedRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "id",
@@ -152,25 +151,25 @@
             "fields": [
               {
                 "label": "id",
-                "path": "id"
+                "path": "$[\"id\"]"
               }
             ]
           },
-          "example_json": "{\"id\":\"Mind the year, then celebrate!\"}"
+          "example_json": "{\"id\":\"Repellat aut et.\"}"
         },
         {
+          "full_name": "kitchensink.v1.NamesService.Second",
           "proto_name": "Second",
-          "go_name": "Second",
           "name": "second",
-          "input": {
+          "request": {
             "full_name": "second.v1.PingRequest",
             "proto_file": "second/v1/second.proto",
             "proto_package": "second.v1",
-            "go_name": "PingRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/second/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/second/v1",
             "go_package_name": "v1"
           },
-          "output": "second.v1.PingRequest",
+          "response": "second.v1.PingRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "text",
@@ -183,25 +182,25 @@
             "fields": [
               {
                 "label": "text",
-                "path": "text"
+                "path": "$[\"text\"]"
               }
             ]
           },
-          "example_json": "{\"text\":\"Mind the year, then celebrate!\"}"
+          "example_json": "{\"text\":\"Repellat aut et.\"}"
         },
         {
+          "full_name": "kitchensink.v1.NamesService.Reserved",
           "proto_name": "Reserved",
-          "go_name": "Reserved",
           "name": "reserved",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.ReservedRequest",
             "proto_file": "kitchensink/v1/names.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "ReservedRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.ReservedRequest",
+          "response": "kitchensink.v1.ReservedRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "filename",
@@ -209,8 +208,8 @@
               "bind": "string"
             },
             {
-              "proto_path": "input",
-              "name": "arg-input",
+              "proto_path": "data",
+              "name": "arg-data",
               "bind": "string"
             },
             {
@@ -222,6 +221,26 @@
               "proto_path": "output",
               "name": "arg-output",
               "bind": "string"
+            },
+            {
+              "proto_path": "timeout",
+              "name": "arg-timeout",
+              "bind": "string"
+            },
+            {
+              "proto_path": "example",
+              "name": "arg-example",
+              "bind": "string"
+            },
+            {
+              "proto_path": "dry_run",
+              "name": "arg-dry-run",
+              "bind": "string"
+            },
+            {
+              "proto_path": "columns",
+              "name": "arg-columns",
+              "bind": "string"
             }
           ],
           "view": {
@@ -229,56 +248,71 @@
             "fields": [
               {
                 "label": "filename",
-                "path": "filename"
+                "path": "$[\"filename\"]"
               },
               {
-                "label": "input",
-                "path": "input"
+                "label": "data",
+                "path": "$[\"data\"]"
               },
               {
                 "label": "help",
-                "path": "help"
+                "path": "$[\"help\"]"
               },
               {
                 "label": "output",
-                "path": "output"
+                "path": "$[\"output\"]"
+              },
+              {
+                "label": "timeout",
+                "path": "$[\"timeout\"]"
+              },
+              {
+                "label": "example",
+                "path": "$[\"example\"]"
+              },
+              {
+                "label": "dry_run",
+                "path": "$[\"dryRun\"]"
+              },
+              {
+                "label": "columns",
+                "path": "$[\"columns\"]"
               }
             ]
           },
-          "example_json": "{\"filename\":\"Mind the year, then celebrate!\",\"input\":\"Celebrate wins tied to the group.\",\"help\":\"Up to the company, we chase a smaller woman.\",\"output\":\"Onto the fact, align expectations.\"}"
+          "example_json": "{\"filename\":\"Repellat aut et.\",\"data\":\"Repudiandae quis recusandae.\",\"help\":\"Vel odit omnis.\",\"output\":\"Exercitationem vel maiores.\",\"timeout\":\"Aliquid iusto consequatur.\",\"example\":\"Vero consequuntur sequi.\",\"dryRun\":\"Ea magnam minima.\",\"columns\":\"Animi omnis qui.\"}"
         },
         {
+          "full_name": "kitchensink.v1.NamesService.Empty",
           "proto_name": "Empty",
-          "go_name": "Empty",
           "name": "empty",
-          "long_help": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:\n\n    service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }",
-          "input": {
+          "request": {
             "full_name": "google.protobuf.Empty",
             "proto_file": "google/protobuf/empty.proto",
             "proto_package": "google.protobuf",
-            "go_name": "Empty",
             "go_import_path": "google.golang.org/protobuf/types/known/emptypb",
             "go_package_name": "emptypb"
           },
-          "output": "google.protobuf.Empty",
+          "response": "google.protobuf.Empty",
+          "shape": "unary",
           "view": {
             "full_name": "google.protobuf.Empty"
           },
           "example_json": "{}"
         },
         {
+          "full_name": "kitchensink.v1.NamesService.HTTPCall",
           "proto_name": "HTTPCall",
-          "go_name": "HTTPCall",
           "name": "http-call",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.CasingRequest",
             "proto_file": "kitchensink/v1/names.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "CasingRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.CasingRequest",
+          "response": "kitchensink.v1.CasingRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "HTTPHeader",
@@ -306,37 +340,37 @@
             "fields": [
               {
                 "label": "HTTPHeader",
-                "path": "HTTPHeader"
+                "path": "$[\"HTTPHeader\"]"
               },
               {
                 "label": "camelField",
-                "path": "camelField"
+                "path": "$[\"camelField\"]"
               },
               {
                 "label": "with_json_name",
-                "path": "customName"
+                "path": "$[\"customName\"]"
               },
               {
                 "label": "dotted",
-                "path": "weird\\.name"
+                "path": "$[\"weird.name\"]"
               }
             ]
           },
-          "example_json": "{\"HTTPHeader\":\"Mind the year, then celebrate!\",\"camelField\":\"Celebrate wins tied to the group.\",\"customName\":\"Up to the company, we chase a smaller woman.\",\"weird.name\":\"Onto the fact, align expectations.\"}"
+          "example_json": "{\"HTTPHeader\":\"Repellat aut et.\",\"camelField\":\"Repudiandae quis recusandae.\",\"customName\":\"Vel odit omnis.\",\"weird.name\":\"Exercitationem vel maiores.\"}"
         },
         {
+          "full_name": "kitchensink.v1.NamesService.lower_snake",
           "proto_name": "lower_snake",
-          "go_name": "LowerSnake",
           "name": "lower-snake",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.CasingRequest",
             "proto_file": "kitchensink/v1/names.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "CasingRequest",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.CasingRequest",
+          "response": "kitchensink.v1.CasingRequest",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "HTTPHeader",
@@ -364,37 +398,37 @@
             "fields": [
               {
                 "label": "HTTPHeader",
-                "path": "HTTPHeader"
+                "path": "$[\"HTTPHeader\"]"
               },
               {
                 "label": "camelField",
-                "path": "camelField"
+                "path": "$[\"camelField\"]"
               },
               {
                 "label": "with_json_name",
-                "path": "customName"
+                "path": "$[\"customName\"]"
               },
               {
                 "label": "dotted",
-                "path": "weird\\.name"
+                "path": "$[\"weird.name\"]"
               }
             ]
           },
-          "example_json": "{\"HTTPHeader\":\"Mind the year, then celebrate!\",\"camelField\":\"Celebrate wins tied to the group.\",\"customName\":\"Up to the company, we chase a smaller woman.\",\"weird.name\":\"Onto the fact, align expectations.\"}"
+          "example_json": "{\"HTTPHeader\":\"Repellat aut et.\",\"camelField\":\"Repudiandae quis recusandae.\",\"customName\":\"Vel odit omnis.\",\"weird.name\":\"Exercitationem vel maiores.\"}"
         },
         {
+          "full_name": "kitchensink.v1.NamesService.Borrow",
           "proto_name": "Borrow",
-          "go_name": "Borrow",
           "name": "borrow",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.Outer",
             "proto_file": "kitchensink/v1/fields.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "Outer",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.Outer",
+          "response": "kitchensink.v1.Outer",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "string_leaf",
@@ -462,49 +496,49 @@
             "fields": [
               {
                 "label": "string_leaf",
-                "path": "stringLeaf"
+                "path": "$[\"stringLeaf\"]"
               },
               {
                 "label": "int64_leaf",
-                "path": "int64Leaf"
+                "path": "$[\"int64Leaf\"]"
               },
               {
                 "label": "middle.leaf",
-                "path": "middle.leaf"
+                "path": "$[\"middle\"][\"leaf\"]"
               },
               {
                 "label": "middle.inner.leaf",
-                "path": "middle.inner.leaf"
+                "path": "$[\"middle\"][\"inner\"][\"leaf\"]"
               },
               {
                 "label": "middle.inner.deep.leaf",
-                "path": "middle.inner.deep.leaf"
+                "path": "$[\"middle\"][\"inner\"][\"deep\"][\"leaf\"]"
               },
               {
                 "label": "middle.inner.deep.deeper.leaf",
-                "path": "middle.inner.deep.deeper.leaf"
+                "path": "$[\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"leaf\"]"
               },
               {
                 "label": "middle.inner.deep.deeper.deepest.leaf",
-                "path": "middle.inner.deep.deeper.deepest.leaf"
+                "path": "$[\"middle\"][\"inner\"][\"deep\"][\"deeper\"][\"deepest\"][\"leaf\"]"
               }
             ]
           },
-          "example_json": "{\"stringLeaf\":\"Mind the year, then celebrate!\",\"int64Leaf\":\"864\",\"middle\":{\"leaf\":\"Launch the world midweek for clarity.\",\"inner\":{\"leaf\":\"Retire outdated company each quarter.\",\"deep\":{\"leaf\":\"Protect the woman under enthusiastic load.\",\"deeper\":{\"leaf\":\"Theirs life has ready for fiction.\",\"deepest\":{\"leaf\":\"Publish a changelog entry for the way.\"}}}}}}"
+          "example_json": "{\"stringLeaf\":\"Repellat aut et.\",\"int64Leaf\":\"913\",\"middle\":{\"leaf\":\"Quis recusandae vel.\",\"inner\":{\"leaf\":\"Odit omnis exercitationem.\",\"deep\":{\"leaf\":\"Vel maiores aliquid.\",\"deeper\":{\"leaf\":\"Iusto consequatur vero.\",\"deepest\":{\"leaf\":\"Consequuntur sequi ea.\"}}}}}}"
         },
         {
+          "full_name": "kitchensink.v1.NamesService.Nested",
           "proto_name": "Nested",
-          "go_name": "Nested",
           "name": "nested",
-          "input": {
+          "request": {
             "full_name": "kitchensink.v1.Envelope.Letter",
             "proto_file": "kitchensink/v1/names.proto",
             "proto_package": "kitchensink.v1",
-            "go_name": "Envelope_Letter",
-            "go_import_path": "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
+            "go_import_path": "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1",
             "go_package_name": "kitchensinkv1"
           },
-          "output": "kitchensink.v1.Envelope.Letter",
+          "response": "kitchensink.v1.Envelope.Letter",
+          "shape": "unary",
           "params": [
             {
               "proto_path": "body",
@@ -517,11 +551,11 @@
             "fields": [
               {
                 "label": "body",
-                "path": "body"
+                "path": "$[\"body\"]"
               }
             ]
           },
-          "example_json": "{\"body\":\"Mind the year, then celebrate!\"}"
+          "example_json": "{\"body\":\"Repellat aut et.\"}"
         }
       ]
     }

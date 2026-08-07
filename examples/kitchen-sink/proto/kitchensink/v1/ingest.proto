@@ -1,5 +1,4 @@
-// This service has only client-streaming RPCs. Its generated file omits the
-// document-input machinery. Absorb's request comes from another package.
+// This service has only client-streaming RPCs.
 
 syntax = "proto3";
 
@@ -7,7 +6,7 @@ package kitchensink.v1;
 
 import "imported/v1/imported.proto";
 
-option go_package = "github.com/braveokafor/proto-to-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
+option go_package = "github.com/braveokafor/protoc-gen-cli/examples/kitchen-sink/go-cobra/gen/kitchensink/v1;kitchensinkv1";
 
 // IngestService counts what it receives.
 service IngestService {

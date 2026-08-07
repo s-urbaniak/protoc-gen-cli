@@ -1,40 +1,37 @@
-// Package gocobra is the Go + Cobra target for protoc-gen-cli. It emits one
-// self-contained <file>_cli.pb.go for each proto file.
+// Package gocobra is the Go + Cobra target. It emits one <file>_cli.pb.go for each proto file.
 package gocobra
 
 import (
 	"embed"
 	"fmt"
+	"io/fs"
 
-	"github.com/braveokafor/proto-to-cli/internal/ir"
-	"github.com/braveokafor/proto-to-cli/internal/target"
+	"github.com/braveokafor/protoc-gen-cli/internal/ir"
+	"github.com/braveokafor/protoc-gen-cli/internal/target"
 	"golang.org/x/tools/imports"
+	"google.golang.org/protobuf/compiler/protogen"
 )
 
-//go:embed template.go.tmpl
+//go:embed templates/*.tmpl
 var templateFS embed.FS
 
 // Generate returns one <file>_cli.pb.go for a proto file with services.
-func Generate(model *ir.Model, opts target.Options) ([]target.File, error) {
+func Generate(file *protogen.File, model *ir.Model, opts target.Options) ([]target.File, error) {
 	if len(model.Services) == 0 {
 		return nil, nil
 	}
 
-	rendered, err := target.RenderTemplate(
-		templateFS,
-		"template.go.tmpl",
-		opts.TemplateOverride,
-		funcMap(model),
-		model,
-	)
+	builtin, err := fs.Sub(templateFS, "templates")
+	if err != nil {
+		return nil, fmt.Errorf("gocobra: %w", err)
+	}
+	rendered, err := target.Render(builtin, opts.TemplatesDir, funcMap(file, model), model)
 	if err != nil {
 		return nil, fmt.Errorf("gocobra: %w", err)
 	}
 
 	name := model.GeneratedFilenamePrefix + "_cli.pb.go"
 
-	// imports.Process formats the code and drops the imports that the
-	// services do not reach.
 	pruned, err := imports.Process(name, rendered, &imports.Options{
 		Comments:  true,
 		TabIndent: true,
