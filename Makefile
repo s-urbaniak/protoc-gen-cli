@@ -79,6 +79,14 @@ install: ## Install protoc-gen-cli
 upgrade: ## Upgrade dependencies
 	go get -u -t ./... && go mod tidy -v
 
+.PHONY: release-check
+release-check: ## Validate the GoReleaser config
+	go run github.com/goreleaser/goreleaser/v2@latest check
+
+.PHONY: release-snapshot
+release-snapshot: ## Build a local release snapshot without publishing
+	go run github.com/goreleaser/goreleaser/v2@latest release --snapshot --clean
+
 .PHONY: clean
 clean: ## Delete build artifacts
 	rm -rf .tmp dist

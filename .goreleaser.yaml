@@ -1,0 +1,87 @@
+version: 2
+
+project_name: protoc-gen-cli
+
+builds:
+  - id: protoc-gen-cli
+    main: ./cmd/protoc-gen-cli
+    binary: protoc-gen-cli
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version=v{{ .Version }}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: protoc-gen-cli
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    files:
+      - LICENSE
+      - README.md
+      - proto/cli/v1/cli.proto
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^test:"
+      - "^docs:"
+      - "^ci:"
+      - "Merge pull request"
+      - "Merge branch"
+  groups:
+    - title: New features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 100
+    - title: Bug fixes
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 200
+    - title: Other work
+      order: 999
+
+homebrew_casks:
+  - name: protoc-gen-cli
+    repository:
+      owner: braveokafor
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    homepage: "https://github.com/braveokafor/protoc-gen-cli"
+    description: "Generate an API's command-line interface from its .proto"
+    binaries:
+      - protoc-gen-cli
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/protoc-gen-cli"]
+          end
+
+release:
+  prerelease: auto
+  footer: |
+    ## Install
+
+    ```sh
+    brew install --cask braveokafor/tap/protoc-gen-cli
+    go install github.com/braveokafor/protoc-gen-cli/cmd/protoc-gen-cli@{{ .Tag }}
+    ```
