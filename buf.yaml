@@ -5,6 +5,7 @@ modules:
   - path: examples/bookstore/proto
   - path: examples/bookstore-annotated/proto
   - path: examples/kitchen-sink/proto
+  - path: examples/connect/proto
 lint:
   use:
     - STANDARD

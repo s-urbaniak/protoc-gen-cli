@@ -26,6 +26,21 @@ plugins:
     opt: [paths=source_relative, target=gocobra]
 ```
 
+For `client=connect-go`, use `protoc-gen-connect-go` v1.20.0 instead of
+`protoc-gen-go-grpc`. The generated constructor accepts the generated Connect
+client rather than a connection:
+
+```yaml
+plugins:
+  - local: protoc-gen-go
+    out: gen
+  - local: protoc-gen-connect-go
+    out: gen
+  - local: protoc-gen-cli
+    out: gen
+    opt: [target=gocobra, client=connect-go]
+```
+
 ## A command name repeats
 
 A service command takes the kebab-case service name, minus a `-service` suffix. `BookstoreService` gives `bookstore`. A root of the same name doubles it.
@@ -48,6 +63,7 @@ These stop the run.
 | --- | --- |
 | `opt=target=<name> is required (available: …)` | Add `target=gocobra` to `opt:`. |
 | `unknown target "x" (available: …)` | The `target` value names no target. Use one from the list. |
+| `unknown client "x" (available: [connect-go grpc-go])` | `client` selects the generated Go client API. Use `grpc-go` (the default) or `connect-go`. |
 | `opt=request-expand-depth=N is negative; use 0 or more (0 expands no message fields)` | Use `0` or more. `0` gives no dotted flags. |
 | `opt=response-expand-depth=N is negative; use 0 or more (0 expands no message fields)` | Use `0` or more. `0` gives a message field one column. |
 | ``gocobra: template: pattern matches no files: `tmpl/*.tmpl` `` | The `templates` directory holds no `*.tmpl` files. Point it at the right directory. |

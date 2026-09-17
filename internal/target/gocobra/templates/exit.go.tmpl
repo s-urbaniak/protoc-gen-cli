@@ -15,18 +15,25 @@ type {{ prefix }}exitError struct {
 	err  error
 }
 
-// Error removes the gRPC "rpc error: ..." wrapper.
+// Error removes the {{ if clientIs "connect-go" }}Connect error{{ else }}gRPC "rpc error: ..."{{ end }} wrapper.
 func (e {{ prefix }}exitError) Error() string {
+{{- if clientIs "connect-go" }}
+	if connectErr := new(connect.Error); errors.As(e.err, &connectErr) {
+		return connectErr.Message()
+	}
+	return e.err.Error()
+{{- else }}
 	if msg := status.Convert(e.err).Message(); msg != "" {
 		return msg
 	}
 	return e.err.Error()
+{{- end }}
 }
 
 func (e {{ prefix }}exitError) Unwrap() error { return e.err }
 func (e {{ prefix }}exitError) ExitCode() int { return e.code }
 
-// The context, not the gRPC status, decides the exit code.
+// The context, not the {{ if clientIs "connect-go" }}RPC{{ else }}gRPC{{ end }} status, decides the exit code.
 func {{ prefix }}withExitCode(ctx context.Context, err error) error {
 	if err == nil {
 		return nil

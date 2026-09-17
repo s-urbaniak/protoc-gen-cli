@@ -48,13 +48,29 @@
 				}
 {{- template "command.input" . }}
 {{- if eq .Shape "bidi" }}
+				{{- if clientIs "connect-go" }}
+				return {{ prefix }}runConnectBidi(cmd.Context(), cmd.OutOrStdout(), printer, view, reqs, dryRun, timeout, client.{{ goName .FullName }})
+				{{- else }}
 				return {{ prefix }}runBidi(cmd.Context(), cmd.OutOrStdout(), printer, view, reqs, dryRun, timeout, client.{{ goName .FullName }})
+				{{- end }}
 {{- else if eq .Shape "client_stream" }}
+				{{- if clientIs "connect-go" }}
+				return {{ prefix }}runConnectClientStream(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), printer, view, reqs, dryRun, timeout, client.{{ goName .FullName }})
+				{{- else }}
 				return {{ prefix }}runClientStream(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), printer, view, reqs, dryRun, timeout, client.{{ goName .FullName }})
+				{{- end }}
 {{- else if eq .Shape "server_stream" }}
+				{{- if clientIs "connect-go" }}
+				return {{ prefix }}runConnectServerStream(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.{{ goName .FullName }})
+				{{- else }}
 				return {{ prefix }}runServerStream(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.{{ goName .FullName }})
+				{{- end }}
 {{- else }}
+				{{- if clientIs "connect-go" }}
+				return {{ prefix }}runConnectUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.{{ goName .FullName }})
+				{{- else }}
 				return {{ prefix }}runUnary(cmd.Context(), cmd.OutOrStdout(), printer, view, req, dryRun, timeout, client.{{ goName .FullName }})
+				{{- end }}
 {{- end }}
 			},
 		}

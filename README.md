@@ -75,7 +75,7 @@ Use `protoc-gen-cli` when you want an easy-to-maintain CLI for one API. It suits
 
 Use `grpcurl` or `buf curl` instead when you want to poke an unfamiliar server once. They need no build step. They call any server through reflection.
 
-The generated CLI never exposes gRPC to its users. It takes no `-H` flag and no target address. The caller owns the `grpc.ClientConn`. Transport, credentials, and interceptors stay there.
+The generated CLI never exposes its RPC transport to users. It takes no `-H` flag and no target address. The caller owns the gRPC connection or Connect client, so transport, credentials, and interceptors stay there.
 
 ## Install
 
@@ -85,7 +85,7 @@ brew install --cask braveokafor/tap/protoc-gen-cli
 
 Or `go install github.com/braveokafor/protoc-gen-cli/cmd/protoc-gen-cli@latest`. The [releases page](https://github.com/braveokafor/protoc-gen-cli/releases) also has archives for Linux, macOS, and Windows.
 
-The Quickstart below runs all three plugins, so `protoc-gen-go` and `protoc-gen-go-grpc` go on `PATH` too:
+The gRPC quickstart below runs all three plugins, so `protoc-gen-go` and `protoc-gen-go-grpc` go on `PATH` too:
 
 ```sh
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
@@ -193,6 +193,7 @@ Pass these in `opt:`.
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `target` | *(required)* | The target to generate with. `gocobra` is Go with Cobra. |
+| `client` | `grpc-go` | The generated Go client API: `grpc-go` or `connect-go`. This does not choose a wire protocol: a Connect client can speak Connect, gRPC, or gRPC-Web. `connect-go` requires `connectrpc.com/connect` and `protoc-gen-connect-go` v1.20.0. |
 | `request-expand-depth` | `1` | How many message levels below a request field still get their own dotted flags. |
 | `response-expand-depth` | `1` | How many message levels below a response field still get their own table columns. |
 | `templates` | *(built-in)* | A directory of `*.tmpl` files. Each `{{define}}` block replaces the built-in fragment of the same name. |

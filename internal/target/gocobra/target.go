@@ -25,7 +25,12 @@ func Generate(file *protogen.File, model *ir.Model, opts target.Options) ([]targ
 	if err != nil {
 		return nil, fmt.Errorf("gocobra: %w", err)
 	}
-	rendered, err := target.Render(builtin, opts.TemplatesDir, funcMap(file, model), model)
+	rendered, err := target.Render(
+		builtin,
+		opts.TemplatesDir,
+		funcMap(file, model, opts.Client, opts.Files),
+		model,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("gocobra: %w", err)
 	}

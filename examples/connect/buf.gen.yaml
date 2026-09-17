@@ -1,0 +1,14 @@
+version: v2
+plugins:
+  - local: [go, tool, protoc-gen-go]
+    out: go-cobra/gen
+    opt: [paths=source_relative]
+  - local: [go, tool, protoc-gen-connect-go]
+    out: go-cobra/gen
+    opt: [paths=source_relative]
+  - local: [go, run, github.com/braveokafor/protoc-gen-cli/cmd/protoc-gen-cli]
+    out: go-cobra/gen
+    opt:
+      [paths=source_relative, target=gocobra, client=connect-go]
+inputs:
+  - directory: proto

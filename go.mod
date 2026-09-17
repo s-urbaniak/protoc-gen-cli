@@ -3,6 +3,7 @@ module github.com/braveokafor/protoc-gen-cli
 go 1.26.3
 
 require (
+	connectrpc.com/connect v1.20.0
 	github.com/brianvoe/gofakeit/v7 v7.15.0
 	github.com/jedib0t/go-pretty/v6 v6.8.3
 	github.com/spf13/cobra v1.10.2
@@ -27,7 +28,6 @@ require (
 	buf.build/go/protovalidate v1.2.0 // indirect
 	buf.build/go/protoyaml v0.7.0 // indirect
 	cel.dev/expr v0.25.2 // indirect
-	connectrpc.com/connect v1.20.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/bufbuild/protocompile v0.14.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
@@ -51,6 +51,7 @@ require (
 )
 
 tool (
+	connectrpc.com/connect/cmd/protoc-gen-connect-go
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc
 	google.golang.org/protobuf/cmd/protoc-gen-go
 )

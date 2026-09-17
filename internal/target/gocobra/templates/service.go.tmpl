@@ -22,6 +22,10 @@ type {{ $go }}ViewList = {{ export }}ViewList
 
 type {{ $go }}ViewField = {{ export }}ViewField
 
+{{- if clientIs "connect-go" }}
+{{ connectClientInterface $svc }}
+{{- end }}
+
 // The built-in decoders, in the order the CLI tries them.
 var (
 	{{ $go }}DecoderJSON = {{ export }}DecoderJSON
@@ -36,8 +40,10 @@ var (
 {{- end }}
 //
 // Later opts override earlier opts for each entry.
-func New{{ $go }}Command(conn grpc.ClientConnInterface, opts ...{{ $go }}Options) *cobra.Command {
+func New{{ $go }}Command({{ if clientIs "connect-go" }}client {{ $go }}CLIClient{{ else }}conn grpc.ClientConnInterface{{ end }}, opts ...{{ $go }}Options) *cobra.Command {
+{{- if not (clientIs "connect-go") }}
 	client := New{{ $go }}Client(conn)
+{{- end }}
 	opt := {{ prefix }}resolveOptions(opts)
 
 	cmd := &cobra.Command{

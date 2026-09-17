@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package connect.v1;
+
+option go_package = "github.com/braveokafor/protoc-gen-cli/examples/connect/go-cobra/gen/connect/v1;connectv1";
+
+// StreamService exercises every Connect RPC shape.
+service StreamService {
+  // Unary echoes one request.
+  rpc Unary(EchoRequest) returns (EchoResponse);
+  // Server streams echoes.
+  rpc Server(EchoRequest) returns (stream EchoResponse);
+  // Client joins the request stream.
+  rpc Client(stream EchoRequest) returns (EchoResponse);
+  // Bidi echoes each request.
+  rpc Bidi(stream EchoRequest) returns (stream EchoResponse);
+}
+
+message EchoRequest {
+  string text = 1;
+}
+
+message EchoResponse {
+  string text = 1;
+}

@@ -9,6 +9,7 @@ func {{ prefix }}callContext(ctx context.Context, timeout time.Duration) (contex
 	}
 	return context.WithCancel(ctx)
 }
+{{- if not (clientIs "connect-go") }}
 {{ if fileHasShape "server_stream" "bidi" }}
 func {{ prefix }}printResponses[Res any, PRes interface{ proto.Message; *Res }](w io.Writer, printer {{ export }}Printer, view {{ export }}View, recv func() (*Res, error)) error {
 	for {
@@ -175,4 +176,133 @@ func {{ prefix }}runBidi[Req, Res any, PReq interface{ proto.Message; *Req }, PR
 	return recvErr
 }
 {{ end }}
+{{- end }}
+{{- if clientIs "connect-go" }}
+{{- if fileHasShape "unary" }}
+func {{ prefix }}runConnectUnary[Req, Res any, PReq interface{ proto.Message; *Req }, PRes interface{ proto.Message; *Res }](ctx context.Context, out io.Writer, printer {{ export }}Printer, view {{ export }}View, req PReq, dryRun bool, timeout time.Duration, call func(context.Context, *connect.Request[Req]) (*connect.Response[Res], error)) (err error) {
+	if dryRun {
+		return {{ prefix }}printMessage(out, printer, {{ export }}View{}, req)
+	}
+	ctx, cancel := {{ prefix }}callContext(ctx, timeout)
+	defer cancel()
+	defer func() { err = {{ prefix }}withExitCode(ctx, err) }()
+
+	resp, err := call(ctx, connect.NewRequest((*Req)(req)))
+	if err != nil {
+		return err
+	}
+	return {{ prefix }}printMessage(out, printer, view, PRes(resp.Msg))
+}
+{{ end }}
+{{- if fileHasShape "server_stream" }}
+func {{ prefix }}runConnectServerStream[Req, Res any, PReq interface{ proto.Message; *Req }, PRes interface{ proto.Message; *Res }](ctx context.Context, out io.Writer, printer {{ export }}Printer, view {{ export }}View, req PReq, dryRun bool, timeout time.Duration, open func(context.Context, *connect.Request[Req]) (*connect.ServerStreamForClient[Res], error)) (err error) {
+	if dryRun {
+		return {{ prefix }}printMessage(out, printer, {{ export }}View{}, req)
+	}
+	ctx, cancel := {{ prefix }}callContext(ctx, timeout)
+	defer cancel()
+	defer func() { err = {{ prefix }}withExitCode(ctx, err) }()
+
+	stream, err := open(ctx, connect.NewRequest((*Req)(req)))
+	if err != nil {
+		return err
+	}
+	defer stream.Close()
+	for stream.Receive() {
+		if err := {{ prefix }}printMessage(out, printer, view, PRes(stream.Msg())); err != nil {
+			return err
+		}
+	}
+	return stream.Err()
+}
+{{ end }}
+{{- if fileHasShape "client_stream" }}
+func {{ prefix }}runConnectClientStream[Req, Res any, PReq interface{ proto.Message; *Req }, PRes interface{ proto.Message; *Res }](ctx context.Context, out, stderr io.Writer, printer {{ export }}Printer, view {{ export }}View, reqs iter.Seq2[PReq, error], dryRun bool, timeout time.Duration, open func(context.Context) *connect.ClientStreamForClient[Req, Res]) (err error) {
+	if dryRun {
+		for req, err := range reqs {
+			if err != nil { return err }
+			if err := {{ prefix }}printMessage(out, printer, {{ export }}View{}, req); err != nil { return err }
+		}
+		return nil
+	}
+	ctx, cancel := {{ prefix }}callContext(ctx, timeout)
+	defer cancel()
+	defer func() { err = {{ prefix }}withExitCode(ctx, err) }()
+	if f, ok := stderr.(*os.File); ok && term.IsTerminal(int(f.Fd())) {
+		fmt.Fprintln(stderr, "sending requests; the server replies when it has them all")
+	}
+	stream := open(ctx)
+	for req, reqErr := range reqs {
+		if reqErr != nil { return reqErr }
+		if err := ctx.Err(); err != nil { return err }
+		if err := stream.Send(req); err != nil {
+			if !errors.Is(err, io.EOF) { return err }
+			break
+		}
+	}
+	resp, err := stream.CloseAndReceive()
+	if err != nil { return err }
+	return {{ prefix }}printMessage(out, printer, view, PRes(resp.Msg))
+}
+{{ end }}
+{{- if fileHasShape "bidi" }}
+func {{ prefix }}runConnectBidi[Req, Res any, PReq interface{ proto.Message; *Req }, PRes interface{ proto.Message; *Res }](ctx context.Context, out io.Writer, printer {{ export }}Printer, view {{ export }}View, reqs iter.Seq2[PReq, error], dryRun bool, timeout time.Duration, open func(context.Context) *connect.BidiStreamForClient[Req, Res]) (err error) {
+	if dryRun {
+		for req, err := range reqs {
+			if err != nil { return err }
+			if err := {{ prefix }}printMessage(out, printer, {{ export }}View{}, req); err != nil { return err }
+		}
+		return nil
+	}
+	callCtx, callCancel := {{ prefix }}callContext(ctx, timeout)
+	defer callCancel()
+	defer func() { err = {{ prefix }}withExitCode(callCtx, err) }()
+	if err := callCtx.Err(); err != nil { return err }
+	// sendCtx ends a blocked sender after the receive side terminates without
+	// changing callCtx, so withExitCode still classifies deadlines and signals.
+	sendCtx, cancel := context.WithCancel(callCtx)
+	defer cancel()
+	stream := open(sendCtx)
+	sent := make(chan error, 1)
+	go func() {
+		var sendErr error
+		for req, reqErr := range reqs {
+			if reqErr != nil { sendErr = reqErr; break }
+			if sendErr = sendCtx.Err(); sendErr != nil { break }
+			if sendErr = stream.Send(req); sendErr != nil {
+				// The peer may terminate while stdin is still producing bodies.
+				// Receive owns the terminal RPC status in that case.
+				if errors.Is(sendErr, io.EOF) { sendErr = nil }
+				break
+			}
+		}
+		if sendErr == nil {
+			sendErr = stream.CloseRequest()
+		}
+		if errors.Is(sendErr, context.Canceled) { sendErr = nil }
+		sent <- sendErr
+		if sendErr != nil { cancel() }
+	}()
+
+	var recvErr error
+	for {
+		resp, receiveErr := stream.Receive()
+		if errors.Is(receiveErr, io.EOF) { break }
+		if receiveErr != nil { recvErr = receiveErr; break }
+		if printErr := {{ prefix }}printMessage(out, printer, view, PRes(resp)); printErr != nil {
+			recvErr = printErr
+			break
+		}
+	}
+	if closeErr := stream.CloseResponse(); recvErr == nil { recvErr = closeErr }
+	cancel()
+	select {
+	case sendErr := <-sent:
+		if sendErr != nil { return sendErr }
+	default:
+	}
+	return recvErr
+}
+{{ end }}
+{{- end }}
 {{- end -}}

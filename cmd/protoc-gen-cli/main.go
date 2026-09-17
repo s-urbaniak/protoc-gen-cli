@@ -45,6 +45,9 @@ type Config struct {
 	RequestExpandDepth  int    // At zero, only the request's own fields get params.
 	ResponseExpandDepth int    // At zero, only the response's own fields become view fields.
 	TemplatesDir        string // Empty uses the built-in templates.
+	// Client selects the generated Go client API. It does not select a wire
+	// protocol: connect-go can itself speak Connect, gRPC, or gRPC-Web.
+	Client string
 
 	// main sets this.
 	Version string
@@ -69,6 +72,8 @@ func main() {
 		"how many message levels down response fields still become view fields")
 	flags.StringVar(&cfg.TemplatesDir, "templates", "",
 		"replace built-in template with the *.tmpl files in this directory")
+	flags.StringVar(&cfg.Client, "client", "grpc-go",
+		"generated client API: grpc-go or connect-go")
 
 	opts := &protogen.Options{
 		ParamFunc: flags.Set,
@@ -88,6 +93,9 @@ func run(plug *protogen.Plugin, cfg *Config) error {
 	tgt, ok := targets[cfg.Target]
 	if !ok {
 		return fmt.Errorf("unknown target %q (available: %v)", cfg.Target, targetNames)
+	}
+	if !validClient(cfg.Client) {
+		return fmt.Errorf("unknown client %q (available: [connect-go grpc-go])", cfg.Client)
 	}
 	if cfg.RequestExpandDepth < 0 {
 		return fmt.Errorf(
@@ -144,7 +152,11 @@ func run(plug *protogen.Plugin, cfg *Config) error {
 			}
 		}
 
-		files, err := tgt(file, m, target.Options{TemplatesDir: cfg.TemplatesDir})
+		files, err := tgt(file, m, target.Options{
+			TemplatesDir: cfg.TemplatesDir,
+			Client:       cfg.Client,
+			Files:        plug.FilesByPath,
+		})
 		if err != nil {
 			return fmt.Errorf("%s: %w", protoPath, err)
 		}
@@ -165,4 +177,8 @@ func run(plug *protogen.Plugin, cfg *Config) error {
 	}
 
 	return nil
+}
+
+func validClient(client string) bool {
+	return client == "grpc-go" || client == "connect-go"
 }

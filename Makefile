@@ -54,6 +54,7 @@ gen-examples: fmt-proto ## Regenerate examples
 	cd examples/bookstore && buf generate
 	cd examples/bookstore-annotated && buf generate
 	cd examples/kitchen-sink && buf generate
+	cd examples/connect && buf generate
 
 .PHONY: verify-examples-regen
 verify-examples-regen: gen ## Fail if regenerating examples changes anything
@@ -93,3 +94,4 @@ clean: ## Delete build artifacts
 	rm -rf examples/bookstore/go-cobra/gen
 	rm -rf examples/bookstore-annotated/go-cobra/gen
 	rm -rf examples/kitchen-sink/go-cobra/gen
+	rm -rf examples/connect/go-cobra/gen

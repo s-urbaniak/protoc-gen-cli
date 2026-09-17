@@ -1,6 +1,7 @@
 package gocobra
 
 import (
+	"fmt"
 	"maps"
 	"slices"
 	"strconv"
@@ -12,7 +13,12 @@ import (
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
-func funcMap(file *protogen.File, model *ir.Model) template.FuncMap {
+func funcMap(
+	file *protogen.File,
+	model *ir.Model,
+	client string,
+	files map[string]*protogen.File,
+) template.FuncMap {
 	// Two generated files can share a Go package.
 	ident := strings.Map(func(r rune) rune {
 		if unicode.IsLetter(r) || unicode.IsDigit(r) {
@@ -23,20 +29,37 @@ func funcMap(file *protogen.File, model *ir.Model) template.FuncMap {
 
 	// Proto full names are unique across services, methods and messages.
 	goNames := map[string]string{}
+	types := map[string]protogen.GoIdent{}
+	methods := map[string]*protogen.Method{}
 	for _, svc := range file.Services {
 		goNames[string(svc.Desc.FullName())] = svc.GoName
 		for _, m := range svc.Methods {
 			goNames[string(m.Desc.FullName())] = m.GoName
 			goNames[string(m.Input.Desc.FullName())] = m.Input.GoIdent.GoName
+			types[string(m.Input.Desc.FullName())] = m.Input.GoIdent
+			types[string(m.Output.Desc.FullName())] = m.Output.GoIdent
+			methods[string(m.Desc.FullName())] = m
 		}
 	}
 
 	rows := maps.Clone(templateImports)
 	foreign := map[string]string{}
+	packageNames := map[string]string{}
+	for _, candidate := range files {
+		packageNames[string(candidate.GoImportPath)] = string(candidate.GoPackageName)
+	}
 	for _, svc := range model.Services {
 		for _, cmd := range svc.Commands {
-			if path := cmd.Request.GoImportPath; path != model.FileOptions.GoImportPath {
-				foreign[path] = cmd.Request.GoPackageName
+			for _, message := range []string{cmd.Request.FullName, cmd.Response} {
+				ident := types[message]
+				if importPath := string(
+					ident.GoImportPath,
+				); importPath != "" &&
+					importPath != model.FileOptions.GoImportPath {
+					if _, seen := foreign[importPath]; !seen {
+						foreign[importPath] = goPackageName(importPath, cmd, packageNames)
+					}
+				}
 			}
 		}
 	}
@@ -72,11 +95,14 @@ func funcMap(file *protogen.File, model *ir.Model) template.FuncMap {
 		"messageViews": func() []*ir.View { return views },
 		"goName":       func(fullName string) string { return goNames[fullName] },
 		"goRequestType": func(cmd *ir.Command) string {
-			name := goNames[cmd.Request.FullName]
-			if alias, ok := aliases[cmd.Request.GoImportPath]; ok {
-				return alias + "." + name
-			}
-			return name
+			return goType(types[cmd.Request.FullName], aliases)
+		},
+		"goResponseType": func(cmd *ir.Command) string {
+			return goType(types[cmd.Response], aliases)
+		},
+		"clientIs": func(name string) bool { return client == name },
+		"connectClientInterface": func(svc *ir.Service) string {
+			return connectClientInterface(goNames[svc.FullName], svc, methods, aliases)
 		},
 		"quoteJoin": func(names []string) string {
 			quoted := make([]string, len(names))
@@ -96,6 +122,91 @@ func funcMap(file *protogen.File, model *ir.Model) template.FuncMap {
 			return false
 		},
 	}
+}
+
+func goPackageName(importPath string, cmd *ir.Command, packageNames map[string]string) string {
+	// The IR records the request package, including managed-mode rewrites. The
+	// full descriptor set supplies the exact name for every other package, so
+	// a response can live in a different Go package without guessing from its
+	// import path.
+	if importPath == cmd.Request.GoImportPath {
+		return cmd.Request.GoPackageName
+	}
+	return packageNames[importPath]
+}
+
+func goType(ident protogen.GoIdent, aliases map[string]string) string {
+	name := ident.GoName
+	if alias, ok := aliases[string(ident.GoImportPath)]; ok {
+		return alias + "." + name
+	}
+	return name
+}
+
+// connectClientInterface returns source for the per-service interface that a
+// generated connect-go client satisfies. The CLI file shares the protobuf
+// package with the messages, so importing its generated child connect package
+// would create an import cycle.
+func connectClientInterface(
+	goName string,
+	svc *ir.Service,
+	methods map[string]*protogen.Method,
+	aliases map[string]string,
+) string {
+	var b strings.Builder
+	if goName == "" {
+		return ""
+	}
+	fmt.Fprintf(
+		&b,
+		"// %sCLIClient is the subset of the generated connect-go client used by this command.\n",
+		goName,
+	)
+	fmt.Fprintf(&b, "type %sCLIClient interface {\n", goName)
+	for _, cmd := range svc.Commands {
+		method := methods[cmd.FullName]
+		if method == nil {
+			continue
+		}
+		req := goType(method.Input.GoIdent, aliases)
+		res := goType(method.Output.GoIdent, aliases)
+		switch cmd.Shape {
+		case ir.ShapeUnary:
+			fmt.Fprintf(
+				&b,
+				"\t%s(context.Context, *connect.Request[%s]) (*connect.Response[%s], error)\n",
+				method.GoName,
+				req,
+				res,
+			)
+		case ir.ShapeServerStream:
+			fmt.Fprintf(
+				&b,
+				"\t%s(context.Context, *connect.Request[%s]) (*connect.ServerStreamForClient[%s], error)\n",
+				method.GoName,
+				req,
+				res,
+			)
+		case ir.ShapeClientStream:
+			fmt.Fprintf(
+				&b,
+				"\t%s(context.Context) *connect.ClientStreamForClient[%s, %s]\n",
+				method.GoName,
+				req,
+				res,
+			)
+		case ir.ShapeBidi:
+			fmt.Fprintf(
+				&b,
+				"\t%s(context.Context) *connect.BidiStreamForClient[%s, %s]\n",
+				method.GoName,
+				req,
+				res,
+			)
+		}
+	}
+	b.WriteString("}\n")
+	return b.String()
 }
 
 type pflagBinding struct {
@@ -229,6 +340,7 @@ var templateImports = map[string]string{
 	"term":      "golang.org/x/term",
 	"grpc":      "google.golang.org/grpc",
 	"status":    "google.golang.org/grpc/status",
+	"connect":   "connectrpc.com/connect",
 	"protojson": "google.golang.org/protobuf/encoding/protojson",
 	"proto":     "google.golang.org/protobuf/proto",
 	"yaml3":     "go.yaml.in/yaml/v3",
