@@ -8,12 +8,14 @@ require (
 	github.com/jedib0t/go-pretty/v6 v6.8.3
 	github.com/spf13/cobra v1.10.2
 	github.com/stoewer/go-strcase v1.3.1
+	github.com/stretchr/testify v1.11.1
 	github.com/sudorandom/fauxrpc v0.26.0
 	github.com/theory/jsonpath v0.12.0
 	github.com/tidwall/sjson v1.2.5
 	go.yaml.in/yaml/v3 v3.0.5
 	golang.org/x/term v0.45.0
 	golang.org/x/tools v0.48.0
+	google.golang.org/genproto/googleapis/api v0.0.0-20260803160001-6ac0973c030d
 	google.golang.org/grpc v1.83.0
 	google.golang.org/protobuf v1.36.11
 	sigs.k8s.io/yaml v1.6.0
@@ -31,9 +33,11 @@ require (
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/bufbuild/protocompile v0.14.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/google/cel-go v0.30.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mattn/go-runewidth v0.0.27 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/tidwall/gjson v1.19.0 // indirect
 	github.com/tidwall/match v1.2.0 // indirect
@@ -45,9 +49,9 @@ require (
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260803160001-6ac0973c030d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260803160001-6ac0973c030d // indirect
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.6.2 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 tool (

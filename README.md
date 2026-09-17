@@ -173,6 +173,7 @@ You can also rename the command from the proto. See [Annotations](https://github
 ## What your users get
 
 - **Flags.** A scalar field becomes its own flag. A field of a message field becomes a dotted flag such as `--shelf.theme`, down to `request-expand-depth`. A repeated field repeats. A map field takes `key=value`.
+- **Server-owned fields.** A field annotated `google.api.field_behavior = OUTPUT_ONLY` never becomes a flag or an `--example` value, including below a request resource. It remains legal in `-d` and `-f` bodies because protobuf accepts complete request messages; servers decide whether to ignore or reject it.
 - **Whole-request input.** `-f/--filename` reads a file or `-` for stdin. `-d/--data` takes a request body inline. Both repeat, and both apply before the flags. JSON and YAML are the built-in formats. The caller adds more. A source holds one body or many: JSON Lines, a JSON array, or a YAML file with `---` separators. An rpc that sends one request merges them with `proto.Merge`.
 - **`--example`.** Flags reach the top of a request. A field deeper than `request-expand-depth` has no flag of its own. A nested request otherwise needs a hand-written body. `--example` prints the whole shape, filled in and ready to edit. The server accepts it as a request. It round-trips:
 

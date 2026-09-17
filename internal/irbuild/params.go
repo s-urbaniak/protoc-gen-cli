@@ -7,6 +7,8 @@ import (
 
 	"github.com/braveokafor/protoc-gen-cli/internal/ir"
 	"github.com/stoewer/go-strcase"
+	annotations "google.golang.org/genproto/googleapis/api/annotations"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/descriptorpb"
 )
@@ -62,7 +64,7 @@ func buildParams(md protoreflect.MessageDescriptor, opts Options) []*ir.Param {
 			fd := fields.Get(i)
 			po := paramOptions(fd)
 
-			if po.GetSkip() {
+			if po.GetSkip() || isOutputOnly(fd) {
 				continue
 			}
 
@@ -148,6 +150,14 @@ func buildParams(md protoreflect.MessageDescriptor, opts Options) []*ir.Param {
 	walk(md, "", "", opts.RequestExpandDepth, []protoreflect.FullName{md.FullName()})
 
 	return params
+}
+
+// isOutputOnly reports whether an API field is server-populated. These fields
+// may still appear in whole-request input, where protobuf accepts them, but a
+// generated CLI must not invite callers to set them with flags.
+func isOutputOnly(fd protoreflect.FieldDescriptor) bool {
+	behaviors := proto.GetExtension(fd.Options(), annotations.E_FieldBehavior).([]annotations.FieldBehavior)
+	return slices.Contains(behaviors, annotations.FieldBehavior_OUTPUT_ONLY)
 }
 
 // fieldBind returns ok false for a field with no param.

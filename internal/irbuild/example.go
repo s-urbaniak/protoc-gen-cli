@@ -55,8 +55,15 @@ func buildExample(md protoreflect.MessageDescriptor, opts Options) string {
 			if oo.IsSynthetic() {
 				continue
 			}
-			if n := oo.Fields().Len(); n > 0 {
-				arms[oo.Name()] = oo.Fields().Get(faker.IntN(n))
+			candidates := make([]protoreflect.FieldDescriptor, 0, oo.Fields().Len())
+			for j := range oo.Fields().Len() {
+				fd := oo.Fields().Get(j)
+				if !isOutputOnly(fd) {
+					candidates = append(candidates, fd)
+				}
+			}
+			if len(candidates) > 0 {
+				arms[oo.Name()] = candidates[faker.IntN(len(candidates))]
 			}
 		}
 
@@ -64,6 +71,9 @@ func buildExample(md protoreflect.MessageDescriptor, opts Options) string {
 		fields := md.Fields()
 		for i := range fields.Len() {
 			fd := fields.Get(i)
+			if isOutputOnly(fd) {
+				continue
+			}
 			if oo := fd.ContainingOneof(); oo != nil && !oo.IsSynthetic() && arms[oo.Name()] != fd {
 				continue
 			}
